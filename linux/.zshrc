@@ -708,9 +708,9 @@ complete () {
 export PATH=$PATH:$JAVA_HOME/bin
 
 # machine specific configuration
-hostname=$(hostname -f)
+hostname=$(hostname)
 
-if [ $hostname == "ubuntu-ygu5-01.sh.intel.com" -o $hostname == "ubuntu-ygu5-02.sh.intel.com" ] ; then
+if [ $hostname == "ubuntu-ygu5-01" -o $hostname == "ubuntu-ygu5-02" ] ; then
     cd /workspace/project/android-ia && source /workspace/project/android-ia/build/envsetup.sh >/dev/null && lunch emu64-eng >/dev/null
 elif [ $hostname == "ubuntu-y560d" ] ; then
     cd /workspace/project/gyagp/share
