@@ -135,8 +135,8 @@ def setup():
     _ensure_repos()
 
 
-def sync():
-    if not args.sync:
+def sync(force=False):
+    if not args.sync and not force:
         return
 
     command = 'repo sync -c -j16'
@@ -145,8 +145,8 @@ def sync():
     execute(command)
 
 
-def patch():
-    if not args.patch:
+def patch(force=False):
+    if not args.patch and not force:
         return
 
     for patch in patches:
@@ -172,25 +172,26 @@ def patch():
         restore_dir()
 
 
-def clean():
-    if not args.clean:
+def clean(force=False):
+    if not args.clean and not force:
         return
 
-    warning('Clean is very dangerous, your local changes will be lost')
-    sys.stdout.write('Are you sure to do the cleanup? [yes/no]: ')
-    choice = raw_input().lower()
-    if choice not in ['yes', 'y']:
-        return
+    if not force:
+        warning('Clean is very dangerous, your local changes will be lost')
+        sys.stdout.write('Are you sure to do the cleanup? [yes/no]: ')
+        choice = raw_input().lower()
+        if choice not in ['yes', 'y']:
+            return
 
     for repo in dirty_repos:
         backup_dir(root_dir + '/' + repo)
         execute('git reset --hard aia/topic/64-bit/master', silent=True, catch=True)
-        info(repo + ' is resetted to aia/topic/64-bit/master')
+        info(repo + ' is reset to aia/topic/64-bit/master')
         restore_dir()
 
 
-def mk64():
-    if not args.mk64:
+def mk64(force=False):
+    if not args.mk64 and not force:
         return
 
     backup_dir(webview_dir)
@@ -248,8 +249,8 @@ def mk64():
     restore_dir()
 
 
-def build():
-    if not args.build:
+def build(force=False):
+    if not args.build and not force:
         return
 
     backup_dir(root_dir)
@@ -381,20 +382,23 @@ def dep():
 
 
 def test_build():
-    global args
-
     if not args.test_build:
         return
 
-    execute('rm -rf ' + root_dir + '/out')
+    combo_orig = args.combo
     args.combo = 'all'
+    module_orig = args.module
     args.module = 'all'
-    args.build = True
-    clean()
-    sync()
-    patch()
-    mk64()
-    build()
+
+    execute('rm -rf ' + root_dir + '/out')
+    clean(force=True)
+    sync(force=True)
+    patch(force=True)
+    mk64(force=True)
+    build(force=True)
+
+    args.combo = combo_orig
+    args.module = module_orig
 
 
 if __name__ == '__main__':

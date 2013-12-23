@@ -11,7 +11,7 @@ import argparse
 import subprocess
 
 host_os = platform.system()
-args = ''
+args = argparse.Namespace()
 dir_stack = []
 
 
