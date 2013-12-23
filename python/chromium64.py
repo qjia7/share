@@ -390,6 +390,10 @@ def test_build():
     args.combo = 'all'
     args.module = 'all'
     args.build = True
+    clean()
+    sync()
+    patch()
+    mk64()
     build()
 
 
