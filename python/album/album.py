@@ -15,7 +15,7 @@ storage_dir = 'e:/storage/'
 googleplus_storage_dir = storage_dir + 'GooglePlus/'
 skydrive_storage_dir = storage_dir + u'SkyDrive/顾诗云/'
 
-ffmpeg = 'E:/software/active/ffmpeg/bin/ffmpeg.exe'
+ffmpeg = 'D:/software/active/ffmpeg/bin/ffmpeg.exe'
 
 def info(msg):
     print '[INFO] ' + msg + '.'
