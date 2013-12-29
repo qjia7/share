@@ -28,24 +28,27 @@ def warning(msg):
     print '[WARNING] ' + msg + '.'
 
 
-def error(msg, abort=True):
+def error(msg, abort=True, error_code=256):
     print "[ERROR] " + msg + "!"
     if abort:
-        quit()
+        quit(error_code / 256)
 
 
 def cmd(msg):
     print '[COMMAND] ' + msg
 
 
-def execute(command, silent=False, catch=False, abort=True, duration=False, dryrun=False):
+def execute(command, silent=False, catch=False, abort=True, duration=False, dryrun=False, log=''):
     if not silent:
         _cmd(command)
 
     if dryrun:
-        return
+        return [0, '']
 
     start_time = datetime.datetime.now().replace(microsecond=0)
+
+    if log != '':
+        command += ' 2>&1 |tee >>' + log
 
     if catch:
         result = commands.getstatusoutput(command)
@@ -60,7 +63,7 @@ def execute(command, silent=False, catch=False, abort=True, duration=False, dryr
         info(str(time_diff) + ' was spent to execute following command: ' + command)
 
     if abort and result[0]:
-        error('Failed to execute')
+        error('Failed to execute', error_code=result[0])
 
     return result
 

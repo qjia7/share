@@ -4,8 +4,9 @@ root_dir = ''     # e.g., /workspace/project/chromium-linux
 src_dir = ''      # e.g., /workspace/project/chromium-linux/src
 build_dir = ''    # e.g., /workspace/project/chromium-linux/src/out/Release
 target_os = ''
-target = ''
 target_arch = ''
+target_module = ''
+
 
 def has_build_dir():
     if not os.path.exists(build_dir):
@@ -16,7 +17,7 @@ def has_build_dir():
     return True
 
 def get_target_os():
-    return get_symbolic_link_dir().rsplit('-')[-1]
+    return root_dir[root_dir.rfind('-') + 1:]
 
 ###########################################################
 
@@ -24,7 +25,6 @@ def check():
     # System sanity check
     if not is_windows() and not is_linux():
         error('Current host system is not supported')
-        quit()
 
 # override format_epilog to make it format better
 argparse.format_epilog = lambda self, formatter: self.epilog
@@ -37,14 +37,14 @@ def handle_option():
 examples:
 
   update:
-  python %(prog)s -u sync
   python %(prog)s -u 'sync --force'
   python %(prog)s -u runhooks
+  python %(prog)s -u fetch
 
   build:
   python %(prog)s -b -c -v
-  python %(prog)s -b --target webview // out/Release/lib/libstandalonelibwebviewchromium.so->Release/android_webview_apk/libs/x86/libstandalonelibwebviewchromium.so
-  python %(prog)s -b --target chrome
+  python %(prog)s -b --target-module webview // out/Release/lib/libstandalonelibwebviewchromium.so->Release/android_webview_apk/libs/x86/libstandalonelibwebviewchromium.so
+  python %(prog)s -b --target-module chrome
 
   run:
   python %(prog)s -r release
@@ -83,7 +83,7 @@ examples:
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'arm', 'x86_64'], default='x86')
     #parser.add_argument('--target-os', dest='target_os', help='target os', choices=['linux', 'android'], default='linux')
     parser.add_argument('--type', dest='type', help='type', choices=['release', 'debug'], default='release')
-    parser.add_argument('--target', dest='target', help='target to build', choices=['chrome', 'webview', 'content_shell'])
+    parser.add_argument('--target-module', dest='target_module', help='target module to build', choices=['chrome', 'webview', 'content_shell'])
 
     parser.add_argument('--owner', dest='owner', help='find owner for latest commit', action='store_true')
     parser.add_argument('-d', '--root-dir', dest='root_dir', help='set root directory')
@@ -96,24 +96,21 @@ examples:
         parser.print_help()
 
 def setup():
-    global root_dir, src_dir, build_dir, target_os, target, target_arch
+    global root_dir, src_dir, build_dir, target_os, target_module, target_arch
+
+    if args.root_dir:
+        root_dir = args.root_dir
+    else:
+        root_dir = get_symbolic_link_dir()
 
     target_os = get_target_os()
     target_arch = args.target_arch
 
-    if not args.root_dir:
-        if is_windows():
-            root_dir = "d:/user/ygu5/project/chromium"
-        else:
-            root_dir = '/workspace/project/chromium-' + target_os
-    else:
-        root_dir = args.root_dir
-
     src_dir = root_dir + '/src'
     build_dir = src_dir + '/out/' + args.type.capitalize()
 
-    os.putenv('http_proxy', 'http://proxy-shz.intel.com:911')
-    os.putenv('https_proxy', 'https://proxy-shz.intel.com:911')
+    os.putenv('http_proxy', '127.0.0.1:8118')
+    os.putenv('https_proxy', '127.0.0.1:8118')
 
     if is_windows():
         path = os.getenv('PATH')
@@ -142,13 +139,13 @@ def setup():
 
         os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 enable_svg=0')
 
-    if not args.target:
+    if not args.target_module:
         if target_os == 'linux':
-            target = 'chrome'
+            target_module = 'chrome'
         elif target_os == 'android':
-            target = 'webview'
+            target_module = 'webview'
     else:
-        target = args.target
+        target_module = args.target_module
 
 def update(args):
     if not args.update:
@@ -166,22 +163,22 @@ def update(args):
 
         if not is_master:
             error('Repo ' + repo + ' is not on master')
-            quit()
 
     os.chdir(root_dir)
-    if is_windows():
-        cmd = 'd:/user/ygu5/project/chromium/depot_tools/gclient'
-    else:
-        cmd = 'gclient'
 
     if host_os == 'Linux' and not has_process('privoxy'):
         execute('sudo privoxy /etc/privoxy/config')
 
-    cmd = cmd + ' ' + args.update
-    execute(cmd)
+    cmd = 'gclient ' + args.update
+    if target_os == 'android':
+        cmd = 'source src/build/android/envsetup.sh --target-arch=' + target_arch + ' && ' + cmd
+    result = execute(cmd, abort=False)
 
     if host_os == 'Linux':
         execute('sudo killall privoxy')
+
+    if result[0]:
+        error('Fail to execute command: ' + cmd, error_code=result[0])
 
 def build(args):
     if not args.build:
@@ -205,25 +202,31 @@ def build(args):
     if build_clean:
         if target_os == 'android':
             # We can't omit this step as android_gyp is a built-in command, instead of environmental variable.
-            execute(bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror='))
+            cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror=')
         else:
-            execute('build/gyp_chromium -Dwerror= ')
+            cmd = 'build/gyp_chromium -Dwerror='
 
-    ninja_cmd = 'ninja -k0 -j16'
+        result = execute(cmd, abort=False)
+        if result[0]:
+            error('Fail to execute command: ' + cmd, error_code=result[0])
+
+    ninja_cmd = 'ninja -j16'
 
     if args.build_verbose:
         ninja_cmd += ' -v'
 
     ninja_cmd += ' -C ' + build_dir
 
-    if target == 'webview':
+    if target_module == 'webview':
         ninja_cmd += ' android_webview_apk libwebviewchromium'
-    elif target == 'content_shell' and target_os == 'android':
+    elif target_module == 'content_shell' and target_os == 'android':
         ninja_cmd += ' content_shell_apk'
     else:
-        ninja_cmd += ' ' + target
+        ninja_cmd += ' ' + target_module
 
-    execute(ninja_cmd)
+    result = execute(ninja_cmd, abort=False)
+    if result[0]:
+        error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
 
 def install(args):
     if not args.install:
