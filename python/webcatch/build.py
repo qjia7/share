@@ -5,7 +5,6 @@ from util import *
 
 import time
 import os as OS
-import logging
 
 
 # major -> svn rev, git commit, build. major commit is after build commit.
@@ -57,9 +56,6 @@ BUILD_NEXT_INDEX_REV = 3
 
 DRYRUN = False
 
-LOGGER = logging.getLogger('webcatch')
-formatter = logging.Formatter('[%(asctime)s - %(levelname)s] %(message)s', "%Y-%m-%d %H:%M:%S")
-
 #
 fail_number = 0
 FAIL_NUMBER_MAX = 3
@@ -90,6 +86,7 @@ def setup():
 
     backup_dir(get_script_dir())
     ensure_package('libnss3-dev')
+    ensure_package('ant')
     OS.putenv('JAVA_HOME', '/usr/lib/jvm/jdk1.6.0_45')
 
     if args.os == 'all':
@@ -132,8 +129,6 @@ def setup():
 
     update_git_info(fetch=False)
 
-    LOGGER.setLevel(logging.DEBUG)
-
     restore_dir()
 
 
@@ -160,45 +155,30 @@ def build():
 def build_one(build_next):
     (os, arch, module, rev) = build_next
     log_file = log_dir + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
-    log = logging.FileHandler(log_file)
-    log.setFormatter(formatter)
-    LOGGER.addHandler(log)
-    console = logging.StreamHandler()
-    console.setFormatter(formatter)
-    LOGGER.addHandler(console)
 
-    LOGGER.info('Begin to build ' + os + ',' + arch + ',' + module + ',' + str(rev) + '...')
+    info('Begin to build ' + os + ',' + arch + ',' + module + ',' + str(rev) + '...')
     commit = rev_commit[rev]
     repo_dir = project_dir + '/chromium-' + os
-    LOGGER.info('Sync to revision ' + str(rev))
-    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit +'"' + ' -d ' + repo_dir, catch=True, abort=False, dryrun=DRYRUN)
+    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit +'"' + ' -d ' + repo_dir, abort=False, dryrun=DRYRUN, log=log_file)
     if result[0]:
-        LOGGER.info(result[1])
         quit(result[0])
 
-    LOGGER.info('')
     command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + repo_dir
-    result = execute(command_build, catch=True, abort=False, dryrun=DRYRUN)
+    result = execute(command_build, abort=False, dryrun=DRYRUN, log=log_file)
 
     # Retry here
     if result[0]:
-        LOGGER.info(result[1])
         if os == 'android':
-            pass
-            result = execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', catch=True, abort=False, dryrun=DRYRUN)
-            if result[0]:
-                LOGGER.info(result[1])
-            result = execute(command_build, catch=True, abort=False, dryrun=DRYRUN)
+            execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', abort=False, dryrun=DRYRUN, log=log_file)
+            result = execute(command_build, abort=False, dryrun=DRYRUN, log=log_file)
         if result[0]:
-            LOGGER.info(result[1])
-            execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN)
-            result = execute(command_build, catch=True, abort=False, dryrun=DRYRUN)
+            execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN, log=log_file)
+            result = execute(command_build, abort=False, dryrun=DRYRUN)
 
     # Handle result, either success or failure
     if os == 'android' and module == 'content_shell':
         if result[0]:
-            LOGGER.info(result[1])
-            execute('touch ' + out_dir + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk.FAIL')
+            execute('touch ' + out_dir + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk.FAIL', log=log_file)
         else:
             execute('cp ' + repo_dir + '/src/out/Release/apks/ContentShell.apk ' + out_dir + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk', dryrun=DRYRUN)
             execute('rm -f ' + log_file)
