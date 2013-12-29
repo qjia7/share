@@ -129,6 +129,20 @@ def setup():
 
     update_git_info(fetch=False)
 
+    if not OS.path.exists(log_dir):
+        OS.mkdir(log_dir)
+
+    if not OS.path.exists(out_dir):
+        OS.mkdir(out_dir)
+
+    for os in os_info:
+        for build in os_info[os][OS_INFO_INDEX_BUILD]:
+            arch = build[OS_INFO_INDEX_BUILD_ARCH]
+            module = build[OS_INFO_INDEX_BUILD_MODULE]
+            comb_dir = out_dir + '/' + get_comb_name(os, arch, module)
+            if not OS.path.exists(comb_dir):
+                OS.mkdir(comb_dir)
+
     restore_dir()
 
 
