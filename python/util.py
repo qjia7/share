@@ -38,7 +38,7 @@ def cmd(msg):
     print '[COMMAND] ' + msg
 
 
-def execute(command, silent=False, catch=False, abort=True, duration=False, dryrun=False, log=''):
+def execute(command, silent=False, catch=False, abort=True, duration=False, dryrun=False, log_file=''):
     if not silent:
         _cmd(command)
 
@@ -47,8 +47,8 @@ def execute(command, silent=False, catch=False, abort=True, duration=False, dryr
 
     start_time = datetime.datetime.now().replace(microsecond=0)
 
-    if log != '':
-        command += ' 2>&1 |tee >>' + log
+    if log_file != '':
+        command += ' 2>&1 |tee >>' + log_file
 
     if catch:
         result = commands.getstatusoutput(command)
