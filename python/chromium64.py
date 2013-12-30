@@ -69,6 +69,8 @@ def _ensure_repos():
         if not re.match('external/chromium_org', repo):
             repos.append(root_dir + '/' + repo)
 
+    restore_dir()
+
 
 def handle_option():
     global args
@@ -85,6 +87,7 @@ examples:
   python %(prog)s --combo hsb_64-eng -b -m hsb_64
 
   python %(prog)s --clean -s --patch --test-build
+  python %(prog)s --scan -m all
 ''')
     group_sync = parser.add_argument_group('sync')
     group_sync.add_argument('-s', '--sync', dest='sync', help='sync the repo', action='store_true')
@@ -110,6 +113,7 @@ examples:
     group_other.add_argument('-d', '--root-dir', dest='root_dir', help='set root directory')
     group_other.add_argument('--dep', dest='dep', help='get dep for each module', action='store_true')
     group_other.add_argument('--git-status', dest='git_status', help='git status for repos', action='store_true')
+    group_other.add_argument('--scan', dest='scan', help='scan code during build with static analyzer', action='store_true')
     group_other.add_argument('--test-build', dest='test_build', help='build test with all combos and modules', action='store_true')
 
     args = parser.parse_args()
@@ -253,8 +257,6 @@ def build(force=False):
     if not args.build and not force:
         return
 
-    backup_dir(root_dir)
-
     if args.combo == 'all':
         combos_build = combos
     else:
@@ -295,8 +297,6 @@ def build(force=False):
             command = command.replace('suffix', suffix)
             command = bashify(command)
             execute(command, duration=True)
-
-    restore_dir()
 
 
 def git_status():
@@ -401,6 +401,36 @@ def test_build():
     args.module = module_orig
 
 
+def scan():
+    if not args.scan:
+        return
+
+    if args.module == 'all':
+        modules_build = modules_common
+    else:
+        modules_build = args.module.split(',')
+
+    for module in modules_build:
+        command = '. ' + root_dir + '/build/envsetup.sh && lunch emu64-eng && '
+        if module == 'webviewchromium':
+            command += 'export WITH_STATIC_ANALYZER=1 && export BUILD_HOST_64bit=1 && make -B v8_tools_gyp_mksnapshot_x64_host_gyp suffix1 && unset BUILD_HOST_64bit && mmma -B external/chromium_org suffix2'
+        else:
+            command += 'mmma -B '
+
+            if module == 'webview':
+                command += 'frameworks/webview'
+            elif module == 'browser':
+                command += 'packages/apps/Browser'
+
+            command += 'suffix'
+
+        suffix = ' -j16'
+        suffix += ' 2>&1 |tee ' + root_dir + '/' + module + '_scan_log'
+        command = command.replace('suffix', suffix)
+        command = bashify(command)
+        execute(command, duration=True, abort=False)
+
+
 if __name__ == '__main__':
     handle_option()
     setup()
@@ -412,3 +442,4 @@ if __name__ == '__main__':
     git_status()
     dep()
     test_build()
+    scan()
