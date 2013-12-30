@@ -662,7 +662,7 @@ function symbolic_link() {
 }
 
 # chromium-desktop
-symbolic_link $PYTHON_DIR chromium.py $PROJECT_DIR/chromium-desktop
+symbolic_link $PYTHON_DIR chromium.py $PROJECT_DIR/chromium-linux
 export CHROME_DEVEL_SANDBOX=/usr/local/sbin/chrome-devel-sandbox
 
 # chromium-android
