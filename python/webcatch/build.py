@@ -1,6 +1,10 @@
 # TODO:
 # Update rev_commit once all builds are finished for a rev, which would free some memory.
 
+
+# Build speed
+# android_content_shell: 25/hour
+
 from util import *
 
 import time
@@ -56,9 +60,10 @@ BUILD_NEXT_INDEX_REV = 3
 
 DRYRUN = False
 
-#
 fail_number = 0
 FAIL_NUMBER_MAX = 3
+
+build_every = 1
 ################################################################################
 
 
@@ -78,11 +83,12 @@ examples:
     parser.add_argument('--module', dest='module', help='module', choices=module_all + ['all'], default='all')
     parser.add_argument('-r', '--rev', dest='rev', help='revisions to build. E.g., 233137, 217377-225138')
     parser.add_argument('--root', dest='root_pwd', help='root password')
+    parser.add_argument('--build-every', dest='build_every', help='build every number')
     args = parser.parse_args()
 
 
 def setup():
-    global os_info
+    global os_info, build_every
 
     backup_dir(get_script_dir())
     ensure_package('libnss3-dev')
@@ -142,6 +148,9 @@ def setup():
             comb_dir = out_dir + '/' + get_comb_name(os, arch, module)
             if not OS.path.exists(comb_dir):
                 OS.mkdir(comb_dir)
+
+    if args.build_every:
+        build_every = int(args.build_every)
 
     restore_dir()
 
@@ -209,6 +218,9 @@ def get_next_rev(os, index):
     for rev in range(rev_next, rev_max + 1):
         if rev > rev_git:
             return rev
+
+        if not rev % build_every == 0:
+            continue
 
         cmd = 'ls ' + out_dir + '/' + get_comb_name(os, arch, module) + '/*' + str(rev) + '*'
         result = execute(cmd, abort=False, silent=True, catch=True)
