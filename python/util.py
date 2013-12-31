@@ -9,11 +9,18 @@ import datetime
 import commands
 import argparse
 import subprocess
+import logging
+import time
 
+formatter = logging.Formatter('[%(asctime)s - %(levelname)s] %(message)s', "%Y-%m-%d %H:%M:%S")
 host_os = platform.system()
 args = argparse.Namespace()
 dir_stack = []
 
+
+os_all = ['android', 'linux']
+arch_all = ['x86', 'arm']
+module_all = ['webview', 'chrome', 'content_shell']
 
 def get_datetime():
     now = datetime.datetime.now()
