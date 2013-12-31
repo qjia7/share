@@ -413,9 +413,9 @@ def scan():
     for module in modules_build:
         command = '. ' + root_dir + '/build/envsetup.sh && lunch emu64-eng && '
         if module == 'webviewchromium':
-            command += 'export WITH_STATIC_ANALYZER=1 && export BUILD_HOST_64bit=1 && make -B v8_tools_gyp_mksnapshot_x64_host_gyp suffix1 && unset BUILD_HOST_64bit && mmma -B external/chromium_org suffix2'
+            command += 'export WITH_STATIC_ANALYZER=1 && export WITHOUT_CLANG=true && export BUILD_HOST_64bit=1 && make -B v8_tools_gyp_mksnapshot_x64_host_gyp suffix1 && unset BUILD_HOST_64bit && mmma -B external/chromium_org suffix2'
         else:
-            command += 'mmma -B '
+            command += 'export WITH_STATIC_ANALYZER=1 && export WITHOUT_CLANG=true && mmma -B '
 
             if module == 'webview':
                 command += 'frameworks/webview'
