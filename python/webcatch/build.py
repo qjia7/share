@@ -4,6 +4,7 @@
 
 # Build speed
 # android_content_shell: 25/hour
+# linux_chrome: 30/hour
 
 from util import *
 
