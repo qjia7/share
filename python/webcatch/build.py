@@ -7,39 +7,12 @@
 # linux_chrome: 30/hour
 
 from util import *
+from common import *
 
 import time
 import os as OS
 
-
-# major -> svn rev, git commit, build. major commit is after build commit.
-# To get this, search 'The atomic number' in 'git log origin master chrome/VERSION'
-ver_info = {
-    34: [241271, '3824512f1312ec4260ad0b8bf372619c7168ef6b', 1751],
-    33: [233137, 'eeaecf1bb1c52d4b9b56a620cc5119409d1ecb7b', 1701],
-    32: [225138, '6a384c4afe48337237e3da81ccff8658755e2a02', 1652],
-    31: [217377, 'c95dd877deb939ec7b064831c2d20d92e93a4775', 1600],
-    30: [208581, '88367e9bf6a10b9e024ec99f12755b6f626bbe0c', 1548],
-}
-VERSION_INFO_INDEX_REV = 0
-# revision range for build by default
-rev_default = [ver_info[31][VERSION_INFO_INDEX_REV], 999999]
 rev_commit = {}
-
-root_dir = '/workspace/project/gyagp/WebCatch'
-out_dir = root_dir + '/out'
-project_dir = root_dir + '/project'
-log_dir = root_dir + '/log'
-
-os_all = ['android', 'linux']
-arch_all = ['x86', 'arm']
-module_all = ['webview', 'chrome', 'content_shell']
-
-comb_valid = [
-    ['android', 'x86', 'content_shell'],
-    #['android', 'arm', 'content_shell'],
-    ['linux', 'x86', 'chrome'],
-]
 
 # os -> [build, fetch_time, rev_min, rev_max, rev_git_max]
 # build -> [[arch, module, build_next]]
@@ -113,7 +86,7 @@ def setup():
         arg_module = args.module.split(',')
 
     for os, arch, module in [(os, arch, module) for os in arg_os for arch in arg_arch for module in arg_module]:
-        if not [os, arch, module] in comb_valid:
+        if not (os, arch, module) in comb_valid:
             continue
 
         if not os in os_info:
@@ -137,17 +110,17 @@ def setup():
 
     update_git_info(fetch=False)
 
-    if not OS.path.exists(log_dir):
-        OS.mkdir(log_dir)
+    if not OS.path.exists(dir_log):
+        OS.mkdir(dir_log)
 
-    if not OS.path.exists(out_dir):
-        OS.mkdir(out_dir)
+    if not OS.path.exists(dir_out):
+        OS.mkdir(dir_out)
 
     for os in os_info:
         for build in os_info[os][OS_INFO_INDEX_BUILD]:
             arch = build[OS_INFO_INDEX_BUILD_ARCH]
             module = build[OS_INFO_INDEX_BUILD_MODULE]
-            comb_dir = out_dir + '/' + get_comb_name(os, arch, module)
+            comb_dir = dir_out + '/' + get_comb_name(os, arch, module)
             if not OS.path.exists(comb_dir):
                 OS.mkdir(comb_dir)
 
@@ -179,11 +152,11 @@ def build():
 
 def build_one(build_next):
     (os, arch, module, rev) = build_next
-    log_file = log_dir + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
+    log_file = dir_log + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
 
     info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
     commit = rev_commit[rev]
-    repo_dir = project_dir + '/chromium-' + os
+    repo_dir = dir_project + '/chromium-' + os
     result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + repo_dir + ' --log-file ' + log_file, abort=False, dryrun=DRYRUN)
     if result[0]:
         quit(result[0])
@@ -201,7 +174,7 @@ def build_one(build_next):
             result = execute(command_build, abort=False, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
-    comb_dir = out_dir + '/' + get_comb_name(os, arch, module)
+    comb_dir = dir_out + '/' + get_comb_name(os, arch, module)
     if os == 'android' and module == 'content_shell':
         if result[0]:
             execute('touch ' + comb_dir + '/ContentShell@' + str(rev) + '.apk.FAIL')
@@ -260,7 +233,7 @@ def get_rev_next(os, index):
         if not rev % build_every == 0:
             continue
 
-        cmd = 'ls ' + out_dir + '/' + get_comb_name(os, arch, module) + '/*' + str(rev) + '*'
+        cmd = 'ls ' + dir_out + '/' + get_comb_name(os, arch, module) + '/*' + str(rev) + '*'
         result = execute(cmd, abort=False, silent=True, catch=True)
         if result[0] == 0:
             continue
@@ -272,10 +245,10 @@ def get_rev_next(os, index):
 
         # Handle invalid revision number here. TODO: Need to handle other comb.
         if os == 'android' and module == 'content_shell':
-            execute('touch ' + out_dir + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk.NULL')
+            execute('touch ' + dir_out + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk.NULL')
         elif os == 'linux' and module == 'chrome':
             info(str(rev) + ' does not exist')
-            execute('touch ' + out_dir + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.NULL')
+            execute('touch ' + dir_out + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.NULL')
 
     return rev_max + 1
 
@@ -305,24 +278,20 @@ def ensure_package(name):
         error('You need to install package: ' + name)
 
 
-def get_comb_name(os, arch, module):
-    return os + '-' + arch + '-' + module
-
-
 def get_time():
     return int(time.time())
 
 
 def update_git_info_one(os):
     global rev_commit
-    backup_dir(root_dir + '/project/chromium-' + os + '/src')
+    backup_dir(dir_root + '/project/chromium-' + os + '/src')
     execute('git log origin master >git_log')
     file = open('git_log')
     lines = file.readlines()
     file.close()
 
     is_max_rev = True
-    pattern_commit = re.compile('commit (.*)')
+    pattern_commit = re.compile('^commit (.*)')
     pattern_rev = re.compile('git-svn-id: .*@(.*) (.*)')
     for line in lines:
         match = pattern_commit.search(line)
@@ -356,7 +325,7 @@ def update_git_info_one(os):
 def update_git_info(fetch=True):
     for os in os_info:
         if fetch:
-            repo_dir = project_dir + '/chromium-' + os
+            repo_dir = dir_project + '/chromium-' + os
             execute('python chromium.py -u "fetch" --root-dir ' + repo_dir, dryrun=DRYRUN)
             os_info[os][OS_INFO_INDEX_TIME] = get_time()
         update_git_info_one(os)
