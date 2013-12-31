@@ -37,7 +37,7 @@ module_all = ['webview', 'chrome', 'content_shell']
 comb_valid = [
     ['android', 'x86', 'content_shell'],
     #['android', 'arm', 'content_shell'],
-    #['linux', 'x86', 'chrome']
+    ['linux', 'x86', 'chrome'],
 ]
 
 # os -> [build, fetch_time, rev_min, rev_max, rev_git_max]
@@ -69,13 +69,14 @@ build_every = 1
 
 def handle_option():
     global args
-    parser = argparse.ArgumentParser(description = 'Script to build automatically',
-                                     formatter_class = \
-                                     argparse.RawTextHelpFormatter,
-                                     epilog = '''
+    parser = argparse.ArgumentParser(description='Script to build automatically',
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     epilog='''
 examples:
   python %(prog)s --root password
   python %(prog)s -r 217377-225138
+  python %(prog)s --os linux --module chrome -r 233137-242710 --build-every 5
+  python %(prog)s --os android --module content_shell
 
 ''')
     parser.add_argument('--os', dest='os', help='os', choices=os_all + ['all'], default='all')
@@ -114,7 +115,7 @@ def setup():
         if not [os, arch, module] in comb_valid:
             continue
 
-        if not os_info.has_key(os):
+        if not os in os_info:
             os_info[os] = [[], 0, 0, 0, 0]
             if args.rev:
                 revs = [int(x) for x in args.rev.split('-')]
@@ -179,37 +180,73 @@ def build_one(build_next):
     (os, arch, module, rev) = build_next
     log_file = log_dir + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
 
-    info('Begin to build ' + os + ',' + arch + ',' + module + ',' + str(rev) + '...')
+    info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
     commit = rev_commit[rev]
     repo_dir = project_dir + '/chromium-' + os
-    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit +'"' + ' -d ' + repo_dir, abort=False, dryrun=DRYRUN, log=log_file)
+    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + repo_dir + ' --log-file ' + log_file, abort=False, dryrun=DRYRUN)
     if result[0]:
         quit(result[0])
 
-    command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + repo_dir
-    result = execute(command_build, abort=False, dryrun=DRYRUN, log=log_file)
+    command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + repo_dir + ' --log-file ' + log_file
+    result = execute(command_build, abort=False, dryrun=DRYRUN)
 
     # Retry here
     if result[0]:
         if os == 'android':
-            execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', abort=False, dryrun=DRYRUN, log=log_file)
-            result = execute(command_build, abort=False, dryrun=DRYRUN, log=log_file)
+            execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', abort=False, dryrun=DRYRUN)
+            result = execute(command_build, abort=False, dryrun=DRYRUN)
         if result[0]:
-            execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN, log=log_file)
+            execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN)
             result = execute(command_build, abort=False, dryrun=DRYRUN)
 
-    # Handle result, either success or failure
+    # Handle result, either success or failure. TODO: Need to handle other comb.
+    comb_dir = out_dir + '/' + get_comb_name(os, arch, module)
     if os == 'android' and module == 'content_shell':
         if result[0]:
-            execute('touch ' + out_dir + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk.FAIL', log=log_file)
+            execute('touch ' + comb_dir + '/ContentShell@' + str(rev) + '.apk.FAIL')
         else:
-            execute('cp ' + repo_dir + '/src/out/Release/apks/ContentShell.apk ' + out_dir + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk', dryrun=DRYRUN)
+            execute('cp ' + repo_dir + '/src/out/Release/apks/ContentShell.apk ' + comb_dir + '/ContentShell@' + str(rev) + '.apk', dryrun=DRYRUN)
             execute('rm -f ' + log_file)
+    elif os == 'linux' and module == 'chrome':
+        dest_dir = comb_dir + '/' + str(rev)
+        if result[0]:
+            execute('touch ' + dest_dir + '.FAIL')
+        else:
+            OS.mkdir(dest_dir)
+            src_dir = repo_dir + '/src/out/Release'
+            config_file = repo_dir + '/src/chrome/tools/build/' + os + '/FILES.cfg'
+            file = open(config_file)
+            lines = file.readlines()
+            file.close()
+            pattern = re.compile("'filename': '(.*)'")
+            files = []
+            for line in lines:
+                match = pattern.search(line)
+                if match and OS.path.exists(src_dir + '/' + match.group(1)):
+                    files.append(match.group(1))
 
+            # This file is not included in FILES.cfg. Bug?
+            files.append('lib/*.so')
+
+            for file_name in files:
+                dest_dir_temp = OS.path.dirname(dest_dir + '/' + file_name)
+                print file_name
+                if not OS.path.exists(dest_dir_temp):
+                    execute('mkdir -p ' + dest_dir_temp)
+
+                # Some are just dir, so we need -r option
+                execute('cp -rf ' + src_dir + '/' + file_name + ' ' + dest_dir_temp)
+
+            backup_dir(comb_dir)
+            execute('tar zcf ' + str(rev) + '.tar.gz ' + str(rev))
+            execute('rm -rf ' + str(rev))
+            restore_dir()
+
+    print result[0]
     return result[0]
 
 
-def get_next_rev(os, index):
+def get_rev_next(os, index):
     arch = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_ARCH]
     module = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_MODULE]
     rev_next = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_NEXT]
@@ -232,9 +269,12 @@ def get_next_rev(os, index):
         if rev in rev_commit:
             return rev
 
-        # Handle invalid revision number here
+        # Handle invalid revision number here. TODO: Need to handle other comb.
         if os == 'android' and module == 'content_shell':
             execute('touch ' + out_dir + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk.NULL')
+        elif os == 'linux' and module == 'chrome':
+            info(str(rev) + ' does not exist')
+            execute('touch ' + out_dir + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.NULL')
 
     return rev_max + 1
 
@@ -242,10 +282,10 @@ def get_next_rev(os, index):
 def get_build_next():
     is_base = True
     for os in os_info:
-        for index,comb in enumerate(os_info[os][OS_INFO_INDEX_BUILD]):
+        for index, comb in enumerate(os_info[os][OS_INFO_INDEX_BUILD]):
             arch = comb[0]
             module = comb[1]
-            rev_next_temp = get_next_rev(os, index)
+            rev_next_temp = get_rev_next(os, index)
             os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_NEXT] = rev_next_temp
             if is_base:
                 is_base = False
@@ -256,6 +296,7 @@ def get_build_next():
                 build_next = [os, arch, module, rev_next]
 
     return build_next
+
 
 def ensure_package(name):
     result = execute('dpkg -l ' + name, silent=True, catch=True, abort=False)
