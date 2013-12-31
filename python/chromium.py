@@ -16,10 +16,12 @@ def has_build_dir():
 
     return True
 
+
 def get_target_os():
     return root_dir[root_dir.rfind('-') + 1:]
 
 ###########################################################
+
 
 def check():
     # System sanity check
@@ -29,11 +31,12 @@ def check():
 # override format_epilog to make it format better
 argparse.format_epilog = lambda self, formatter: self.epilog
 
+
 def handle_option():
     global args
-    parser = argparse.ArgumentParser(description = 'Script to update, build and run Chromium',
-                                     formatter_class = argparse.RawTextHelpFormatter,
-                                     epilog = '''
+    parser = argparse.ArgumentParser(description='Script to update, build and run Chromium',
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     epilog='''
 examples:
 
   update:
@@ -89,11 +92,13 @@ examples:
     parser.add_argument('-d', '--root-dir', dest='root_dir', help='set root directory')
     parser.add_argument('--layout-test', dest='layout_test', help='cases to run against')
     parser.add_argument('-i', '--install', dest='install', help='install chrome for android', choices=['release', 'debug'])
+    parser.add_argument('--log-file', dest='log_file', help='log file to record log', default='')
 
     args = parser.parse_args()
 
     if len(sys.argv) <= 1:
         parser.print_help()
+
 
 def setup():
     global root_dir, src_dir, build_dir, target_os, target_module, target_arch
@@ -147,6 +152,7 @@ def setup():
     else:
         target_module = args.target_module
 
+
 def update(args):
     if not args.update:
         return()
@@ -172,13 +178,14 @@ def update(args):
     cmd = 'gclient ' + args.update
     if target_os == 'android':
         cmd = 'source src/build/android/envsetup.sh --target-arch=' + target_arch + ' && ' + cmd
-    result = execute(cmd, abort=False)
+    result = execute(cmd, abort=False, log_file=args.log_file)
 
     if host_os == 'Linux':
         execute('sudo killall privoxy')
 
     if result[0]:
         error('Fail to execute command: ' + cmd, error_code=result[0])
+
 
 def build(args):
     if not args.build:
@@ -224,9 +231,10 @@ def build(args):
     else:
         ninja_cmd += ' ' + target_module
 
-    result = execute(ninja_cmd, abort=False)
+    result = execute(ninja_cmd, abort=False, log_file=args.log_file)
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
+
 
 def install(args):
     if not args.install:
@@ -237,6 +245,7 @@ def install(args):
 
     os.chdir(src_dir)
     execute('python build/android/adb_install_apk.py --apk ContentShell.apk --' + args.install)
+
 
 def run(args):
     if not args.run:
@@ -263,13 +272,14 @@ def run(args):
 
     execute(cmd)
 
+
 def find_owner(args):
     if not args.owner:
         return()
 
     os.chdir(src_dir)
     files = commands.getoutput('git diff --name-only HEAD origin/master').split('\n')
-    owner_file_map = {} # map from OWNERS file to list of modified files
+    owner_file_map = {}  # map from OWNERS file to list of modified files
     for file in files:
         dir = os.path.dirname(file)
         while not os.path.exists(dir + '/OWNERS'):
@@ -289,6 +299,7 @@ def find_owner(args):
             print modified_file
         print '[OWNERS File]'
         print owner
+
 
 def layout_test(args):
     if not args.layout_test:
