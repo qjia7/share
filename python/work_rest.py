@@ -1,32 +1,50 @@
-#/usr/bin/python
+from util import *
 
-import os
-import commands
-import argparse
-import platform
-import time
 
-# Global variables
-args = None
+def handle_option():
+    global args
+    parser = argparse.ArgumentParser(description='Script to sleep several seconds, and hibernate|restart|poweroff on Windows',
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     epilog='''
+examples:
 
-def info(msg):
-    print '[INFO] ' + msg + '.'
+  python %(prog)s -h
+  python %(prog)s -w 5 --hibernate
+''')
 
-def warning(msg):
-    print '[WARNING] ' + msg + '.'
+    parser.add_argument('-s', '--sleep', dest='sleep', help='minutes to sleep', type=int, default=60)
+    parser.add_argument('--hibernate', dest='hibernate', help='choose to hibernate', action='store_true')
+    parser.add_argument('--restart', dest='restart', help='choose to restart', action='store_true')
+    parser.add_argument('--poweroff', dest='poweroff', help='choose to poweroff', action='store_true')
+    parser.add_argument('--unit', dest='unit', help='unit for sleep, default is minute', choices=['m', 's', 'h'], default='m')
 
-def error(msg):
-    print '[ERROR] ' + msg + '!'
-    quit()
+    args = parser.parse_args()
+    if len(sys.argv) <= 1:
+        parser.print_help()
 
-def cmd(msg):
-    print '[COMMAND] ' + msg
+    count = 0
+    if args.hibernate:
+        count = count + 1
+    if args.restart:
+        count = count + 1
+    if args.poweroff:
+        count = count + 1
+    if count < 1:
+        error('Please choose a rest mode')
+    if count > 1:
+        error('More than one rest mode is chosen')
 
-def execute(command):
-    cmd(command)
-    if os.system(command):
-        error('Failed to execute')
-        quit()
+
+def sleep():
+    if args.unit == 'm':
+        second = args.sleep * 60
+    elif args.unit == 'h':
+        second = args.sleep * 3600
+    else:
+        second = args.sleep
+
+    time.sleep(second)
+
 
 def rest():
     if args.hibernate:
@@ -38,49 +56,11 @@ def rest():
     if args.poweroff:
         cmd = 'shutdown.exe -s -t 0 -f'
 
-    info(time.strftime("%Y-%m-%d %X", time.localtime()))
+    info(get_datetime(format='%Y-%m-%d %X'))
     execute(cmd)
 
-def sleep():
-    time.sleep(float(args.work))
-
-def check():
-    count = 0
-    if args.hibernate:
-        count = count + 1
-
-    if args.restart:
-        count = count + 1
-
-    if args.poweroff:
-        count = count + 1
-
-    if count < 1:
-        error('Please choose a rest mode')
-
-    if count > 1:
-        error('More than one rest mode is chosen')
 
 if __name__ == '__main__':
-    # Handle options
-    parser = argparse.ArgumentParser(description = 'Script to sleep several seconds, and hibernate|restart|poweroff on Windows',
-                                     formatter_class = argparse.RawTextHelpFormatter,
-                                     epilog = '''
-examples:
-
-  python %(prog)s --hibernate
-  python %(prog)s -w 5 --hibernate
-''')
-
-    parser.add_argument('-w', '--work', dest='work', help='seconds to work', default=3600)
-    parser.add_argument('--hibernate', dest='hibernate', help='choose to hibernate', action='store_true')
-    parser.add_argument('--restart', dest='restart', help='choose to restart', action='store_true')
-    parser.add_argument('--poweroff', dest='poweroff', help='choose to poweroff', action='store_true')
-
-    args = parser.parse_args()
-
-    check()
+    handle_option()
     sleep()
     rest()
-
-
