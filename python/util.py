@@ -22,9 +22,9 @@ os_all = ['android', 'linux']
 arch_all = ['x86', 'arm']
 module_all = ['webview', 'chrome', 'content_shell']
 
-def get_datetime():
-    now = datetime.datetime.now()
-    return now.strftime("%Y%m%d%H%M%S")
+
+def get_datetime(format='%Y%m%d%H%M%S'):
+    return time.strftime(format, time.localtime())
 
 
 def info(msg):
