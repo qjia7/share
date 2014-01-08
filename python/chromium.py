@@ -181,7 +181,7 @@ def update(args):
     result = execute(cmd, abort=False, log_file=args.log_file)
 
     if host_os == 'Linux':
-        execute('sudo killall privoxy')
+        execute('sudo killall privoxy', abort=False)
 
     if result[0]:
         error('Fail to execute command: ' + cmd, error_code=result[0])
