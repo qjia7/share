@@ -428,6 +428,14 @@ function install_gyagp_precmd() {
 install_gyagp_precmd
 
 
+# Fix the locale problem
+LC_CTYPE="en_US.UTF-8"
+export LC_CTYPE
+LC_MESSAGES="en_US.UTF-8"
+export LC_MESSAGES
+LC_ALL="en_US.UTF-8"
+export LC_ALL
+
 ########## Start of git support ##########
 # Only appears if your current directory is a Git repository.
 # Shows number of commits ahead and behind upstream, as applicable.
