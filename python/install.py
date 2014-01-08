@@ -225,6 +225,8 @@ if __name__ == "__main__":
     installPackage('bison')
     installPackage('python-pip')
     installPackage('module-assistant')
+    installPackage('autoconf')
+    installPackage('automake')
     #installPackage('')
 
     installPackage('python-boto')
