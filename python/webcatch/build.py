@@ -161,6 +161,22 @@ def build_one(build_next):
     if result[0]:
         quit(result[0])
 
+    # Patch the problem disable_nacl=1
+    if rev >= 235053 and rev < 235114:
+        backup_dir(repo_dir + '/src/build')
+        execute('mv all.gyp all.gyp.bk')
+        fr = open('all.gyp.bk')
+        lines = fr.readlines()
+        fr.close()
+
+        fw = open('all.gyp', 'w')
+        for line in lines:
+            if re.search('native_client_sdk_untrusted', line):
+                continue
+            fw.write(line)
+        fw.close()
+        restore_dir()
+
     command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + repo_dir + ' --log-file ' + log_file
     result = execute(command_build, dryrun=DRYRUN, show_progress=True)
 

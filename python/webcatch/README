@@ -1,1 +1,1 @@
-[20140108 15:05:00] found that "disable_nacl=1" build was broken by checkin @235053, and fixed by @235114. So the build with @235055 was broken. From now on, all build will remove "disable_nacl=1".
+[20140108 15:05:00] found that "disable_nacl=1" build was broken by checkin @235053, and fixed by @235114. So the build with @235055 was broken. Hacked the builds [235053, 235114) with the fix in @235114.
