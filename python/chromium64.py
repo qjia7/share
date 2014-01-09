@@ -45,7 +45,7 @@ dirty_repos = [
 
 combos = ['emu64-eng', 'hsb_64-eng']
 modules_common = ['webviewchromium', 'webview', 'browser']
-modules_system = {'emu64-eng': 'emu', 'hsb_64-eng': 'hsb_64'}
+modules_system = {'emu64-eng': 'emu', 'hsb_64-eng': 'droid'}
 
 ################################################################################
 
