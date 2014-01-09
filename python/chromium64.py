@@ -87,13 +87,11 @@ examples:
   python %(prog)s -s --sync-local
   python %(prog)s --mk64
   python %(prog)s -b --build-showcommands --build-onejob
-
   python %(prog)s --dep
-  python %(prog)s --combo emu64-eng -b
-  python %(prog)s --combo hsb_64-eng -b -m hsb_64
-
-  python %(prog)s --clean -s --patch --test-build
-  python %(prog)s --scan -m all
+  python %(prog)s -c emu64-eng -b
+  python %(prog)s --test-build
+  python %(prog)s --scan -m all -c hsb_64-eng
+  python %(prog)s --clean -s --patch --mk64 -b -c hsb_64-eng -m droid
 ''')
     group_sync = parser.add_argument_group('sync')
     group_sync.add_argument('-s', '--sync', dest='sync', help='sync the repo', action='store_true')
@@ -114,7 +112,7 @@ examples:
     group_build.add_argument('--build-onejob', dest='build_onejob', help='build with one job, and stop once failure happens', action='store_true')
 
     group_other = parser.add_argument_group('other')
-    group_other.add_argument('-c', '--combo', dest='combo', help='combos, split with ","', choices=combos + ['all'], default='emu64-eng')
+    group_other.add_argument('-c', '--combo', dest='combo', help='combos, split with ","', choices=combos + ['all'], default='hsb_64-eng')
     group_other.add_argument('-m', '--module', dest='module', help='modules, split with ","', choices=modules_common + modules_system.values() + ['all'], default='webviewchromium')
     group_other.add_argument('-d', '--root-dir', dest='root_dir', help='set root directory')
     group_other.add_argument('--dep', dest='dep', help='get dep for each module', action='store_true')
@@ -152,7 +150,7 @@ def sync(force=False):
     command = 'repo sync -c -j16'
     if args.sync_local:
         command += ' -l'
-    execute(command)
+    execute(command, show_progress=True)
 
 
 def patch(force=False):
@@ -284,10 +282,8 @@ def build(force=False):
         for module in modules_build:
             command = '. ' + root_dir + '/build/envsetup.sh && lunch ' + combo + ' && '
 
-            if module == 'emu':
-                command += 'make emu suffix'
-            elif module == 'hsb_64':
-                command += 'make hsb_64 suffix'
+            if module == 'emu' or module == 'droid':
+                command += 'make ' + module + ' suffix'
             elif module == 'webviewchromium':
                 command += 'export BUILD_HOST_64bit=1 && make v8_tools_gyp_mksnapshot_x64_host_gyp suffix1 && unset BUILD_HOST_64bit && mmma external/chromium_org suffix2'
             else:
@@ -309,7 +305,7 @@ def build(force=False):
             suffix += ' 2>&1 |tee ' + root_dir + '/' + combo + '_' + module + '_log'
             command = command.replace('suffix', suffix)
             command = bashify(command)
-            execute(command, show_duration=True)
+            execute(command, show_progress=True, show_duration=True)
 
 
 def git_status():
