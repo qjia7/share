@@ -35,18 +35,25 @@ def warning(msg):
     print '[WARNING] ' + msg + '.'
 
 
-def error(msg, abort=True, error_code=256):
+def error(msg, abort=True, error_code=1):
     print "[ERROR] " + msg + "!"
     if abort:
-        quit(error_code / 256)
+        quit(error_code)
 
 
 def cmd(msg):
     print '[COMMAND] ' + msg
 
 
-def execute(command, silent=False, catch=False, abort=True, duration=False, dryrun=False, log_file=''):
-    if not silent:
+# show_command: Print command if Ture. Default to True.
+# show_duration: Report duration to execute command if True. Default to False.
+# show_progress: print stdout and stderr to console if True. Default to False.
+# return_output: Put stdout in result if True. Default to False.
+# dryrun: Do not actually run command if True. Default to False.
+# abort: Quit after execution failed if True. Default to False.
+# log_file: Print stderr to log file if existed. Default to ''.
+def execute(command, show_command=True, show_duration=False, show_progress=False, return_output=False, dryrun=False, abort=False, log_file=''):
+    if show_command:
         _cmd(command)
 
     if dryrun:
@@ -54,19 +61,30 @@ def execute(command, silent=False, catch=False, abort=True, duration=False, dryr
 
     start_time = datetime.datetime.now().replace(microsecond=0)
 
-    if log_file != '':
-        command += ' 2>&1 |tee >>' + log_file
+    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
-    if catch:
-        result = commands.getstatusoutput(command)
+    while show_progress:
+        nextline = process.stdout.readline()
+        if nextline == '' and process.poll() != None:
+            break
+        sys.stdout.write(nextline)
+        sys.stdout.flush()
+
+    (std_out, std_err) = process.communicate()
+    ret = process.returncode
+
+    if return_output:
+        result = [ret, std_out]
     else:
-        r = os.system(command)
-        result = [r, '']
+        result = [ret, '']
+
+    if log_file:
+        os.system('echo ' + std_err + ' >>' + log_file)
 
     end_time = datetime.datetime.now().replace(microsecond=0)
     time_diff = end_time - start_time
 
-    if duration:
+    if show_duration:
         info(str(time_diff) + ' was spent to execute following command: ' + command)
 
     if abort and result[0]:

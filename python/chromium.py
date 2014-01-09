@@ -178,10 +178,10 @@ def update(args):
     cmd = 'gclient ' + args.update
     if target_os == 'android':
         cmd = 'source src/build/android/envsetup.sh --target-arch=' + target_arch + ' && ' + cmd
-    result = execute(cmd, abort=False, log_file=args.log_file)
+    result = execute(cmd, log_file=args.log_file, show_progress=True)
 
     if host_os == 'Linux':
-        execute('sudo killall privoxy', abort=False)
+        execute('sudo killall privoxy')
 
     if result[0]:
         error('Fail to execute command: ' + cmd, error_code=result[0])
@@ -213,7 +213,7 @@ def build(args):
         else:
             cmd = 'build/gyp_chromium -Dwerror='
 
-        result = execute(cmd, abort=False)
+        result = execute(cmd)
         if result[0]:
             error('Fail to execute command: ' + cmd, error_code=result[0])
 
@@ -231,7 +231,7 @@ def build(args):
     else:
         ninja_cmd += ' ' + target_module
 
-    result = execute(ninja_cmd, abort=False, log_file=args.log_file)
+    result = execute(ninja_cmd, log_file=args.log_file, show_progress=True)
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
 

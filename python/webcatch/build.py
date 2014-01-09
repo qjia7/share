@@ -157,21 +157,21 @@ def build_one(build_next):
     info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
     commit = rev_commit[rev]
     repo_dir = dir_project + '/chromium-' + os
-    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + repo_dir + ' --log-file ' + log_file, abort=False, dryrun=DRYRUN)
+    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + repo_dir + ' --log-file ' + log_file, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         quit(result[0])
 
     command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + repo_dir + ' --log-file ' + log_file
-    result = execute(command_build, abort=False, dryrun=DRYRUN)
+    result = execute(command_build, dryrun=DRYRUN, show_progress=True)
 
     # Retry here
     if result[0]:
         if os == 'android':
-            execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', abort=False, dryrun=DRYRUN)
-            result = execute(command_build, abort=False, dryrun=DRYRUN)
-        if result[0]:
-            execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN)
-            result = execute(command_build, abort=False, dryrun=DRYRUN)
+            execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', dryrun=DRYRUN)
+            result = execute(command_build, dryrun=DRYRUN)
+        #if result[0]:
+        #    execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN)
+        #    result = execute(command_build, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
     comb_dir = dir_out + '/' + get_comb_name(os, arch, module)
@@ -212,11 +212,14 @@ def build_one(build_next):
                 execute('cp -rf ' + src_dir + '/' + file_name + ' ' + dest_dir_temp)
 
             backup_dir(comb_dir)
+            # It's strange some builds have full debug info
+            #size = int(OS.path.getsize(str(rev) + '/chrome'))
+            #if size > 300000000:
+            #    execute('strip ' + str(rev) + '/chrome')
             execute('tar zcf ' + str(rev) + '.tar.gz ' + str(rev))
             execute('rm -rf ' + str(rev))
             restore_dir()
 
-    print result[0]
     return result[0]
 
 
@@ -234,7 +237,7 @@ def get_rev_next(os, index):
             continue
 
         cmd = 'ls ' + dir_out + '/' + get_comb_name(os, arch, module) + '/*' + str(rev) + '*'
-        result = execute(cmd, abort=False, silent=True, catch=True)
+        result = execute(cmd, show_command=False)
         if result[0] == 0:
             continue
 
@@ -273,7 +276,7 @@ def get_build_next():
 
 
 def ensure_package(name):
-    result = execute('dpkg -l ' + name, silent=True, catch=True, abort=False)
+    result = execute('dpkg -l ' + name, show_command=False)
     if result[0]:
         error('You need to install package: ' + name)
 

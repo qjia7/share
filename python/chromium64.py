@@ -161,13 +161,13 @@ def patch(force=False):
         backup_dir(root_dir + '/' + repo)
 
         command = 'git fetch ssh://aia-review.intel.com/platform/' + repo + ' ' + change
-        execute(command, silent=True, catch=True)
-        result = execute('git show FETCH_HEAD |grep Change-Id:', catch=True, silent=True)
+        execute(command)
+        result = execute('git show FETCH_HEAD |grep Change-Id:', return_output=True, show_command=False)
 
         pattern = re.compile('Change-Id: (.*)')
         change_id = result[1]
         match = pattern.search(change_id)
-        result = execute('git log |grep ' + match.group(1), catch=True, silent=True, abort=False)
+        result = execute('git log |grep ' + match.group(1), show_command=False)
         if result[0]:
             execute('git cherry-pick FETCH_HEAD')
         else:
@@ -189,7 +189,7 @@ def clean(force=False):
 
     for repo in dirty_repos:
         backup_dir(root_dir + '/' + repo)
-        execute('git reset --hard aia/topic/64-bit/master', silent=True, catch=True)
+        execute('git reset --hard aia/topic/64-bit/master', show_command=False)
         info(repo + ' is reset to aia/topic/64-bit/master')
         restore_dir()
 
@@ -227,7 +227,7 @@ def mk64(force=False):
             x64_file = auto_x64_file.replace('target', 'target.linux-' + android_target_arch)
             x64_file = x64_file.replace('host', 'host.linux-' + android_target_arch)
             command = 'cp -f ' + auto_x64_file + ' ' + x64_file
-            execute(command, True)
+            execute(command, show_command=False)
 
             line = line.replace('target', 'target.linux-' + android_target_arch)
             line = line.replace('host', 'host.linux-' + android_target_arch)
@@ -296,7 +296,7 @@ def build(force=False):
             suffix += ' 2>&1 |tee ' + root_dir + '/' + combo + '_' + module + '_log'
             command = command.replace('suffix', suffix)
             command = bashify(command)
-            execute(command, duration=True)
+            execute(command, show_duration=True)
 
 
 def git_status():
@@ -308,7 +308,7 @@ def git_status():
 
     for repo in repos:
         backup_dir(repo)
-        result = execute('git status |grep modified', silent=True, catch=True, abort=False)
+        result = execute('git status |grep modified', show_command=False)
         if not result[0]:
             has_change = True
             repos_change.append(repo)
@@ -428,7 +428,7 @@ def scan():
         suffix += ' 2>&1 |tee ' + root_dir + '/' + module + '_scan_log'
         command = command.replace('suffix', suffix)
         command = bashify(command)
-        execute(command, duration=True, abort=False)
+        execute(command, show_duration=True)
 
 
 if __name__ == '__main__':
