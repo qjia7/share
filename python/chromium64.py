@@ -9,8 +9,6 @@ android_target_arch = ''
 chromium_target_arch = ''
 
 patches = [
-    # Patches borrowed from other groups
-
     # Patches by our own
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/00/3200/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/95/2395/2 && git checkout FETCH_HEAD',
@@ -21,9 +19,16 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/icu refs/changes/27/3027/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/openssl refs/changes/28/3028/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/29/3029/3 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/libnativehelper refs/changes/49/3049/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/system/core refs/changes/03/3203/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/frameworks/webview refs/changes/23/3523/1 && git checkout FETCH_HEAD'
+    'git fetch https://aia-review.intel.com/platform/frameworks/webview refs/changes/23/3523/2 && git checkout FETCH_HEAD',
+    # Enable build for Chromium WebView
+    'git fetch https://aia-review.intel.com/platform/build refs/changes/81/4181/1 && git checkout FETCH_HEAD',
+    # force to build v8 host tools with m64
+    'git fetch https://aia-review.intel.com/platform/build refs/changes/21/3921/1 && git checkout FETCH_HEAD',
+    # Expand the size of system image
+    'git fetch https://aia-review.intel.com/device/intel/haswell refs/changes/19/4219/1 && git checkout FETCH_HEAD',
+    # Set the code range size as the correct value on Android
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/27/4227/1 && git checkout FETCH_HEAD',
 ]
 
 dirty_repos = [
@@ -41,6 +46,7 @@ dirty_repos = [
     'frameworks/webview',
     'libnativehelper',
     'system/core',
+    'device/intel/haswell',
 ]
 
 combos = ['emu64-eng', 'hsb_64-eng']
@@ -154,14 +160,20 @@ def patch(force=False):
         return
 
     for patch in patches:
-        pattern = re.compile('platform/(.*) (.*) &&')
+        pattern = re.compile('aia-review\.intel\.com/(.*) (.*) &&')
         match = pattern.search(patch)
-        repo = match.group(1)
+        path = match.group(1)
+
+        # Handle repos like platform/build, device/intel/haswell
+        repo = path
+        if re.search('platform', repo):
+            repo = repo.replace('platform/', '')
+
         change = match.group(2)
         backup_dir(root_dir + '/' + repo)
 
-        command = 'git fetch ssh://aia-review.intel.com/platform/' + repo + ' ' + change
-        execute(command)
+        cmd_fetch = 'git fetch ssh://aia-review.intel.com/' + path + ' ' + change
+        execute(cmd_fetch, show_command=False)
         result = execute('git show FETCH_HEAD |grep Change-Id:', return_output=True, show_command=False)
 
         pattern = re.compile('Change-Id: (.*)')
@@ -169,7 +181,8 @@ def patch(force=False):
         match = pattern.search(change_id)
         result = execute('git log |grep ' + match.group(1), show_command=False)
         if result[0]:
-            execute('git cherry-pick FETCH_HEAD')
+            info('Cherry-pick: ' + cmd_fetch)
+            execute('git cherry-pick FETCH_HEAD', show_command=False)
         else:
             info('Patch has been cherry picked, so it will be skipped: ' + patch)
 
