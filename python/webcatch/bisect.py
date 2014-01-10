@@ -60,6 +60,14 @@ def setup():
     get_rev_list(rev_min, rev_max)
     #print rev_list
 
+    if os == 'linux' and module == 'chrome':
+        sandbox_file = '/usr/local/sbin/chrome-devel-sandbox'
+        if not OS.path.exists(sandbox_file):
+            error('SUID Sandbox file "' + sandbox_file + '" does not exist')
+        sandbox_env = OS.getenv('CHROME_DEVEL_SANDBOX')
+        if not sandbox_env:
+            error('SUID Sandbox environmental variable does not set')
+
 
 def is_good(rev):
     result = execute('python webmark.py --os ' + os + ' --arch ' + arch + ' --module ' + module + ' --rev ' + rev + ' --benchmark ' + benchmark)
