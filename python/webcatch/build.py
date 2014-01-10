@@ -185,9 +185,9 @@ def build_one(build_next):
         if os == 'android':
             execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', dryrun=DRYRUN)
             result = execute(command_build, dryrun=DRYRUN)
-        #if result[0]:
-        #    execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN)
-        #    result = execute(command_build, dryrun=DRYRUN)
+        if result[0]:
+            execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN)
+            result = execute(command_build, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
     comb_dir = dir_out + '/' + get_comb_name(os, arch, module)
