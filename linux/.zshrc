@@ -379,7 +379,7 @@ if [ $profile == "PROXY" ] ; then
     export https_proxy=https://proxy-shz.intel.com:911
     export ftp_proxy=ftp://proxy-shz.intel.com:21
     export socks_proxy=proxy.jf.intel.com:1080
-    export no_proxy=intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,127.0.0.0/8,134.134.0.0/16,172.16.0.0/20
+    export no_proxy=intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,127.0.0.0/8,134.134.0.0/16,172.16.0.0/20,192.168.42.0/16
 fi
 
 export PATH=$PATH:/workspace/project/depot_tools
