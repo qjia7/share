@@ -395,9 +395,9 @@ def test_build():
         return
 
     combo_orig = args.combo
-    args.combo = 'all'
+    args.combo = 'hsb_64-eng'
     module_orig = args.module
-    args.module = 'all'
+    args.module = 'droid'
 
     execute('rm -rf ' + root_dir + '/out')
     clean(force=True)
