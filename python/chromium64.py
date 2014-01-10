@@ -119,6 +119,7 @@ examples:
     group_other.add_argument('--git-status', dest='git_status', help='git status for repos', action='store_true')
     group_other.add_argument('--scan', dest='scan', help='scan code during build with static analyzer', action='store_true')
     group_other.add_argument('--test-build', dest='test_build', help='build test with all combos and modules', action='store_true')
+    group_other.add_argument('--burn-live', dest='burn_live', help='burn live image')
 
     args = parser.parse_args()
 
@@ -440,6 +441,21 @@ def scan():
         execute(command, show_duration=True)
 
 
+def burn_live():
+    if not args.burn_live:
+        return
+
+    img = 'out/target/product/hsb_64/live.img'
+    if not os.path.exists(img):
+        error('Could not find the live image to burn')
+
+    sys.stdout.write('Are you sure to burn live image to ' + args.burn_live + '? [yes/no]: ')
+    choice = raw_input().lower()
+    if choice not in ['yes', 'y']:
+        return
+
+    execute('sudo dd if=' + img + ' of=' + args.burn_live + ' && sync', show_progress=True)
+
 if __name__ == '__main__':
     handle_option()
     setup()
@@ -452,3 +468,4 @@ if __name__ == '__main__':
     dep()
     test_build()
     scan()
+    burn_live()
