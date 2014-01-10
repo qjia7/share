@@ -1,4 +1,26 @@
-[20140108 15:05:00] found that "disable_nacl=1" build was broken by checkin @235053, and fixed by @235114. So the build with @235055 was broken. Hacked the builds [235053, 235114) with the fix in @235114.
+.FAIL: Fail to build, which needs further investigation
+.TRUEFAIL: Could not build actually
+.NULL: No corresponding revision
+
+
+
+
+history:
+[20140108 15:05:00]
+found that "disable_nacl=1" build was broken by checkin @235053, and fixed by @235114. So the build with @235055 was broken. Hacked the builds [235053, 235114) with the fix in @235114.
 
 [20140110 14:01:00] The following binaries are stiped.
 233890,234265,234270,234485,234490,234495,234500,234510,234515,234520,234525,234530,234535,234540,234545,234560,234570,234600,234610,234615,234625,234630,234635,234640,234650,234655,234660,234665,234670,234675,234680,234685,234690,234695,234705,234710,234715,234720,234725,234730,234735,234740,234745,234750,234755,234765,234770,234775,234780,234785,234790,234795,234800,234815,234820,234825,234835,234840,234845,234850,234855,234865,234870,234875,234880,234885,234890,234895,234900,234905,234910,234915,234920,234925,234930,234935,234940,234945,234960,234965,234970,234975,234980,234990,235005,235015,235020,235025,235030
+
+[20140110 17:56:00]
+236727 introduced chrome/browser/component_updater/test/update_manifest_unittest.cc, which has conflict with chrome/common/extensions/update_manifest_unittest.cc.It reports following errors: '''
+bash -c "source build/android/envsetup.sh --target-arch=x86 && android_gyp -Dwerror=" would report error:
+
+static library /workspace/project/gyagp/webcatch/project/chromium-android/src/chrome/chrome.gyp:unit_tests#target has several files with the same basename:
+  update_manifest_unittest: browser/component_updater/test/update_manifest_unittest.cc common/extensions/update_manifest_unittest.cc
+Some build systems, e.g. MSVC08, cannot handle that.
+gyp: Duplicate basenames in sources section, see list above
+'''
+
+237081 fix this issue
+

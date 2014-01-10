@@ -11,6 +11,7 @@ from common import *
 
 import time
 import os as OS
+import fileinput
 
 rev_commit = {}
 
@@ -59,6 +60,7 @@ examples:
     parser.add_argument('-r', '--rev', dest='rev', help='revisions to build. E.g., 233137, 217377-225138')
     parser.add_argument('--root', dest='root_pwd', help='root password')
     parser.add_argument('--build-every', dest='build_every', help='build every number')
+    parser.add_argument('--keep-out', dest='keep_out', help='do not remove out dir after failure', action='store_true')
     args = parser.parse_args()
 
 
@@ -149,6 +151,57 @@ def build():
                 time.sleep(second)
                 update_git_info(fetch=True)
 
+# Patch the problem disable_nacl=1
+def patch_disable_nacl(os, arch, module, rev):
+    if rev < 235053 or rev >= 235114:
+        return
+
+    dir_repo = dir_project + '/chromium-' + os
+    backup_dir(dir_repo + '/src/build')
+
+    for line in fileinput.input('all.gyp', inplace=1):
+        if re.search('native_client_sdk_untrusted', line):
+            continue
+        # We can not use print here as it will generate blank line
+        sys.stdout.write(line)
+    fileinput.close()
+    restore_dir()
+
+# Fix the issue using the same way introduced by @237081
+def patch_basename(os, arch, module, rev):
+    if os != 'android' or module != 'content_shell':
+        return
+
+    if rev < 236727 or rev >= 237081:
+        return
+
+    dir_repo = dir_project + '/chromium-' + os
+    backup_dir(dir_repo + '/src/chrome')
+    file_browser = 'browser/component_updater/test/update_manifest_unittest.cc'
+    file_browser_new = file_browser.replace('update_manifest_unittest', 'component_update_manifest_unittest')
+    file_common = 'common/extensions/update_manifest_unittest.cc'
+
+    if not OS.path.exists(file_browser) or not OS.path.exists(file_common):
+        return
+
+    gypi_file = 'chrome_tests_unit.gypi'
+    for line in fileinput.input(gypi_file, inplace=1):
+        if re.search(file_browser, line):
+            line = line.replace(file_browser, file_browser_new)
+        # We can not use print here as it will generate blank line
+        sys.stdout.write(line)
+    fileinput.close()
+
+    execute('mv ' + file_browser + ' ' + file_browser_new)
+
+    restore_dir()
+
+
+# Patch the code to solve some build error problem in upstream
+def patch(os, arch, module, rev):
+    patch_disable_nacl(os, arch, module, rev)
+    patch_basename(os, arch, module, rev)
+
 
 def build_one(build_next):
     (os, arch, module, rev) = build_next
@@ -156,37 +209,23 @@ def build_one(build_next):
 
     info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
     commit = rev_commit[rev]
-    repo_dir = dir_project + '/chromium-' + os
-    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + repo_dir + ' --log-file ' + log_file, dryrun=DRYRUN, show_progress=True)
+    dir_repo = dir_project + '/chromium-' + os
+    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + dir_repo + ' --log-file ' + log_file, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         quit(result[0])
 
-    # Patch the problem disable_nacl=1
-    if rev >= 235053 and rev < 235114:
-        backup_dir(repo_dir + '/src/build')
-        execute('mv all.gyp all.gyp.bk')
-        fr = open('all.gyp.bk')
-        lines = fr.readlines()
-        fr.close()
+    patch(os, arch, module, rev)
 
-        fw = open('all.gyp', 'w')
-        for line in lines:
-            if re.search('native_client_sdk_untrusted', line):
-                continue
-            fw.write(line)
-        fw.close()
-        restore_dir()
-
-    command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + repo_dir + ' --log-file ' + log_file
+    command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --log-file ' + log_file
     result = execute(command_build, dryrun=DRYRUN, show_progress=True)
 
     # Retry here
     if result[0]:
         if os == 'android':
-            execute('sudo ' + repo_dir + '/src/build/install-build-deps-android.sh', dryrun=DRYRUN)
+            execute('sudo ' + dir_repo + '/src/build/install-build-deps-android.sh', dryrun=DRYRUN)
             result = execute(command_build, dryrun=DRYRUN)
-        if result[0]:
-            execute('rm -rf ' + repo_dir + '/src/out', dryrun=DRYRUN)
+        if result[0] and not args.keep_out:
+            execute('rm -rf ' + dir_repo + '/src/out', dryrun=DRYRUN)
             result = execute(command_build, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
@@ -195,7 +234,7 @@ def build_one(build_next):
         if result[0]:
             execute('touch ' + comb_dir + '/ContentShell@' + str(rev) + '.apk.FAIL')
         else:
-            execute('cp ' + repo_dir + '/src/out/Release/apks/ContentShell.apk ' + comb_dir + '/ContentShell@' + str(rev) + '.apk', dryrun=DRYRUN)
+            execute('cp ' + dir_repo + '/src/out/Release/apks/ContentShell.apk ' + comb_dir + '/ContentShell@' + str(rev) + '.apk', dryrun=DRYRUN)
             execute('rm -f ' + log_file)
     elif os == 'linux' and module == 'chrome':
         dest_dir = comb_dir + '/' + str(rev)
@@ -203,8 +242,8 @@ def build_one(build_next):
             execute('touch ' + dest_dir + '.FAIL')
         else:
             OS.mkdir(dest_dir)
-            src_dir = repo_dir + '/src/out/Release'
-            config_file = repo_dir + '/src/chrome/tools/build/' + os + '/FILES.cfg'
+            src_dir = dir_repo + '/src/out/Release'
+            config_file = dir_repo + '/src/chrome/tools/build/' + os + '/FILES.cfg'
             file = open(config_file)
             lines = file.readlines()
             file.close()
@@ -344,8 +383,8 @@ def update_git_info_one(os):
 def update_git_info(fetch=True):
     for os in os_info:
         if fetch:
-            repo_dir = dir_project + '/chromium-' + os
-            execute('python chromium.py -u "fetch" --root-dir ' + repo_dir, dryrun=DRYRUN)
+            dir_repo = dir_project + '/chromium-' + os
+            execute('python chromium.py -u "fetch" --root-dir ' + dir_repo, dryrun=DRYRUN)
             os_info[os][OS_INFO_INDEX_TIME] = get_time()
         update_git_info_one(os)
 
