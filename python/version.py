@@ -47,7 +47,8 @@ def set_version():
         set_version_gcc()
 
 def get_version_java():
-    java_version_result = execute('java -version', silent=True, catch=True)
+    # Output is in stderr
+    java_version_result = execute('java -version', show_command=False, return_output=True)
     match = re.match('java version "(.*)"', java_version_result[1])
     java_version = match.group(1)
 
@@ -63,7 +64,7 @@ def get_version_java():
         java_home = 'NULL'
 
     if os.path.exists(default_java_file):
-        default_java_result = execute('ls -l ' + default_java_file, silent=True, catch=True)
+        default_java_result = execute('ls -l ' + default_java_file, show_command=False, return_output=True)
         match = re.match('.*jdk(.*)', default_java_result[1])
         if match:
             default_java = match.group(1)
@@ -100,13 +101,13 @@ def set_version_java():
     execute('sudo update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/jdk' + version + '/bin/jar 50000')
     execute('sudo update-alternatives --install /usr/bin/jarsigner jarsigner /usr/lib/jvm/jdk' + version + '/bin/jarsigner 50000')
     execute('sudo update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/jdk' + version + '/bin/javadoc 50000')
-    execute('sudo update-alternatives --config javac')
-    execute('sudo update-alternatives --config java')
-    execute('sudo update-alternatives --config javaws')
-    execute('sudo update-alternatives --config javap')
-    execute('sudo update-alternatives --config jar')
-    execute('sudo update-alternatives --config jarsigner')
-    execute('sudo update-alternatives --config javadoc')
+    execute('sudo update-alternatives --config javac', interactive=True)
+    execute('sudo update-alternatives --config java', interactive=True)
+    execute('sudo update-alternatives --config javaws', interactive=True)
+    execute('sudo update-alternatives --config javap', interactive=True)
+    execute('sudo update-alternatives --config jar', interactive=True)
+    execute('sudo update-alternatives --config jarsigner', interactive=True)
+    execute('sudo update-alternatives --config javadoc', interactive=True)
 
     execute('sudo rm -f ' + default_java_file)
     execute('sudo ln -s /usr/lib/jvm/jdk' + version + ' /usr/lib/jvm/default-java')
@@ -114,7 +115,7 @@ def set_version_java():
     get_version_java()
 
 def get_version_gcc():
-    gcc_version_result = execute('ls -l ' + gcc_file, silent=True, catch=True)
+    gcc_version_result = execute('ls -l ' + gcc_file, show_command=True, return_output=True)
     match = re.match('.+gcc-(.+)', gcc_version_result[1])
     if match:
         gcc_version = match.group(1)
@@ -126,12 +127,12 @@ def get_version_gcc():
 
 def set_version_gcc():
     version = args.set_version
-    execute('sudo rm -f /usr/bin/gcc', silent=True)
-    execute('sudo ln -s /usr/bin/gcc-' + version + ' /usr/bin/gcc', silent=True)
-    execute('sudo rm -f /usr/bin/g++', silent=True)
-    execute('sudo ln -s /usr/bin/g++-' + version + ' /usr/bin/g++', silent=True)
-    execute('sudo rm -f /usr/bin/cc', silent=True)
-    execute('sudo ln -s /usr/bin/gcc /usr/bin/cc', silent=True)
+    execute('sudo rm -f /usr/bin/gcc', show_command=True)
+    execute('sudo ln -s /usr/bin/gcc-' + version + ' /usr/bin/gcc', show_command=True)
+    execute('sudo rm -f /usr/bin/g++', show_command=True)
+    execute('sudo ln -s /usr/bin/g++-' + version + ' /usr/bin/g++', show_command=True)
+    execute('sudo rm -f /usr/bin/cc', show_command=True)
+    execute('sudo ln -s /usr/bin/gcc /usr/bin/cc', show_command=True)
 
     get_version_gcc()
 

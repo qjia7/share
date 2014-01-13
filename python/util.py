@@ -1,16 +1,18 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import re
+
 import os
 import platform
 import sys
 import datetime
-import commands
 import argparse
 import subprocess
 import logging
 import time
+
+import re
+import commands
 
 formatter = logging.Formatter('[%(asctime)s - %(levelname)s] %(message)s', "%Y-%m-%d %H:%M:%S")
 host_os = platform.system()
@@ -45,14 +47,16 @@ def cmd(msg):
     print '[COMMAND] ' + msg
 
 
+# TODO: The interactive solution doesn't use subprocess now, which can not support show_progress and return_output now.
 # show_command: Print command if Ture. Default to True.
 # show_duration: Report duration to execute command if True. Default to False.
 # show_progress: print stdout and stderr to console if True. Default to False.
-# return_output: Put stdout in result if True. Default to False.
+# return_output: Put stdout and stderr in result if True. Default to False.
 # dryrun: Do not actually run command if True. Default to False.
 # abort: Quit after execution failed if True. Default to False.
 # log_file: Print stderr to log file if existed. Default to ''.
-def execute(command, show_command=True, show_duration=False, show_progress=False, return_output=False, dryrun=False, abort=False, log_file=''):
+# interactive: Need user's input if true. Default to False.
+def execute(command, show_command=True, show_duration=False, show_progress=False, return_output=False, dryrun=False, abort=False, log_file='', interactive=False):
     if show_command:
         _cmd(command)
 
@@ -61,22 +65,25 @@ def execute(command, show_command=True, show_duration=False, show_progress=False
 
     start_time = datetime.datetime.now().replace(microsecond=0)
 
-    process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-
-    while show_progress:
-        nextline = process.stdout.readline()
-        if nextline == '' and process.poll() != None:
-            break
-        sys.stdout.write(nextline)
-        sys.stdout.flush()
-
-    (std_out, std_err) = process.communicate()
-    ret = process.returncode
-
-    if return_output:
-        result = [ret, std_out]
+    if interactive:
+        ret = os.system(command)
+        result = [ret / 256, '']
     else:
-        result = [ret, '']
+        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        while show_progress:
+            nextline = process.stdout.readline()
+            if nextline == '' and process.poll() != None:
+                break
+            sys.stdout.write(nextline)
+            sys.stdout.flush()
+
+        (out, err) = process.communicate()
+        ret = process.returncode
+
+        if return_output:
+            result = [ret, out + err]
+        else:
+            result = [ret, '']
 
     if log_file:
         os.system('echo ' + std_err + ' >>' + log_file)
