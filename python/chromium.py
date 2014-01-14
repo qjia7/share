@@ -209,7 +209,7 @@ def build(args):
     if build_clean:
         if target_os == 'android':
             # We can't omit this step as android_gyp is a built-in command, instead of environmental variable.
-            cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror=')
+            cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror= -Duse_goma=0')
         else:
             cmd = 'build/gyp_chromium -Dwerror='
 
