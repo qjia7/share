@@ -5,7 +5,7 @@ import os as OS
 
 # Define result for good rev
 benchmarks = {
-    'cocos': ['>100']
+    'cocos': ['>20']
 }
 
 os = ''
@@ -28,9 +28,9 @@ examples:
   python %(prog)s -g 218527 -b 226662 --benchmark cocos
 
 ''')
-    parser.add_argument('--os', dest='os', help='os', choices=os_all, default='linux')
+    parser.add_argument('--os', dest='os', help='os', choices=os_all, default='android')
     parser.add_argument('--arch', dest='arch', help='arch', choices=arch_all, default='x86')
-    parser.add_argument('--module', dest='module', help='module', choices=module_all, default='chrome')
+    parser.add_argument('--module', dest='module', help='module', choices=module_all, default='content_shell')
     parser.add_argument('--benchmark', dest='benchmark', help='benchmark', required=True)
     parser.add_argument('-g', '--good-rev', dest='good_rev', type=int, help='small revision, which is good')
     parser.add_argument('-b', '--bad-rev', dest='bad_rev', type=int, help='big revision, which is bad')
@@ -39,7 +39,7 @@ examples:
 
 
 def setup():
-    global os, arch, module, comb_name, benchmark
+    global os, arch, module, comb_name, benchmark, dir_out
 
     os = args.os
     arch = args.arch
@@ -69,13 +69,24 @@ def setup():
             error('SUID Sandbox environmental variable does not set')
 
 
+def parse_result(benchmark, output):
+    # Result is in format: result is [1,2,3]
+    results = []
+    pattern = re.compile('result is \[(.*)\]')
+    match = pattern.search(output)
+    if match:
+        results = match.group(1).split(',')
+    return results
+
 def is_good(rev):
-    result = execute('python webmark.py --os ' + os + ' --arch ' + arch + ' --module ' + module + ' --rev ' + rev + ' --benchmark ' + benchmark)
-    if result[0]:
+    r = execute('python ../webmark/webmark.py --os ' + os + ' --arch ' + arch + ' --module-name ' + module + ' --module-path ' + dir_out + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk' + ' --benchmark ' + benchmark, return_output=True)
+    if r[0]:
         error('Failed to run benchmark ' + benchmark + ' with revision ' + str(rev))
 
-    for index, score in enumerate(result[1]):
-        condition = score + benchmarks[benchmark][index]
+    results = parse_result(benchmark, r[1])
+
+    for index, result in enumerate(results):
+        condition = result + benchmarks[benchmark][index]
         if not eval(condition):
             info(str(rev) + ': Bad')
             return False
@@ -84,20 +95,68 @@ def is_good(rev):
     return True
 
 
+def get_commit(rev_good, rev_bad):
+    backup_dir(dir_root + '/project/chromium-' + os + '/src')
+    execute('git log origin master >git_log', show_command=False)
+    file = open('git_log')
+    lines = file.readlines()
+    file.close()
+
+    pattern_commit = re.compile('^commit (.*)')
+    pattern_rev = re.compile('git-svn-id: .*@(.*) (.*)')
+    need_print = False
+    suspect_log = dir_log + '/suspect.log'
+    for line in lines:
+        match = pattern_commit.search(line)
+        if match:
+            commit = match.group(1)
+            if need_print:
+                execute('git show ' + commit + ' >>' + suspect_log, show_command=False)
+
+        match = pattern_rev.search(line)
+        if match:
+            rev = int(match.group(1))
+
+            if rev <= rev_good:
+                break
+
+            if rev > rev_bad:
+                continue
+
+            if not need_print:
+                need_print = True
+                execute('git show ' + commit + ' >>' + suspect_log, show_command=False)
+
+    info('Check ' + suspect_log + ' for suspected checkins')
+    restore_dir()
+
+
 def bisect(index_good, index_bad, check_boundry=False):
     rev_good = rev_list[index_good]
     rev_bad = rev_list[index_bad]
 
     if check_boundry:
         if not is_good(rev_good):
-            error('Revision ' + str(rev_good) + 'should not be bad')
+            error('Revision ' + str(rev_good) + ' should not be bad')
 
         if is_good(rev_bad):
             error('Revision ' + str(rev_bad) + ' should not be good')
 
     #print 'index_good:' + str(index_good) + ' index_bad:' + str(index_bad)
     if index_good + 1 == index_bad:
-        info('Revision ' + str(rev_bad) + ' is the exact commit for regression')
+        rev_good_final = rev_list[index_good]
+        rev_bad_final = rev_list[index_bad]
+
+        if rev_good_final + 1 == rev_bad_final:
+            info('Revision ' + str(rev_bad) + ' is the exact commit for regression')
+        else:
+            info('The regression is between revisions (' + rev_list[index_good] + ',' + rev_list[index_bad] + '], but there is no build for further investigation')
+
+        if rev_bad_final - rev_good_final < 15:
+            get_commit(rev_good_final, rev_bad_final)
+        else:
+            info('There are too many checkins in between, please manually check the checkin info')
+
         exit(0)
 
     index_mid = (index_good + index_bad) / 2
