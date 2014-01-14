@@ -6,6 +6,13 @@
 # android_content_shell: 25/hour
 # linux_chrome: 30/hour
 
+# build:
+# linux-x86-chrome: rev.tar.gz, rev.FAIL, rev.NULL
+# android-x86-content_shell: rev.apk, rev.FAIL, rev.NULL. Finished: 235194-238638
+
+# Build master: host all the builds.
+# Build slave: ssh-keygen && ssh-add ~/.ssh/id_rsa. And copy ~/.ssh/id_rsa.pub to ~/.ssh/authorized_keys on host
+
 from util import *
 from common import *
 
@@ -39,6 +46,7 @@ fail_number = 0
 FAIL_NUMBER_MAX = 3
 
 build_every = 1
+
 ################################################################################
 
 
@@ -122,9 +130,9 @@ def setup():
         for build in os_info[os][OS_INFO_INDEX_BUILD]:
             arch = build[OS_INFO_INDEX_BUILD_ARCH]
             module = build[OS_INFO_INDEX_BUILD_MODULE]
-            comb_dir = dir_out + '/' + get_comb_name(os, arch, module)
-            if not OS.path.exists(comb_dir):
-                OS.mkdir(comb_dir)
+            dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
+            if not OS.path.exists(dir_comb):
+                OS.mkdir(dir_comb)
 
     if args.build_every:
         build_every = int(args.build_every)
@@ -203,20 +211,31 @@ def patch(os, arch, module, rev):
     patch_basename(os, arch, module, rev)
 
 
+def move_to_server(file, os, arch, module):
+    dir_comb_server = dir_out_server + '/' + get_comb_name(os, arch, module)
+    execute('scp ' + file + ' ' + server + ':' + dir_comb_server)
+    execute('rm -f ' + file)
+
+
 def build_one(build_next):
     (os, arch, module, rev) = build_next
-    log_file = dir_log + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
 
     info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
+    file_log = dir_log + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
+
+    file_lock = dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.LOCK'
+    execute('ssh ' + server + ' touch ' + file_lock)
+
     commit = rev_commit[rev]
     dir_repo = dir_project + '/chromium-' + os
-    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + dir_repo + ' --log-file ' + log_file, dryrun=DRYRUN, show_progress=True)
+    result = execute('python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + dir_repo + ' --log-file ' + file_log, dryrun=DRYRUN, show_progress=True)
+
     if result[0]:
-        quit(result[0])
+        error('Sync failed', error_code=result[0])
 
     patch(os, arch, module, rev)
 
-    command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --log-file ' + log_file
+    command_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --log-file ' + file_log
     result = execute(command_build, dryrun=DRYRUN, show_progress=True)
 
     # Retry here
@@ -229,17 +248,20 @@ def build_one(build_next):
             result = execute(command_build, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
-    comb_dir = dir_out + '/' + get_comb_name(os, arch, module)
+    dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
     if os == 'android' and module == 'content_shell':
         if result[0]:
-            execute('touch ' + comb_dir + '/ContentShell@' + str(rev) + '.apk.FAIL')
+            file_final = dir_comb + '/' + str(rev) + '.FAIL'
+            execute('touch ' + file_final)
         else:
-            execute('cp ' + dir_repo + '/src/out/Release/apks/ContentShell.apk ' + comb_dir + '/ContentShell@' + str(rev) + '.apk', dryrun=DRYRUN)
-            execute('rm -f ' + log_file)
+            file_final = dir_comb + '/' + str(rev) + '.apk'
+            execute('cp ' + dir_repo + '/src/out/Release/apks/ContentShell.apk ' + file_final, dryrun=DRYRUN)
+            execute('rm -f ' + file_log)
     elif os == 'linux' and module == 'chrome':
-        dest_dir = comb_dir + '/' + str(rev)
+        dest_dir = dir_comb + '/' + str(rev)
         if result[0]:
-            execute('touch ' + dest_dir + '.FAIL')
+            file_final = dest_dir + '.FAIL'
+            execute('touch ' + file_final)
         else:
             OS.mkdir(dest_dir)
             src_dir = dir_repo + '/src/out/Release'
@@ -266,14 +288,20 @@ def build_one(build_next):
                 # Some are just dir, so we need -r option
                 execute('cp -rf ' + src_dir + '/' + file_name + ' ' + dest_dir_temp)
 
-            backup_dir(comb_dir)
+            backup_dir(dir_comb)
             # It's strange some builds have full debug info
             #size = int(OS.path.getsize(str(rev) + '/chrome'))
             #if size > 300000000:
             #    execute('strip ' + str(rev) + '/chrome')
             execute('tar zcf ' + str(rev) + '.tar.gz ' + str(rev))
             execute('rm -rf ' + str(rev))
+            execute('rm -f ' + file_log)
             restore_dir()
+
+            file_final = dir_comb + '/' + str(rev) + '.tar.gz'
+
+    move_to_server(file_final, os, arch, module)
+    execute('ssh ' + server + ' rm -f ' + file_lock)
 
     return result[0]
 
@@ -291,9 +319,10 @@ def get_rev_next(os, index):
         if not rev % build_every == 0:
             continue
 
-        cmd = 'ls ' + dir_out + '/' + get_comb_name(os, arch, module) + '/*' + str(rev) + '*'
-        result = execute(cmd, show_command=False)
+        cmd_remote = 'ssh ' + server + ' ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*'
+        result = execute(cmd_remote, show_command=False)
         if result[0] == 0:
+            info(str(rev) + ' has been built')
             continue
 
         # Does not exist from here
@@ -302,12 +331,11 @@ def get_rev_next(os, index):
             return rev
 
         # Handle invalid revision number here. TODO: Need to handle other comb.
-        if os == 'android' and module == 'content_shell':
-            execute('touch ' + dir_out + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk.NULL')
-        elif os == 'linux' and module == 'chrome':
-            info(str(rev) + ' does not exist')
-            execute('touch ' + dir_out + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.NULL')
-
+        dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
+        file_final = dir_comb + '/' + str(rev) + '.NULL'
+        info(str(rev) + ' does not exist')
+        execute('touch ' + file_final)
+        move_to_server(file_final, os, arch, module)
     return rev_max + 1
 
 

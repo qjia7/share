@@ -3,9 +3,12 @@ dir_out = dir_root + '/out'
 dir_project = dir_root + '/project'
 dir_log = dir_root + '/log'
 
+server = 'ubuntu-ygu5-02'
+dir_out_server = '/workspace/service/webcatch/out'
+
 comb_valid = {
-    ('android', 'x86', 'content_shell'): 'ContentShell@(.*).apk',
-    ('linux', 'x86', 'chrome'): '(.*).tar.gz',
+    ('android', 'x86', 'content_shell'): 'ContentShell@(.*).apk$',
+    ('linux', 'x86', 'chrome'): '(.*).tar.gz$',
     #['android', 'arm', 'content_shell'],
 
 }
