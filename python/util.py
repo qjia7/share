@@ -86,7 +86,7 @@ def execute(command, show_command=True, show_duration=False, show_progress=False
             result = [ret, '']
 
     if log_file:
-        os.system('echo ' + std_err + ' >>' + log_file)
+        os.system('echo ' + err + ' >>' + log_file)
 
     end_time = datetime.datetime.now().replace(microsecond=0)
     time_diff = end_time - start_time
