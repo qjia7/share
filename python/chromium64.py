@@ -454,7 +454,7 @@ def burn_live():
     if choice not in ['yes', 'y']:
         return
 
-    execute('sudo dd if=' + img + ' of=' + args.burn_live + ' && sync', show_progress=True)
+    execute('sudo dd if=' + img + ' of=' + args.burn_live + ' && sync', interactive=True)
 
 if __name__ == '__main__':
     handle_option()
