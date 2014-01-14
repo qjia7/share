@@ -24,3 +24,5 @@ gyp: Duplicate basenames in sources section, see list above
 
 237081 fix this issue
 
+[20140114 23:55:00]
+@238630 introduces the usage of gomacc for distributed building, but I couldn't find it. Just disable it using 'android_gyp -Duse_goma=0'.
