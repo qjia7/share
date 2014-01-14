@@ -715,6 +715,7 @@ complete () {
         fi
 }
 
+export JAVA_HOME=/usr/lib/jvm/jdk1.6.0_45
 export PATH=$PATH:$JAVA_HOME/bin
 
 # machine specific configuration
