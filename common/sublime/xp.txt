@@ -1,5 +1,5 @@
 *
-.config/sublime-text-2/Packages/SublimeLinter/sublimelinter/modules/libs/pyflakes/message.py
+~/.config/sublime-text-2/Packages/SublimeLinter/sublimelinter/modules/libs/pyflakes/message.py
 Change
 self.lineno = loc.lineno
 To
