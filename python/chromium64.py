@@ -29,6 +29,10 @@ patches = [
     'git fetch https://aia-review.intel.com/device/intel/haswell refs/changes/19/4219/1 && git checkout FETCH_HEAD',
     # Set the code range size as the correct value on Android
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/27/4227/1 && git checkout FETCH_HEAD',
+    # 64bit: gold has default alignment as 2M for PT_LOAD segment for 64bit
+    'git fetch https://aia-review.intel.com/platform/build refs/changes/93/4393/1 && git checkout FETCH_HEAD',
+    # kernel: Give more memory range out for 2G- trick
+    'git fetch https://aia-review.intel.com/kernel/intel-uefi refs/changes/59/4459/1 && git checkout FETCH_HEAD',
 ]
 
 dirty_repos = [
@@ -47,6 +51,7 @@ dirty_repos = [
     'libnativehelper',
     'system/core',
     'device/intel/haswell',
+    'linux/kernel-uefi',
 ]
 
 combos = ['emu64-eng', 'hsb_64-eng']
@@ -91,6 +96,7 @@ examples:
   python %(prog)s -c emu64-eng -b
   python %(prog)s --test-build
   python %(prog)s --scan -m all -c hsb_64-eng
+  python %(prog)s --burn-live /dev/sdc
   python %(prog)s --clean -s --patch --mk64 -b -c hsb_64-eng -m droid
 ''')
     group_sync = parser.add_argument_group('sync')
@@ -151,7 +157,9 @@ def sync(force=False):
     command = 'repo sync -c -j16'
     if args.sync_local:
         command += ' -l'
-    execute(command, show_progress=True)
+    result = execute(command, show_progress=True)
+    if result[0]:
+        error('sync failed', error_code=result[0])
 
 
 def patch(force=False):
@@ -165,15 +173,20 @@ def patch(force=False):
 
         # Handle repos like platform/build, device/intel/haswell
         repo = path
-        if re.search('platform', repo):
+        if re.search('^platform', repo):
             repo = repo.replace('platform/', '')
+
+        repo = repo.replace('kernel/intel-uefi', 'linux/kernel-uefi')
 
         change = match.group(2)
         backup_dir(root_dir + '/' + repo)
 
         cmd_fetch = 'git fetch ssh://aia-review.intel.com/' + path + ' ' + change
-        execute(cmd_fetch, show_command=False)
-        result = execute('git show FETCH_HEAD |grep Change-Id:', return_output=True, show_command=False)
+        result = execute(cmd_fetch, show_command=True)
+        if result[0]:
+            error('Failed to execute command ' + cmd_fetch, error_code=result[0])
+
+        result = execute('git show FETCH_HEAD |grep Change-Id:', return_output=True, show_command=True)
 
         pattern = re.compile('Change-Id: (.*)')
         change_id = result[1]
