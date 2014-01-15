@@ -9,15 +9,17 @@ android_target_arch = ''
 chromium_target_arch = ''
 
 patches = [
-    # Patches by our own
+    # Expand the size of system image
+    'git fetch https://aia-review.intel.com/device/intel/haswell refs/changes/19/4219/1 && git checkout FETCH_HEAD',
+    # kernel: Give more memory range out for 2G- trick
+    'git fetch https://aia-review.intel.com/kernel/intel-uefi refs/changes/59/4459/1 && git checkout FETCH_HEAD',
+    # fundamental
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/00/3200/1 && git checkout FETCH_HEAD',
-    # v8
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/29/3029/4 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/27/4227/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/78/4578/1 && git checkout FETCH_HEAD',
-    # third_party
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/icu refs/changes/27/3027/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/openssl refs/changes/28/3028/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/build refs/changes/81/4181/1 && git checkout FETCH_HEAD', # Enable build for Chromium WebView
+    'git fetch https://aia-review.intel.com/platform/build refs/changes/21/3921/1 && git checkout FETCH_HEAD', # force to build v8 host tools with m64
+    'git fetch https://aia-review.intel.com/platform/build refs/changes/93/4393/1 && git checkout FETCH_HEAD', # Set the code range size as the correct value on Android, 64bit: gold has default alignment as 2M for PT_LOAD segment for 64bit
     # chromium_org
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/95/2395/2 && git checkout FETCH_HEAD', # build/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/94/3194/5 && git checkout FETCH_HEAD', # build/
@@ -34,46 +36,43 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/66/4566/1 && git checkout FETCH_HEAD', # sandbox/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/77/4577/1 && git checkout FETCH_HEAD', # media/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/57/3357/3 && git checkout FETCH_HEAD', # media/
+    # third_party
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/icu refs/changes/27/3027/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/openssl refs/changes/28/3028/1 && git checkout FETCH_HEAD',
+    # v8
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/29/3029/4 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/27/4227/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/78/4578/1 && git checkout FETCH_HEAD',
     # misc
-    'git fetch https://aia-review.intel.com/platform/system/core refs/changes/03/3203/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/frameworks/av refs/changes/94/4594/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/frameworks/base refs/changes/93/4593/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/frameworks/webview refs/changes/23/3523/3 && git checkout FETCH_HEAD',
-    # Enable build for Chromium WebView
-    'git fetch https://aia-review.intel.com/platform/build refs/changes/81/4181/1 && git checkout FETCH_HEAD',
-    # force to build v8 host tools with m64
-    'git fetch https://aia-review.intel.com/platform/build refs/changes/21/3921/1 && git checkout FETCH_HEAD',
-    # Expand the size of system image
-    'git fetch https://aia-review.intel.com/device/intel/haswell refs/changes/19/4219/1 && git checkout FETCH_HEAD',
-    # Set the code range size as the correct value on Android
-    # 64bit: gold has default alignment as 2M for PT_LOAD segment for 64bit
-    'git fetch https://aia-review.intel.com/platform/build refs/changes/93/4393/1 && git checkout FETCH_HEAD',
-    # kernel: Give more memory range out for 2G- trick
-    'git fetch https://aia-review.intel.com/kernel/intel-uefi refs/changes/59/4459/1 && git checkout FETCH_HEAD',
-    # int64_t fixes
-    'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/system/core refs/changes/03/3203/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/system/netd refs/changes/86/4586/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/system/vold refs/changes/89/4589/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/frameworks/base refs/changes/93/4593/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/frameworks/av refs/changes/94/4594/1 && git checkout FETCH_HEAD',
 ]
 
 dirty_repos = [
     # Repos that possible ever patched. This list is not consistent with
     # patches, it will list all patched repos in histroy.
     'bionic',
+    'bootable/iago',
     'build',
+    'device/intel/haswell',
     'external/chromium',
     'external/chromium_org',
     'external/chromium_org/third_party/icu',
     'external/chromium_org/third_party/openssl',
     'external/chromium_org/v8',
     'frameworks/av',
+    'frameworks/base',
     'frameworks/native',
     'frameworks/webview',
     'libnativehelper',
-    'system/core',
-    'device/intel/haswell',
     'linux/kernel-uefi',
+    'system/core',
+    'system/netd',
+    'system/vold',
 ]
 
 combos = ['emu64-eng', 'hsb_64-eng']
