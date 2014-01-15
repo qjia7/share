@@ -309,6 +309,20 @@ def build_one(build_next):
     return result[0]
 
 
+def rev_is_built(os, arch, module, rev):
+    cmd_remote = 'ssh ' + server + ' ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*'
+    result = execute(cmd_remote, show_command=False)
+    if result[0] == 0:
+        return True
+
+    rev_min = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MIN]
+    rev_max = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MAX]
+    if rev >= rev_min and rev <= rev_max:
+        return True
+
+    return False
+
+
 def get_rev_next(os, index):
     arch = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_ARCH]
     module = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_MODULE]
@@ -322,9 +336,7 @@ def get_rev_next(os, index):
         if not rev % build_every == 0:
             continue
 
-        cmd_remote = 'ssh ' + server + ' ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*'
-        result = execute(cmd_remote, show_command=False)
-        if result[0] == 0:
+        if rev_is_built(os, arch, module, rev):
             info(str(rev) + ' has been built')
             continue
 

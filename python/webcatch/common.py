@@ -6,12 +6,15 @@ dir_log = dir_root + '/log'
 server = 'ubuntu-ygu5-02'
 dir_out_server = '/workspace/service/webcatch/out'
 
+# comb: [binary_format, rev_min_built, rev_max_built]
 comb_valid = {
-    ('android', 'x86', 'content_shell'): 'ContentShell@(.*).apk$',
-    ('linux', 'x86', 'chrome'): '(.*).tar.gz$',
+    ('android', 'x86', 'content_shell'): ['(.*).apk$', 233137, 233378],  # 241271-
+    ('linux', 'x86', 'chrome'): ['(.*).tar.gz$', 0, 233136]
     #['android', 'arm', 'content_shell'],
-
 }
+COMB_VALID_INDEX_FORMAT = 0
+COMB_VALID_INDEX_REV_MIN = 1
+COMB_VALID_INDEX_REV_MAX = 2
 
 # major -> svn rev, git commit, build. major commit is after build commit.
 # To get this, search 'The atomic number' in 'git log origin master chrome/VERSION'
@@ -25,6 +28,7 @@ ver_info = {
 VERSION_INFO_INDEX_REV = 0
 # revision range to care about
 rev_default = [ver_info[31][VERSION_INFO_INDEX_REV], 999999]
+
 
 def get_comb_name(os, arch, module):
     return os + '-' + arch + '-' + module
