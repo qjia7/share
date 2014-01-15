@@ -47,6 +47,10 @@ def cmd(msg):
     print '[COMMAND] ' + msg
 
 
+# Used for debug, so that it can be cleaned up easily
+def debug(msg):
+    print '[DEBUG] ' + msg
+
 # TODO: The interactive solution doesn't use subprocess now, which can not support show_progress and return_output now.
 # show_command: Print command if Ture. Default to True.
 # show_duration: Report duration to execute command if True. Default to False.
