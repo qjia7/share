@@ -51,6 +51,7 @@ def cmd(msg):
 def debug(msg):
     print '[DEBUG] ' + msg
 
+
 # TODO: The interactive solution doesn't use subprocess now, which can not support show_progress and return_output now.
 # show_command: Print command if Ture. Default to True.
 # show_duration: Report duration to execute command if True. Default to False.
@@ -76,7 +77,7 @@ def execute(command, show_command=True, show_duration=False, show_progress=False
         process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         while show_progress:
             nextline = process.stdout.readline()
-            if nextline == '' and process.poll() != None:
+            if nextline == '' and process.poll() is not None:
                 break
             sys.stdout.write(nextline)
             sys.stdout.flush()
