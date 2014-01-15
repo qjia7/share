@@ -23,7 +23,9 @@ import fileinput
 rev_commit = {}
 
 # os -> [build, fetch_time, rev_min, rev_max, rev_git_max]
-# build -> [[arch, module, build_next]]
+# build -> [[arch, module, build_next], [arch, module, build_next]]
+# Example: {'android': [[['x86', 'webview', 100000], ['x86', 'content_shell', 200000]], 20140115, 10000, 999999, 150000]}
+
 os_info = {}
 OS_INFO_INDEX_BUILD = 0
 OS_INFO_INDEX_TIME = 1
@@ -159,6 +161,7 @@ def build():
                 time.sleep(second)
                 update_git_info(fetch=True)
 
+
 # Patch the problem disable_nacl=1
 def patch_disable_nacl(os, arch, module, rev):
     if rev < 235053 or rev >= 235114:
@@ -174,6 +177,7 @@ def patch_disable_nacl(os, arch, module, rev):
         sys.stdout.write(line)
     fileinput.close()
     restore_dir()
+
 
 # Fix the issue using the same way introduced by @237081
 def patch_basename(os, arch, module, rev):
@@ -281,7 +285,6 @@ def build_one(build_next):
 
             for file_name in files:
                 dest_dir_temp = OS.path.dirname(dest_dir + '/' + file_name)
-                print file_name
                 if not OS.path.exists(dest_dir_temp):
                     execute('mkdir -p ' + dest_dir_temp)
 
@@ -339,6 +342,7 @@ def get_rev_next(os, index):
     return rev_max + 1
 
 
+# Get the smallest revision from all targeted builds
 def get_build_next():
     is_base = True
     for os in os_info:
@@ -346,15 +350,19 @@ def get_build_next():
             arch = comb[0]
             module = comb[1]
             rev_next_temp = get_rev_next(os, index)
-            os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_NEXT] = rev_next_temp
+
+            if is_base or rev_next_temp < rev_next:
+                os_next = os
+                arch_next = arch
+                module_next = module
+                rev_next = rev_next_temp
+                index_next = index
+
             if is_base:
                 is_base = False
-                rev_next = rev_next_temp
-                build_next = [os, arch, module, rev_next]
-            elif rev_next_temp < rev_next:
-                rev_next = rev_next_temp
-                build_next = [os, arch, module, rev_next]
 
+    os_info[os_next][OS_INFO_INDEX_BUILD][index_next][OS_INFO_INDEX_BUILD_NEXT] = rev_next + 1
+    build_next = [os_next, arch_next, module_next, rev_next]
     return build_next
 
 
