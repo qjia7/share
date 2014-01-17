@@ -17,24 +17,33 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/00/3200/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/bootable/userfastboot refs/changes/04/4804/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/build refs/changes/81/4181/1 && git checkout FETCH_HEAD', # Enable build for Chromium WebView
     'git fetch https://aia-review.intel.com/platform/build refs/changes/21/3921/1 && git checkout FETCH_HEAD', # force to build v8 host tools with m64
     'git fetch https://aia-review.intel.com/platform/build refs/changes/93/4393/1 && git checkout FETCH_HEAD', # Set the code range size as the correct value on Android, 64bit: gold has default alignment as 2M for PT_LOAD segment for 64bit
     # chromium_org
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/95/2395/2 && git checkout FETCH_HEAD', # build/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/94/3194/5 && git checkout FETCH_HEAD', # build/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/56/4556/1 && git checkout FETCH_HEAD', # base/android/jni_generator/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/57/4557/1 && git checkout FETCH_HEAD', # base/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/58/4558/1 && git checkout FETCH_HEAD', # net/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/59/4559/1 && git checkout FETCH_HEAD', # ui/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/60/4560/1 && git checkout FETCH_HEAD', # android_webview/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/61/4561/2 && git checkout FETCH_HEAD', # content/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/62/4562/1 && git checkout FETCH_HEAD', # chrome/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/92/4792/1 && git checkout FETCH_HEAD', # base/android/jni_generator/ upstream r226503
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/93/4793/1 && git checkout FETCH_HEAD', # base/android/jni_generator/ upstream r232858
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/56/4556/2 && git checkout FETCH_HEAD', # base/android/jni_generator/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/94/4794/1 && git checkout FETCH_HEAD', # base/ upstream r234212
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/95/4795/1 && git checkout FETCH_HEAD', # base/ upstream r235725
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/57/4557/2 && git checkout FETCH_HEAD', # base/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/96/4796/1 && git checkout FETCH_HEAD', # net/ upstream r234285
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/58/4558/2 && git checkout FETCH_HEAD', # net/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/97/4797/2 && git checkout FETCH_HEAD', # ui/ upstream r234312
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/98/4798/1 && git checkout FETCH_HEAD', # android_webview/ upstream r237788
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/60/4560/2 && git checkout FETCH_HEAD', # android_webview/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/02/4802/3 && git checkout FETCH_HEAD', # content/ upstream r235815
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/61/4561/6 && git checkout FETCH_HEAD', # content/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/01/4801/1 && git checkout FETCH_HEAD', # chrome/ upstream r236536
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/62/4562/2 && git checkout FETCH_HEAD', # chrome/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/63/4563/1 && git checkout FETCH_HEAD', # components/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/64/4564/1 && git checkout FETCH_HEAD', # native_test/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/65/4565/1 && git checkout FETCH_HEAD', # sync/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/00/4800/1 && git checkout FETCH_HEAD', # testing/android/native_test/ upstream r234513
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/99/4799/1 && git checkout FETCH_HEAD', # sync/ upstream r234804
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/66/4566/1 && git checkout FETCH_HEAD', # sandbox/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/77/4577/1 && git checkout FETCH_HEAD', # media/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/77/4577/1 && git checkout FETCH_HEAD', # media/ upstream r234278
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/57/3357/3 && git checkout FETCH_HEAD', # media/
     # third_party
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/icu refs/changes/27/3027/1 && git checkout FETCH_HEAD',
