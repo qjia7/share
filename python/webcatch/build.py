@@ -23,7 +23,7 @@ import fileinput
 rev_commit = {}
 
 # os -> [build, fetch_time, rev_min, rev_max, rev_git_max]
-# build -> [[arch, module, build_next], [arch, module, build_next]]
+# build -> [[arch, module, rev_next], [arch, module, rev_next]]
 # Example: {'android': [[['x86', 'webview', 100000], ['x86', 'content_shell', 200000]], 20140115, 10000, 999999, 150000]}
 
 os_info = {}
@@ -35,12 +35,14 @@ OS_INFO_INDEX_REV_GIT = 4
 
 OS_INFO_INDEX_BUILD_ARCH = 0
 OS_INFO_INDEX_BUILD_MODULE = 1
-OS_INFO_INDEX_BUILD_NEXT = 2
+OS_INFO_INDEX_BUILD_REV_NEXT = 2
 
+# build_next = [os, arch, module, rev_next, index_next]
 BUILD_NEXT_INDEX_OS = 0
 BUILD_NEXT_INDEX_ARCH = 1
 BUILD_NEXT_INDEX_MODULE = 2
-BUILD_NEXT_INDEX_REV = 3
+BUILD_NEXT_INDEX_REV_NEXT = 3
+BUILD_NEXT_INDEX_INDEX_NEXT = 4
 
 DRYRUN = False
 
@@ -48,6 +50,8 @@ fail_number = 0
 FAIL_NUMBER_MAX = 3
 
 build_every = 1
+
+time_sleep_default = 1800
 
 ################################################################################
 
@@ -146,20 +150,33 @@ def build():
     global fail_number
     while True:
         build_next = get_build_next()
-        if build_next[BUILD_NEXT_INDEX_REV] in rev_commit:
+        os_next = build_next[BUILD_NEXT_INDEX_OS]
+        rev_next = build_next[BUILD_NEXT_INDEX_REV_NEXT]
+        index_next = build_next[BUILD_NEXT_INDEX_INDEX_NEXT]
+        if rev_next in rev_commit:
+            os_info[os_next][OS_INFO_INDEX_BUILD][index_next][OS_INFO_INDEX_BUILD_REV_NEXT] = rev_next + 1
             result = build_one(build_next)
             if result:
                 fail_number += 1
                 if fail_number >= FAIL_NUMBER_MAX:
                     error('You have reached maximum failure number')
         else:
-            if args.rev:
+            os = build_next[BUILD_NEXT_INDEX_OS]
+            rev_max = os_info[os][OS_INFO_INDEX_REV_MAX]
+            if rev_next > rev_max:
                 return
+
+            time_fetch = os_info[os][OS_INFO_INDEX_TIME]
+            time_diff = get_time() - time_fetch
+
+            if time_diff < time_sleep_default:
+                time_sleep = time_sleep_default - time_diff
             else:
-                second = 3600
-                info('Sleeping ' + str(second) + ' seconds...')
-                time.sleep(second)
-                update_git_info(fetch=True)
+                time_sleep = time_sleep_default
+
+            info('Sleeping ' + str(time_sleep) + ' seconds...')
+            time.sleep(time_sleep)
+            update_git_info(fetch=True)
 
 
 # Patch the problem disable_nacl=1
@@ -222,7 +239,7 @@ def move_to_server(file, os, arch, module):
 
 
 def build_one(build_next):
-    (os, arch, module, rev) = build_next
+    (os, arch, module, rev, index) = build_next
 
     info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
     file_log = dir_log + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
@@ -326,7 +343,7 @@ def rev_is_built(os, arch, module, rev):
 def get_rev_next(os, index):
     arch = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_ARCH]
     module = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_MODULE]
-    rev_next = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_NEXT]
+    rev_next = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_REV_NEXT]
     rev_max = os_info[os][OS_INFO_INDEX_REV_MAX]
     rev_git = os_info[os][OS_INFO_INDEX_REV_GIT]
     for rev in range(rev_next, rev_max + 1):
@@ -373,8 +390,8 @@ def get_build_next():
             if is_base:
                 is_base = False
 
-    os_info[os_next][OS_INFO_INDEX_BUILD][index_next][OS_INFO_INDEX_BUILD_NEXT] = rev_next + 1
-    build_next = [os_next, arch_next, module_next, rev_next]
+    #os_info[os_next][OS_INFO_INDEX_BUILD][index_next][OS_INFO_INDEX_BUILD_REV_NEXT] = rev_next + 1
+    build_next = [os_next, arch_next, module_next, rev_next, index_next]
     return build_next
 
 
