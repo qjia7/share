@@ -51,7 +51,7 @@ FAIL_NUMBER_MAX = 3
 
 build_every = 1
 
-time_sleep_default = 1800
+time_sleep_default = 300
 
 ################################################################################
 
@@ -80,6 +80,10 @@ examples:
 
 def setup():
     global os_info, build_every
+
+    result = execute('ssh ' + server + ' ls /tmp', show_command=False)
+    if result[0]:
+        error('Can not connect to build server')
 
     backup_dir(get_script_dir())
     ensure_package('libnss3-dev')
