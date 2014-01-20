@@ -160,6 +160,8 @@ def build():
                 fail_number += 1
                 if fail_number >= FAIL_NUMBER_MAX:
                     error('You have reached maximum failure number')
+            else:
+                fail_number = 0
         else:
             os = build_next[BUILD_NEXT_INDEX_OS]
             rev_max = os_info[os][OS_INFO_INDEX_REV_MAX]
@@ -390,7 +392,6 @@ def get_build_next():
             if is_base:
                 is_base = False
 
-    #os_info[os_next][OS_INFO_INDEX_BUILD][index_next][OS_INFO_INDEX_BUILD_REV_NEXT] = rev_next + 1
     build_next = [os_next, arch_next, module_next, rev_next, index_next]
     return build_next
 
