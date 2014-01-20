@@ -45,6 +45,7 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/66/4566/1 && git checkout FETCH_HEAD', # sandbox/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/77/4577/1 && git checkout FETCH_HEAD', # media/ upstream r234278
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/57/3357/3 && git checkout FETCH_HEAD', # media/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/29/3929/2 && git checkout FETCH_HEAD', # import x86_64.mk files
     # third_party
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/icu refs/changes/27/3027/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/openssl refs/changes/28/3028/1 && git checkout FETCH_HEAD',
