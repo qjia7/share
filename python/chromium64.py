@@ -53,6 +53,7 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/27/4227/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/78/4578/1 && git checkout FETCH_HEAD',
     # misc
+    'git fetch https://aia-review.intel.com/platform/external/webrtc refs/changes/10/4910/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/frameworks/av refs/changes/94/4594/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/frameworks/base refs/changes/93/4593/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/frameworks/webview refs/changes/23/3523/3 && git checkout FETCH_HEAD',
@@ -73,6 +74,7 @@ dirty_repos = [
     'external/chromium_org/third_party/icu',
     'external/chromium_org/third_party/openssl',
     'external/chromium_org/v8',
+    'external/webrtc',
     'frameworks/av',
     'frameworks/base',
     'frameworks/native',
