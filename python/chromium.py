@@ -178,7 +178,7 @@ def update(args):
     cmd = 'gclient ' + args.update
     if target_os == 'android':
         cmd = 'source src/build/android/envsetup.sh --target-arch=' + target_arch + ' && ' + cmd
-    result = execute(cmd, log_file=args.log_file, show_progress=True)
+    result = execute(bashify(cmd), log_file=args.log_file, show_progress=True)
 
     if host_os == 'Linux':
         execute('sudo killall privoxy')
