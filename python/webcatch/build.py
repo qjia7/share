@@ -75,15 +75,17 @@ examples:
     parser.add_argument('--root', dest='root_pwd', help='root password')
     parser.add_argument('--build-every', dest='build_every', help='build every number')
     parser.add_argument('--keep-out', dest='keep_out', help='do not remove out dir after failure', action='store_true')
+    parser.add_argument('--slave-only', dest='slave_only', help='only do things at slave machine, for sake of test', action='store_true')
     args = parser.parse_args()
 
 
 def setup():
     global os_info, build_every
 
-    result = execute('ssh ' + server + ' ls /tmp', show_command=False)
-    if result[0]:
-        error('Can not connect to build server')
+    if not args.slave_only:
+        result = execute(remotify_cmd('ls ' + dir_out_server), show_command=False)
+        if result[0]:
+            error('Can not connect to build server')
 
     backup_dir(get_script_dir())
     ensure_package('libnss3-dev')
@@ -250,8 +252,9 @@ def build_one(build_next):
     info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
     file_log = dir_log + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
 
-    file_lock = dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.LOCK'
-    execute('ssh ' + server + ' touch ' + file_lock)
+    if not args.slave_only:
+        file_lock = dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.LOCK'
+        execute(remotify_cmd('touch ' + file_lock))
 
     commit = rev_commit[rev]
     dir_repo = dir_project + '/chromium-' + os
@@ -326,15 +329,19 @@ def build_one(build_next):
 
             file_final = dir_comb + '/' + str(rev) + '.tar.gz'
 
-    move_to_server(file_final, os, arch, module)
-    execute('ssh ' + server + ' rm -f ' + file_lock)
+    if not args.slave_only:
+        move_to_server(file_final, os, arch, module)
+        execute(remotify_cmd('rm -f ' + file_lock))
 
     return result[0]
 
 
 def rev_is_built(os, arch, module, rev):
-    cmd_remote = 'ssh ' + server + ' ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*'
-    result = execute(cmd_remote, show_command=False)
+    if args.slave_only:
+        cmd = 'ls ' + dir_out + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*'
+    else:
+        cmd = remotify_cmd('ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*')
+    result = execute(cmd, show_command=False)
     if result[0] == 0:
         return True
 
@@ -373,7 +380,8 @@ def get_rev_next(os, index):
         file_final = dir_comb + '/' + str(rev) + '.NULL'
         info(str(rev) + ' does not exist')
         execute('touch ' + file_final)
-        move_to_server(file_final, os, arch, module)
+        if not args.slave_only:
+            move_to_server(file_final, os, arch, module)
     return rev_max + 1
 
 
@@ -459,6 +467,9 @@ def update_git_info(fetch=True):
         update_git_info_one(os)
 
 
+# Patch command if it needs to run on build server
+def remotify_cmd(cmd):
+    return 'ssh ' + server + ' ' + cmd
 ################################################################################
 
 
