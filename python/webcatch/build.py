@@ -78,6 +78,10 @@ examples:
     parser.add_argument('--slave-only', dest='slave_only', help='only do things at slave machine, for sake of test', action='store_true')
     args = parser.parse_args()
 
+    if len(sys.argv) <= 1:
+        parser.print_help()
+        exit(1)
+
 
 def setup():
     global os_info, build_every
