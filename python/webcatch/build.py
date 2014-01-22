@@ -192,12 +192,8 @@ def build():
 
 
 # Patch the problem disable_nacl=1
-def patch_disable_nacl(os, arch, module, rev):
-    if rev < 235053 or rev >= 235114:
-        return
-
-    dir_repo = dir_project + '/chromium-' + os
-    backup_dir(dir_repo + '/src/build')
+def patch_disable_nacl():
+    backup_dir('src/build')
 
     for line in fileinput.input('all.gyp', inplace=1):
         if re.search('native_client_sdk_untrusted', line):
@@ -209,15 +205,9 @@ def patch_disable_nacl(os, arch, module, rev):
 
 
 # Fix the issue using the same way introduced by @237081
-def patch_basename(os, arch, module, rev):
-    if os != 'android' or module != 'content_shell':
-        return
+def patch_basename():
+    backup_dir('src/chrome')
 
-    if rev < 236727 or rev >= 237081:
-        return
-
-    dir_repo = dir_project + '/chromium-' + os
-    backup_dir(dir_repo + '/src/chrome')
     file_browser = 'browser/component_updater/test/update_manifest_unittest.cc'
     file_browser_new = file_browser.replace('update_manifest_unittest', 'component_update_manifest_unittest')
     file_common = 'common/extensions/update_manifest_unittest.cc'
@@ -238,10 +228,29 @@ def patch_basename(os, arch, module, rev):
     restore_dir()
 
 
+# Patch the problem of __int128 in openssl
+def patch_openssl():
+    backup_dir('src/third_party/openssl')
+    execute('git reset --hard 08086bd0f0dfbc08d121ccc6fbd27de9eaed55c7')
+    restore_dir()
+
+
 # Patch the code to solve some build error problem in upstream
 def patch(os, arch, module, rev):
-    patch_disable_nacl(os, arch, module, rev)
-    patch_basename(os, arch, module, rev)
+    dir_repo = dir_project + '/chromium-' + os
+    backup_dir(dir_repo)
+
+    if os == 'android' and module == 'content_shell':
+        if rev >= 235053 and rev < 235114:
+            patch_disable_nacl()
+
+        if rev >= 236727 and rev < 237081:
+            patch_basename()
+
+        if rev >= 234913 and rev < 234919:
+            patch_openssl()
+
+    restore_dir()
 
 
 def move_to_server(file, os, arch, module):
