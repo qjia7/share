@@ -29,7 +29,7 @@ def handle_option():
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      epilog='''
 examples:
-
+  python %(prog)s -s master
   python %(prog)s -s android-4.4.2_r1
   python %(prog)s -f all
 
@@ -37,7 +37,7 @@ examples:
 
 ''')
 
-    parser.add_argument('-s', '--sync', dest='sync', help='tag to sync')
+    parser.add_argument('-s', '--sync', dest='sync', help='branch to sync')
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('-f', '--flash', dest='flash', help='type to flash', choices=['all'])
 
@@ -72,7 +72,10 @@ def sync():
     if not args.sync:
         return()
 
-    execute('repo init -u https://android.googlesource.com/platform/manifest -b ' + args.sync)
+    cmd = 'repo init -u https://android.googlesource.com/platform/manifest'
+    if args.sync != 'master':
+        cmd += ' -b ' + args.sync
+    execute(cmd)
     execute('repo sync', show_progress=True)
 
 
