@@ -88,7 +88,7 @@ dirty_repos = [
 ]
 
 combos = ['emu64-eng', 'hsb_64-eng']
-modules_common = ['webviewchromium', 'webview', 'browser']
+modules_common = ['webviewchromium', 'webview', 'browser', 'BrowserTests']
 modules_system = {'emu64-eng': 'emu', 'hsb_64-eng': 'droid'}
 
 ################################################################################
@@ -329,7 +329,7 @@ def build(force=False):
         for module in modules_build:
             command = '. ' + root_dir + '/build/envsetup.sh && lunch ' + combo + ' && '
 
-            if module == 'emu' or module == 'droid':
+            if module == 'emu' or module == 'droid' or module == 'BrowserTests':
                 command += 'make ' + module + ' suffix'
             elif module == 'webviewchromium':
                 command += 'export BUILD_HOST_64bit=1 && make v8_tools_gyp_mksnapshot_x64_host_gyp suffix1 && unset BUILD_HOST_64bit && mmma external/chromium_org suffix2'
