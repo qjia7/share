@@ -331,12 +331,12 @@ def build(force=False):
 
             if module == 'emu' or module == 'droid' or module == 'BrowserTests':
                 command += 'make ' + module + ' suffix'
-            elif module == 'webviewchromium':
-                command += 'export BUILD_HOST_64bit=1 && make v8_tools_gyp_mksnapshot_x64_host_gyp suffix1 && unset BUILD_HOST_64bit && mmma external/chromium_org suffix2'
             else:
                 command += 'mmma '
 
-                if module == 'webview':
+                if module == 'webviewchromium':
+                    command += 'external/chromium_org'
+                elif module == 'webview':
                     command += 'frameworks/webview'
                 elif module == 'browser':
                     command += 'packages/apps/Browser'
@@ -450,7 +450,6 @@ def test_build():
     clean(force=True)
     sync(force=True)
     patch(force=True)
-    mk64(force=True)
     build(force=True)
 
     args.combo = combo_orig
@@ -462,27 +461,20 @@ def scan():
         return
 
     if args.module == 'all':
-        modules_build = modules_common
+        modules_build = ['webviewchromium', 'webview']
     else:
         modules_build = args.module.split(',')
 
     for module in modules_build:
-        command = '. ' + root_dir + '/build/envsetup.sh && lunch emu64-eng && '
+        command = '. ' + root_dir + '/build/envsetup.sh && lunch hsb_64-eng && WITH_STATIC_ANALYZER=1 WITHOUT_CLANG=true mmma -B '
         if module == 'webviewchromium':
-            command += 'BUILD_HOST_64bit=1 make -B v8_tools_gyp_mksnapshot_x64_host_gyp suffix1 && WITH_STATIC_ANALYZER=1 WITHOUT_CLANG=true mmma -B external/chromium_org suffix2'
-        else:
-            command += 'WITH_STATIC_ANALYZER=1 WITHOUT_CLANG=true mmma -B '
+            command += 'external/chromium_org'
+        if module == 'webview':
+            command += 'frameworks/webview'
+        elif module == 'browser':
+            command += 'packages/apps/Browser'
 
-            if module == 'webview':
-                command += 'frameworks/webview'
-            elif module == 'browser':
-                command += 'packages/apps/Browser'
-
-            command += 'suffix'
-
-        suffix = ' -j16'
-        suffix += ' 2>&1 |tee ' + root_dir + '/' + module + '_scan_log'
-        command = command.replace('suffix', suffix)
+        command += ' -j16' + ' 2>&1 |tee ' + root_dir + '/' + module + '_scan_log'
         command = bashify(command)
         execute(command, show_duration=True)
 
