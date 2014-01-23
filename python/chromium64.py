@@ -13,7 +13,7 @@ patches = [
     'git fetch https://aia-review.intel.com/kernel/intel-uefi refs/changes/59/4459/1 && git checkout FETCH_HEAD',
     # fundamental
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/00/3200/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/2 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/2 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/bootable/userfastboot refs/changes/04/4804/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/build refs/changes/81/4181/1 && git checkout FETCH_HEAD', # Enable build for Chromium WebView
