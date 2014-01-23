@@ -1,10 +1,16 @@
 from util import *
 
-# Before build, download proprietary drivers from https://developers.google.com/android/nexus/drivers,
-# and put them into related directory under /workspace/topic/android/backup/vendor.
+# Build:
+# Check tag info from http://source.android.com/source/build-numbers.html
+# Download proprietary drivers from https://developers.google.com/android/nexus/drivers, and put them into related directory under /workspace/topic/android/backup/vendor.
 # jdk must be 1.6.0.45 for 4.4 build, and JAVA_HOME should be set correctly.
 
-# build time: 4.4 - 1 hour
+# Build time:
+# 4.4 - 1 hour
+
+# Flash:
+# Run script with '-f all', Restart device and enter fastboot mode.
+
 
 root_dir = '/workspace/project/android/'
 backup_dir = '/workspace/topic/android/backup/'
@@ -24,7 +30,7 @@ def handle_option():
                                      epilog='''
 examples:
 
-  python %(prog)s -s android-4.4_r1.2
+  python %(prog)s -s android-4.4.2_r1
   python %(prog)s -f all
 
   python %(prog)s -s android-4.3_r1 -b -f all
@@ -36,7 +42,7 @@ examples:
     parser.add_argument('-f', '--flash', dest='flash', help='type to flash', choices=['all'])
 
     parser.add_argument('-d', '--device', dest='device', help='device', choices=['nexus4', 'nexus5'], default='nexus5')
-    parser.add_argument('-v', '--version', dest='version', help='version', choices=['4.3', '4.4'], default='4.4')
+    parser.add_argument('-v', '--version', dest='version', help='version', choices=['4.3', '4.4', '4.4.2'], default='4.4.2')
     parser.add_argument('--variant', dest='variant', help='variant', choices=['user', 'userdebug', 'eng'], default='userdebug')
 
     args = parser.parse_args()
@@ -67,7 +73,7 @@ def sync():
         return()
 
     execute('repo init -u https://android.googlesource.com/platform/manifest -b ' + args.sync)
-    execute('repo sync')
+    execute('repo sync', show_progress=True)
 
 
 def build():
@@ -84,7 +90,7 @@ def build():
     execute('cp -rf ' + backup_specific_driver_dir + ' ./')
 
     start = datetime.datetime.now()
-    execute(bashify('. build/envsetup.sh && lunch full_' + device_code_name + '-' + variant + ' && make -j16'))
+    execute(bashify('. build/envsetup.sh && lunch full_' + device_code_name + '-' + variant + ' && make -j16'), interactive=True)
     elapsed = (datetime.datetime.now() - start)
     info('Time elapsed to build: ' + str(elapsed.seconds) + 's')
 
