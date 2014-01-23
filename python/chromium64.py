@@ -3,20 +3,18 @@
 from util import *
 
 root_dir = ''
-webview_dir = ''
+webviewchromium_dir = ''
 repos = []
 android_target_arch = ''
 chromium_target_arch = ''
 
 patches = [
-    # Expand the size of system image
-    'git fetch https://aia-review.intel.com/device/intel/haswell refs/changes/19/4219/1 && git checkout FETCH_HEAD',
     # kernel: Give more memory range out for 2G- trick
     'git fetch https://aia-review.intel.com/kernel/intel-uefi refs/changes/59/4459/1 && git checkout FETCH_HEAD',
     # fundamental
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/00/3200/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/1 && git checkout FETCH_HEAD',
-    'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/1 && git checkout FETCH_HEAD',
+    'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/2 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/bootable/userfastboot refs/changes/04/4804/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/build refs/changes/81/4181/1 && git checkout FETCH_HEAD', # Enable build for Chromium WebView
     'git fetch https://aia-review.intel.com/platform/build refs/changes/21/3921/1 && git checkout FETCH_HEAD', # force to build v8 host tools with m64
@@ -34,10 +32,10 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/58/4558/2 && git checkout FETCH_HEAD', # net/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/97/4797/2 && git checkout FETCH_HEAD', # ui/ upstream r234312
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/98/4798/1 && git checkout FETCH_HEAD', # android_webview/ upstream r237788
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/60/4560/2 && git checkout FETCH_HEAD', # android_webview/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/02/4802/3 && git checkout FETCH_HEAD', # content/ upstream r235815
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/60/4560/3 && git checkout FETCH_HEAD', # android_webview/
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/02/4802/4 && git checkout FETCH_HEAD', # content/ upstream r235815
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/61/4561/6 && git checkout FETCH_HEAD', # content/
-    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/01/4801/1 && git checkout FETCH_HEAD', # chrome/ upstream r236536
+    'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/01/4801/2 && git checkout FETCH_HEAD', # chrome/ upstream r236536
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/62/4562/2 && git checkout FETCH_HEAD', # chrome/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/63/4563/1 && git checkout FETCH_HEAD', # components/
     'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/00/4800/1 && git checkout FETCH_HEAD', # testing/android/native_test/ upstream r234513
@@ -68,6 +66,7 @@ dirty_repos = [
     # patches, it will list all patched repos in histroy.
     'bionic',
     'bootable/iago',
+    'bootable/userfastboot',
     'build',
     'device/intel/haswell',
     'external/chromium',
@@ -100,14 +99,14 @@ def _ensure_repos():
     if len(repos) > 0:
         return
 
-    backup_dir(webview_dir)
+    backup_dir(webviewchromium_dir)
     r = os.popen('find -name ".git"')
     lines = r.read().split('\n')
     del lines[len(lines) - 1]
     for repo in lines:
         repo = repo.replace('./', '')
         repo = repo.replace('.git', '')
-        repos.append(webview_dir + '/' + repo)
+        repos.append(webviewchromium_dir + '/' + repo)
 
     for repo in dirty_repos:
         if not re.match('external/chromium_org', repo):
@@ -168,14 +167,14 @@ examples:
 
 
 def setup():
-    global root_dir, webview_dir, android_target_arch, chromium_target_arch
+    global root_dir, webviewchromium_dir, android_target_arch, chromium_target_arch
 
     if not args.root_dir:
         root_dir = os.path.abspath(os.getcwd())
     else:
         root_dir = args.root_dir
 
-    webview_dir = root_dir + '/external/chromium_org'
+    webviewchromium_dir = root_dir + '/external/chromium_org'
     os.chdir(root_dir)
     android_target_arch = 'x86_64'
     chromium_target_arch = 'x64'
@@ -199,6 +198,10 @@ def patch(force=False):
     if not args.patch and not force:
         return
 
+    backup_dir(webviewchromium_dir)
+    execute('find -name "*linux-x86_64.mk" | xargs rm -f')
+    restore_dir()
+
     for patch in patches:
         pattern = re.compile('aia-review\.intel\.com/(.*) (.*) &&')
         match = pattern.search(patch)
@@ -215,21 +218,24 @@ def patch(force=False):
         backup_dir(root_dir + '/' + repo)
 
         cmd_fetch = 'git fetch ssh://aia-review.intel.com/' + path + ' ' + change
-        result = execute(cmd_fetch, show_command=True)
+        result = execute(cmd_fetch, show_command=False)
         if result[0]:
             error('Failed to execute command ' + cmd_fetch, error_code=result[0])
 
-        result = execute('git show FETCH_HEAD |grep Change-Id:', return_output=True, show_command=True)
+        result = execute('git show FETCH_HEAD |grep Change-Id:', return_output=True, show_command=False)
 
         pattern = re.compile('Change-Id: (.*)')
         change_id = result[1]
         match = pattern.search(change_id)
         result = execute('git log |grep ' + match.group(1), show_command=False)
         if result[0]:
-            info('Cherry-pick: ' + cmd_fetch)
-            execute('git cherry-pick FETCH_HEAD', show_command=False)
+            result = execute('git cherry-pick FETCH_HEAD', show_command=False)
+            if result[0]:
+                error('Fail to cherry-pick ' + patch)
+            else:
+                info('Succeed to cherry-pick ' + patch)
         else:
-            info('Patch has been cherry picked, so it will be skipped: ' + patch)
+            warning('Patch has been cherry picked, so it will be skipped: ' + patch)
 
         restore_dir()
 
@@ -256,7 +262,7 @@ def mk64(force=False):
     if not args.mk64 and not force:
         return
 
-    backup_dir(webview_dir)
+    backup_dir(webviewchromium_dir)
 
     # Remove all the x64 mk files
     r = os.popen('find -name "*x86_64*.mk" -o -name "*x64*.mk"')
@@ -381,7 +387,7 @@ def dep():
     if not args.dep:
         return
 
-    backup_dir(webview_dir)
+    backup_dir(webviewchromium_dir)
     libraries = set()
 
     file = open('GypAndroid.linux-' + android_target_arch + '.mk')
