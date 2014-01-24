@@ -240,15 +240,14 @@ def patch(os, arch, module, rev):
     dir_repo = dir_project + '/chromium-' + os
     backup_dir(dir_repo)
 
-    if os == 'android' and module == 'content_shell':
-        if rev >= 235053 and rev < 235114:
-            patch_disable_nacl()
+    if rev >= 235053 and rev < 235114:
+        patch_disable_nacl()
 
-        if rev >= 236727 and rev < 237081:
-            patch_basename()
+    if rev >= 236727 and rev < 237081:
+        patch_basename()
 
-        if rev >= 234913 and rev < 234919:
-            patch_openssl()
+    if rev >= 234913 and rev < 234919 and rev != 234915:
+        patch_openssl()
 
     restore_dir()
 
