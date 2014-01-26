@@ -51,6 +51,7 @@ commands = [
     ('info', 'cat /etc/lsb-release', 'List distribution info', TYPE_RUNNABLE),
     ('vi', ':w !sudo tee %', 'Write a readonly file in vi', TYPE_NULL),
     ('git', r'git log --summary 223286b.. | grep "Author:" | wc -l', 'Count git commits since specific commit', TYPE_RUNNABLE),
+    ('git', r'git format-patch -1 hash', 'Generate patch for a specific hash', TYPE_RUNNABLE),
     ('repo', 'add-apt-repository ppa:gwibber-daily/ppa', 'Add repo', TYPE_NULL),
     ('repo', 'sudo tsocks apt-key adv --recv-keys --keyserver keyserver.ubuntu.com 27F5B2C1B3EAC8D9 27F5B2C1B3EAC8D0', 'Import PPA key', TYPE_NULL),
     ('package', 'sudo apt-get install package-name:i386', 'Install 32-bit package on 64-bit system', TYPE_NULL),
