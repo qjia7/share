@@ -20,6 +20,7 @@ import time
 import os as OS
 import fileinput
 import random
+import select
 
 rev_commit = {}
 
@@ -192,6 +193,16 @@ def build():
             time.sleep(time_sleep)
             update_git_info(fetch=True)
 
+        # Allow pause
+        seconds = 3
+        info('You have ' + str(seconds) + ' seconds to type "enter" to pause')
+        i, o, e = select.select([sys.stdin], [], [], seconds)
+        if i:
+            info('Please type "r" to resume')
+            while True:
+                input = raw_input()
+                if input == 'r':
+                    break
 
 # Patch the problem disable_nacl=1
 def patch_src_disable_nacl():
