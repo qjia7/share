@@ -61,7 +61,6 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/27/4227/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/78/4578/1 && git checkout FETCH_HEAD',
     # misc
-    'git fetch https://aia-review.intel.com/platform/external/webrtc refs/changes/10/4910/1 && git checkout FETCH_HEAD',
     'git fetch https://aia-review.intel.com/platform/frameworks/webview refs/changes/23/3523/3 && git checkout FETCH_HEAD',
 ]
 
@@ -338,7 +337,7 @@ def build(force=False):
             modules_build = args.module.split(',')
 
         for module in modules_build:
-            command = '. ' + root_dir + '/build/envsetup.sh && lunch ' + combo + ' && '
+            command = '. ' + root_dir + '/build/envsetup.sh && lunch ' + combo + ' && unset NDK_ROOT && '
 
             if module == 'emu' or module == 'droid' or module == 'BrowserTests':
                 command += 'make ' + module + ' suffix'
