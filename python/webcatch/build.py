@@ -19,6 +19,7 @@ from common import *
 import time
 import os as OS
 import fileinput
+import random
 
 rev_commit = {}
 
@@ -242,6 +243,7 @@ def patch_libyuv_neon():
     execute('git reset --hard dd4995805827539ee2c5b4b65c7514e62df2d358')
     restore_dir()
 
+
 # Patch the code to solve some build error problem in upstream
 def patch(os, arch, module, rev):
     dir_repo = dir_project + '/chromium-' + os
@@ -359,17 +361,28 @@ def build_one(build_next):
 
 
 def rev_is_built(os, arch, module, rev):
+    # Skip the revision marked as built
+    rev_min = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MIN]
+    rev_max = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MAX]
+    if rev >= rev_min and rev <= rev_max:
+        return True
+
+    # Check if file exists or not
     if args.slave_only:
         cmd = 'ls ' + dir_out + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*'
     else:
         cmd = remotify_cmd('ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*')
+
     result = execute(cmd, show_command=False)
     if result[0] == 0:
         return True
 
-    rev_min = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MIN]
-    rev_max = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MAX]
-    if rev >= rev_min and rev <= rev_max:
+    # Check again to avoid conflict among parallel build machines
+    second = random.randint(1, 10)
+    info('sleep ' + str(second) + ' seconds and check again')
+    time.sleep(second)
+    result = execute(cmd, show_command=False)
+    if result[0] == 0:
         return True
 
     return False
