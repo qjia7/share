@@ -25,8 +25,10 @@ gyp: Duplicate basenames in sources section, see list above
 237081 fix this issue
 
 [20140114 23:55:00]
-@238630 introduces the usage of gomacc for distributed building, but I couldn't find it. Just disable it using 'android_gyp -Duse_goma=0'.
+@238630 introduced the usage of gomacc for distributed building, but I couldn't find it. Just disable it using 'android_gyp -Duse_goma=0'.
 
 [20140122 10:47:00]
-@234913 introduces the problem in third_party/openssl (__int128), and @234919 fixed it. Adopted the solution of @234919 to @234913-@234918
+@234913 introduced the problem in third_party/openssl (__int128), and @234919 fixed it. Adopted the solution of @234919.
 
+[20140126 10:25:00]
+@244572 introduced the problem in third_party/libyuv (-mfpu=neon for linker), and @244600 fixed it. Adopted the solution of @244600.

@@ -193,7 +193,7 @@ def build():
 
 
 # Patch the problem disable_nacl=1
-def patch_disable_nacl():
+def patch_src_disable_nacl():
     backup_dir('src/build')
 
     for line in fileinput.input('all.gyp', inplace=1):
@@ -206,7 +206,7 @@ def patch_disable_nacl():
 
 
 # Fix the issue using the same way introduced by @237081
-def patch_basename():
+def patch_src_basename():
     backup_dir('src/chrome')
 
     file_browser = 'browser/component_updater/test/update_manifest_unittest.cc'
@@ -230,11 +230,17 @@ def patch_basename():
 
 
 # Patch the problem of __int128 in openssl
-def patch_openssl():
+def patch_openssl_int128():
     backup_dir('src/third_party/openssl')
     execute('git reset --hard 08086bd0f0dfbc08d121ccc6fbd27de9eaed55c7')
     restore_dir()
 
+
+# Patch the problem of -mfpu=neon in libyuv
+def patch_libyuv_neon():
+    backup_dir('src/third_party/libyuv')
+    execute('git reset --hard dd4995805827539ee2c5b4b65c7514e62df2d358')
+    restore_dir()
 
 # Patch the code to solve some build error problem in upstream
 def patch(os, arch, module, rev):
@@ -242,13 +248,16 @@ def patch(os, arch, module, rev):
     backup_dir(dir_repo)
 
     if rev >= 235053 and rev < 235114:
-        patch_disable_nacl()
+        patch_src_disable_nacl()
 
     if rev >= 236727 and rev < 237081:
-        patch_basename()
+        patch_src_basename()
 
-    if rev >= 234913 and rev < 234919 and rev != 234915:
-        patch_openssl()
+    if rev >= 234913 and rev < 234919:
+        patch_openssl_int128()
+
+    if rev >= 244572 and rev < 244600:
+        patch_libyuv_neon()
 
     restore_dir()
 
