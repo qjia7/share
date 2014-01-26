@@ -362,10 +362,11 @@ def build_one(build_next):
 
 def rev_is_built(os, arch, module, rev):
     # Skip the revision marked as built
-    rev_min = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MIN]
-    rev_max = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MAX]
-    if rev >= rev_min and rev <= rev_max:
-        return True
+    if not args.slave_only:
+        rev_min = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MIN]
+        rev_max = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MAX]
+        if rev >= rev_min and rev <= rev_max:
+            return True
 
     # Check if file exists or not
     if args.slave_only:

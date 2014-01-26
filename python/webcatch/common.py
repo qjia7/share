@@ -8,8 +8,8 @@ dir_out_server = '/workspace/service/webcatch/out'
 
 # comb: [binary_format, rev_min_built, rev_max_built]
 comb_valid = {
-    ('android', 'x86', 'content_shell'): ['(.*).apk$', 233137, 237676],  # 241271-242710, 233707 true fail
-    ('linux', 'x86', 'chrome'): ['(.*).tar.gz$', 0, 233136]
+    ('android', 'x86', 'content_shell'): ['(.*).apk$', 233137, 241051],  # 241271-244571, 233707 true fail
+    ('linux', 'x86', 'chrome'): ['(.*).tar.gz$', 233137, 233208]
     #['android', 'arm', 'content_shell'],
 }
 COMB_VALID_INDEX_FORMAT = 0
