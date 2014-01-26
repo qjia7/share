@@ -92,8 +92,9 @@ def setup():
             error('Can not connect to build server')
 
     backup_dir(get_script_dir())
-    ensure_package('libnss3-dev')
-    ensure_package('ant')
+    # Packages is split by white space so that you may easily install them all
+    ensure_package('libnss3-dev ant libcups2-dev libcap-dev libxtst-dev libasound2-dev libxss-dev')
+
     OS.putenv('JAVA_HOME', '/usr/lib/jvm/jdk1.6.0_45')
 
     if args.os == 'all':
@@ -420,10 +421,12 @@ def get_build_next():
     return build_next
 
 
-def ensure_package(name):
-    result = execute('dpkg -l ' + name, show_command=False)
-    if result[0]:
-        error('You need to install package: ' + name)
+def ensure_package(packages):
+    package_list = packages.split(' ')
+    for package in package_list:
+        result = execute('dpkg -l ' + package, show_command=False)
+        if result[0]:
+            error('You need to install package: ' + package)
 
 
 def get_time():
