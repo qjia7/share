@@ -10,7 +10,7 @@ chromium_target_arch = ''
 
 patches = [
     # stage 1
-    'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/2 && git checkout FETCH_HEAD',  # upstream change
+    'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/3 && git checkout FETCH_HEAD',  # upstream change
     'git fetch https://aia-review.intel.com/platform/system/core refs/changes/03/3203/2 && git checkout FETCH_HEAD',  # revert our change, redefinition error
     'git fetch https://aia-review.intel.com/platform/frameworks/base refs/changes/93/4593/2 && git checkout FETCH_HEAD',  # sync with upstream
 
