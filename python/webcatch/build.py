@@ -49,7 +49,7 @@ BUILD_NEXT_INDEX_INDEX_NEXT = 4
 DRYRUN = False
 
 fail_number = 0
-FAIL_NUMBER_MAX = 3
+fail_number_max = 3
 
 build_every = 1
 
@@ -78,6 +78,7 @@ examples:
     parser.add_argument('--build-every', dest='build_every', help='build every number')
     parser.add_argument('--keep-out', dest='keep_out', help='do not remove out dir after failure', action='store_true')
     parser.add_argument('--slave-only', dest='slave_only', help='only do things at slave machine, for sake of test', action='store_true')
+    parser.add_argument('--fail-number-max', dest='fail_number_max', help='maximum failure number', type=int)
     args = parser.parse_args()
 
     if len(sys.argv) <= 1:
@@ -86,12 +87,15 @@ examples:
 
 
 def setup():
-    global os_info, build_every
+    global os_info, build_every, fail_number_max
 
     if not args.slave_only:
         result = execute(remotify_cmd('ls ' + dir_out_server), show_command=False)
         if result[0]:
             error('Can not connect to build server')
+
+    if args.fail_number_max:
+        fail_number_max = args.fail_number_max
 
     backup_dir(get_script_dir())
     # Packages is split by white space so that you may easily install them all
@@ -171,7 +175,7 @@ def build():
             result = build_one(build_next)
             if result:
                 fail_number += 1
-                if fail_number >= FAIL_NUMBER_MAX:
+                if fail_number >= fail_number_max:
                     error('You have reached maximum failure number')
             else:
                 fail_number = 0
