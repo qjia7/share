@@ -8,7 +8,7 @@ import sys
 import shutil
 
 script_dir = sys.path[0]
-check_dirs = [u'16月']
+check_dirs = [u'18月']
 
 origin_dir = u'e:/storage/origin/'
 storage_dir = 'e:/storage/'
@@ -49,7 +49,7 @@ def src_to_dest(src_dir, dest_dir):
             src_file_suffix = src_file[-4:].upper()
             src_file_path = src_check_dir + src_file
             if src_file_suffix == '.MOV':
-                dest_file = src_file.replace('.MOV', '.MP4')
+                dest_file = src_file.replace(src_file[-4:], '.MP4')
             else:
                 dest_file = src_file
             dest_file_path= dest_check_dir + dest_file
