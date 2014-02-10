@@ -170,6 +170,7 @@ def build():
         return
 
     fail_number = 0
+    need_sleep = False
     while True:
         build_next = get_build_next()
         os_next = build_next[BUILD_NEXT_INDEX_OS]
@@ -198,8 +199,11 @@ def build():
             else:
                 time_sleep = time_sleep_default
 
-            info('Sleeping ' + str(time_sleep) + ' seconds...')
-            time.sleep(time_sleep)
+            if need_sleep:
+                info('Sleeping ' + str(time_sleep) + ' seconds...')
+                time.sleep(time_sleep)
+            else:
+                need_sleep = True
             update_git_info(fetch=True)
 
         # Allow pause
