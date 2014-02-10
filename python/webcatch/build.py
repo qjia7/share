@@ -545,7 +545,7 @@ def clean_lock():
             else:
                 cmd = remotify_cmd('rm ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/*.LOCK')
 
-            execute(cmd, dryrun=True)
+            execute(cmd)
 
 
 ################################################################################
