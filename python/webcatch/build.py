@@ -269,6 +269,22 @@ def patch_libyuv_neon():
     restore_dir()
 
 
+def patch_libvpx_neon():
+    backup_dir('src/third_party/libvpx')
+    file = 'libvpx.gyp'
+    old = '\'OS=="android"\', {'
+    new = '\'OS=="android" and ((target_arch=="arm" or target_arch=="armv7") and arm_neon==0)\', {'
+    need_change = True
+    for line in fileinput.input(file, inplace=1):
+        if need_change and re.search(old, line):
+            line = line.replace(old, new)
+            need_change = False
+        # We can not use print here as it will generate blank line
+        sys.stdout.write(line)
+    fileinput.close()
+    restore_dir()
+
+
 # Patch the code to solve some build error problem in upstream
 def patch(os, arch, module, rev):
     dir_repo = dir_project + '/chromium-' + os
@@ -285,6 +301,9 @@ def patch(os, arch, module, rev):
 
     if rev >= 244572 and rev < 244600:
         patch_libyuv_neon()
+
+    if rev >= 247840 and rev < 248040:
+        patch_libvpx_neon()
 
     restore_dir()
 
