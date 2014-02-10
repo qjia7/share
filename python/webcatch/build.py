@@ -48,7 +48,6 @@ BUILD_NEXT_INDEX_INDEX_NEXT = 4
 
 DRYRUN = False
 
-fail_number = 0
 fail_number_max = 3
 
 build_every = 1
@@ -65,9 +64,9 @@ def handle_option():
                                      epilog='''
 examples:
   python %(prog)s --root password
-  python %(prog)s -r 217377-225138
-  python %(prog)s --os linux --module chrome -r 233137-242710 --build-every 5
-  python %(prog)s --os android --module content_shell
+  python %(prog)s -b -r 217377-225138
+  python %(prog)s -b --os linux --module chrome -r 233137-242710 --build-every 5
+  python %(prog)s -b --os android --module content_shell --keep_out
 
 ''')
     parser.add_argument('--os', dest='os', help='os', choices=os_all + ['all'], default='all')
@@ -79,6 +78,9 @@ examples:
     parser.add_argument('--keep-out', dest='keep_out', help='do not remove out dir after failure', action='store_true')
     parser.add_argument('--slave-only', dest='slave_only', help='only do things at slave machine, for sake of test', action='store_true')
     parser.add_argument('--fail-number-max', dest='fail_number_max', help='maximum failure number', type=int)
+
+    parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
+    parser.add_argument('--clean-lock', dest='clean_lock', help='clean all lock files', action='store_true')
     args = parser.parse_args()
 
     if len(sys.argv) <= 1:
@@ -164,7 +166,10 @@ def setup():
 
 
 def build():
-    global fail_number
+    if not args.build:
+        return
+
+    fail_number = 0
     while True:
         build_next = get_build_next()
         os_next = build_next[BUILD_NEXT_INDEX_OS]
@@ -207,6 +212,7 @@ def build():
                 input = raw_input()
                 if input == 'r':
                     break
+
 
 # Patch the problem disable_nacl=1
 def patch_src_disable_nacl():
@@ -523,10 +529,30 @@ def update_git_info(fetch=True):
 # Patch command if it needs to run on build server
 def remotify_cmd(cmd):
     return 'ssh ' + server + ' ' + cmd
+
+
+def clean_lock():
+    if not args.clean_lock:
+        return
+
+    for os in os_info:
+        for comb in os_info[os][OS_INFO_INDEX_BUILD]:
+            arch = comb[0]
+            module = comb[1]
+
+            if args.slave_only:
+                cmd = 'rm ' + dir_out + '/' + get_comb_name(os, arch, module) + '/*.LOCK'
+            else:
+                cmd = remotify_cmd('rm ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/*.LOCK')
+
+            execute(cmd, dryrun=True)
+
+
 ################################################################################
 
 
 if __name__ == '__main__':
     handle_option()
     setup()
+    clean_lock()
     build()
