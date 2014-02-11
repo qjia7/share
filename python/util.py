@@ -151,11 +151,6 @@ def shell_source(shell_cmd, use_bash=False):
         os.environ[key] = value
 
 
-def get_script_dir():
-    script_path = os.getcwd() + '/' + sys.argv[0]
-    return os.path.split(script_path)[0]
-
-
 def get_symbolic_link_dir():
     script_path = os.getcwd() + '/' + sys.argv[0]
     return os.path.split(script_path)[0]
