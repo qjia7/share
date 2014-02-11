@@ -684,7 +684,7 @@ symbolic_link $PYTHON_DIR chromium64.py $PROJECT_DIR/android-ia
 
 # Skia
 symbolic_link $PYTHON_DIR skia.py $PROJECT_DIR/skia
-export ANDROID_SDK_ROOT=/workspace/topic/skia/adt-bundle-linux-x86_64/sdk
+#export ANDROID_SDK_ROOT=/workspace/topic/skia/adt-bundle-linux-x86_64/sdk
 
 # sublime
 export PATH=$PATH:/workspace/software/sublime
