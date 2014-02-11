@@ -1,0 +1,93 @@
+From 6e0029f4c9a1cd6ddd9bc481ac092ca048339e16 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Tue, 11 Feb 2014 16:26:37 +0800
+Subject: [PATCH] v8: x64 support
+
+---
+ build/android.gypi   | 18 +++++++++++++++---
+ build/toolchain.gypi |  2 +-
+ src/sampler.cc       | 17 +++++++++++++++++
+ 3 files changed, 33 insertions(+), 4 deletions(-)
+
+diff --git a/build/android.gypi b/build/android.gypi
+index 0ea899d..1e1fa99 100644
+--- a/build/android.gypi
++++ b/build/android.gypi
+@@ -184,9 +184,14 @@
+                   '-L<(android_stlport_libs)/x86',
+                 ],
+               }],
++              ['target_arch=="x64"', {
++                'ldflags': [
++                  '-L<(android_stlport_libs)/x86_64',
++                ],
++              }],
+             ],
+           }],
+-          ['target_arch=="ia32"', {
++          ['target_arch=="ia32" or target_arch=="x64"', {
+             # The x86 toolchain currently has problems with stack-protector.
+             'cflags!': [
+               '-fstack-protector',
+@@ -238,8 +243,15 @@
+       }],  # _toolset=="target"
+       # Settings for building host targets using the system toolchain.
+       ['_toolset=="host"', {
+-        'cflags': [ '-m32', '-pthread' ],
+-        'ldflags': [ '-m32', '-pthread' ],
++        'conditions': [
++          ['target_arch=="x64"', {
++            'cflags': [ '-m64', '-pthread' ],
++            'ldflags': [ '-m64', '-pthread' ],
++          }, {
++            'cflags': [ '-m32', '-pthread' ],
++            'ldflags': [ '-m32', '-pthread' ],
++          }],
++        ],
+         'ldflags!': [
+           '-Wl,-z,noexecstack',
+           '-Wl,--gc-sections',
+diff --git a/build/toolchain.gypi b/build/toolchain.gypi
+index badac26..03251f1 100644
+--- a/build/toolchain.gypi
++++ b/build/toolchain.gypi
+@@ -407,7 +407,7 @@
+           }],
+         ],
+       }],
+-      ['(OS=="linux") and (v8_target_arch=="x64")', {
++      ['(OS=="linux" or OS=="android") and (v8_target_arch=="x64")', {
+         # Check whether the host compiler and target compiler support the
+         # '-m64' option and set it if so.
+         'target_conditions': [
+diff --git a/src/sampler.cc b/src/sampler.cc
+index cb98b6f..7e6d579 100644
+--- a/src/sampler.cc
++++ b/src/sampler.cc
+@@ -146,6 +146,23 @@ typedef struct ucontext {
+   // Other fields are not used by V8, don't define them here.
+ } ucontext_t;
+ enum { REG_EBP = 6, REG_ESP = 7, REG_EIP = 14 };
++
++#elif defined(__x86_64__)
++// x64 version for Android.
++typedef struct {
++ uint64_t gregs[23];
++ void* fpregs;
++ unsigned long __reserved1 [8];
++} mcontext_t;
++
++typedef struct ucontext {
++ unsigned long int uc_flags;
++ struct ucontext *uc_link;
++ stack_t uc_stack;
++ mcontext_t uc_mcontext;
++ // Other fields are not used by V8, don't define them here.
++} ucontext_t;
++enum { REG_RBP = 10, REG_RSP = 15, REG_RIP = 16 };
+ #endif
+ 
+ #endif  // V8_OS_ANDROID && !defined(__BIONIC_HAVE_UCONTEXT_T)
+-- 
+1.8.3.2
+

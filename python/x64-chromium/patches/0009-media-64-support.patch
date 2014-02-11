@@ -1,0 +1,39 @@
+From 07aa662bf46c7df910710b2d1cec5a4c75e6e45d Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Sun, 26 Jan 2014 10:52:39 +0800
+Subject: [PATCH 9/9] media 64 support
+
+X86_32 is never used in media/base/simd/*.[asm|inc] and
+third_party/x86inc/x86inc.asm, while ARCH_X86_64 is used. So change the
+condition to adapt that.
+---
+ media/media.gyp | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/media/media.gyp b/media/media.gyp
+index baeb378..b5624f8 100644
+--- a/media/media.gyp
++++ b/media/media.gyp
+@@ -1329,15 +1329,15 @@
+             ['os_posix==1 and OS!="mac"', {
+               'variables': {
+                 'conditions': [
+-                  ['target_arch=="ia32"', {
++                  ['target_arch=="x64"', {
+                     'yasm_flags': [
+-                      '-DX86_32',
++                      '-DARCH_X86_64',
+                       '-DELF',
++                      '-DPIC',
+                     ],
+-                  }, {
++                  }, { # target_arch=="ia32"
+                     'yasm_flags': [
+                       '-DELF',
+-                      '-DPIC',
+                     ],
+                   }],
+                 ],
+-- 
+1.8.3.2
+

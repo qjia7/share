@@ -1,0 +1,168 @@
+From 519667c322cfac13e482252d6bd22354c00221df Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Tue, 11 Feb 2014 12:41:54 +0800
+Subject: [PATCH 6/9] jni fixes in content/ for Android x64
+
+---
+ content/browser/android/content_view_core_impl.cc                     | 2 +-
+ content/browser/android/content_view_core_impl.h                      | 2 +-
+ content/browser/android/content_view_render_view.cc                   | 2 +-
+ content/browser/android/content_view_render_view.h                    | 2 +-
+ content/browser/renderer_host/render_widget_host_view_android.cc      | 4 ++--
+ content/browser/renderer_host/render_widget_host_view_android.h       | 2 +-
+ .../java/src/org/chromium/content/browser/ContentSettings.java        | 2 +-
+ .../java/src/org/chromium/content/browser/ContentViewCore.java        | 4 ++--
+ .../java/src/org/chromium/content/browser/input/ImeAdapter.java       | 4 ++--
+ content/renderer/media/android/webmediaplayer_android.cc              | 2 +-
+ 10 files changed, 13 insertions(+), 13 deletions(-)
+
+diff --git a/content/browser/android/content_view_core_impl.cc b/content/browser/android/content_view_core_impl.cc
+index 9bae2ac..e2f6ce2 100644
+--- a/content/browser/android/content_view_core_impl.cc
++++ b/content/browser/android/content_view_core_impl.cc
+@@ -1719,7 +1719,7 @@ bool ContentViewCoreImpl::GetUseDesktopUserAgent(
+   return entry && entry->GetIsOverridingUserAgent();
+ }
+ 
+-void ContentViewCoreImpl::UpdateImeAdapter(int native_ime_adapter,
++void ContentViewCoreImpl::UpdateImeAdapter(long native_ime_adapter,
+                                            int text_input_type,
+                                            const std::string& text,
+                                            int selection_start,
+diff --git a/content/browser/android/content_view_core_impl.h b/content/browser/android/content_view_core_impl.h
+index 7464210..58a9d6f 100644
+--- a/content/browser/android/content_view_core_impl.h
++++ b/content/browser/android/content_view_core_impl.h
+@@ -262,7 +262,7 @@ class ContentViewCoreImpl : public ContentViewCore,
+                        const gfx::Vector2dF& content_offset,
+                        float overdraw_bottom_height);
+ 
+-  void UpdateImeAdapter(int native_ime_adapter, int text_input_type,
++  void UpdateImeAdapter(long native_ime_adapter, int text_input_type,
+                         const std::string& text,
+                         int selection_start, int selection_end,
+                         int composition_start, int composition_end,
+diff --git a/content/browser/android/content_view_render_view.cc b/content/browser/android/content_view_render_view.cc
+index 693f569..71f5978 100644
+--- a/content/browser/android/content_view_render_view.cc
++++ b/content/browser/android/content_view_render_view.cc
+@@ -57,7 +57,7 @@ void ContentViewRenderView::Destroy(JNIEnv* env, jobject obj) {
+ }
+ 
+ void ContentViewRenderView::SetCurrentContentView(
+-    JNIEnv* env, jobject obj, int native_content_view) {
++    JNIEnv* env, jobject obj, jlong native_content_view) {
+   InitCompositor();
+   ContentViewCoreImpl* content_view =
+       reinterpret_cast<ContentViewCoreImpl*>(native_content_view);
+diff --git a/content/browser/android/content_view_render_view.h b/content/browser/android/content_view_render_view.h
+index a652864..6ac2831 100644
+--- a/content/browser/android/content_view_render_view.h
++++ b/content/browser/android/content_view_render_view.h
+@@ -26,7 +26,7 @@ class ContentViewRenderView : public CompositorClient {
+ 
+   // Methods called from Java via JNI -----------------------------------------
+   void Destroy(JNIEnv* env, jobject obj);
+-  void SetCurrentContentView(JNIEnv* env, jobject obj, int native_content_view);
++  void SetCurrentContentView(JNIEnv* env, jobject obj, jlong native_content_view);
+   void SurfaceCreated(JNIEnv* env, jobject obj);
+   void SurfaceDestroyed(JNIEnv* env, jobject obj);
+   void SurfaceChanged(JNIEnv* env, jobject obj,
+diff --git a/content/browser/renderer_host/render_widget_host_view_android.cc b/content/browser/renderer_host/render_widget_host_view_android.cc
+index 4f1c64d..cc915d9 100644
+--- a/content/browser/renderer_host/render_widget_host_view_android.cc
++++ b/content/browser/renderer_host/render_widget_host_view_android.cc
+@@ -468,8 +468,8 @@ void RenderWidgetHostViewAndroid::TextInputTypeChanged(
+   // Unused on Android, which uses OnTextInputChanged instead.
+ }
+ 
+-int RenderWidgetHostViewAndroid::GetNativeImeAdapter() {
+-  return reinterpret_cast<int>(&ime_adapter_android_);
++long RenderWidgetHostViewAndroid::GetNativeImeAdapter() {
++  return reinterpret_cast<intptr_t>(&ime_adapter_android_);
+ }
+ 
+ void RenderWidgetHostViewAndroid::OnTextInputStateChanged(
+diff --git a/content/browser/renderer_host/render_widget_host_view_android.h b/content/browser/renderer_host/render_widget_host_view_android.h
+index 67262f7..49f731b 100644
+--- a/content/browser/renderer_host/render_widget_host_view_android.h
++++ b/content/browser/renderer_host/render_widget_host_view_android.h
+@@ -220,7 +220,7 @@ class RenderWidgetHostViewAndroid
+   void LockResources();
+   void UnlockResources();
+ 
+-  int GetNativeImeAdapter();
++  long GetNativeImeAdapter();
+ 
+   void WasResized();
+ 
+diff --git a/content/public/android/java/src/org/chromium/content/browser/ContentSettings.java b/content/public/android/java/src/org/chromium/content/browser/ContentSettings.java
+index f8f0942..bd985d2 100644
+--- a/content/public/android/java/src/org/chromium/content/browser/ContentSettings.java
++++ b/content/public/android/java/src/org/chromium/content/browser/ContentSettings.java
+@@ -39,7 +39,7 @@ public class ContentSettings {
+      * @param nativeContentSettings the native instance that is going away.
+      */
+     @CalledByNative
+-    private void onNativeContentSettingsDestroyed(int nativeContentSettings) {
++    private void onNativeContentSettingsDestroyed(long nativeContentSettings) {
+         assert mNativeContentSettings == nativeContentSettings;
+         mNativeContentSettings = 0;
+     }
+diff --git a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
+index 7921262..9b397f0 100644
+--- a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
++++ b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
+@@ -2565,7 +2565,7 @@ public class ContentViewCore
+     }
+ 
+     @CalledByNative
+-    private void updateImeAdapter(int nativeImeAdapterAndroid, int textInputType,
++    private void updateImeAdapter(long nativeImeAdapterAndroid, int textInputType,
+             String text, int selectionStart, int selectionEnd,
+             int compositionStart, int compositionEnd, boolean showImeIfNeeded, boolean requireAck) {
+         TraceEvent.begin();
+@@ -3430,7 +3430,7 @@ public class ContentViewCore
+     private native void nativeEvaluateJavaScript(long nativeContentViewCoreImpl,
+             String script, JavaScriptCallback callback, boolean startRenderer);
+ 
+-    private native int nativeGetNativeImeAdapter(long nativeContentViewCoreImpl);
++    private native long nativeGetNativeImeAdapter(long nativeContentViewCoreImpl);
+ 
+     private native int nativeGetCurrentRenderProcessId(long nativeContentViewCoreImpl);
+ 
+diff --git a/content/public/android/java/src/org/chromium/content/browser/input/ImeAdapter.java b/content/public/android/java/src/org/chromium/content/browser/input/ImeAdapter.java
+index b4e41b9..3b687ab 100644
+--- a/content/public/android/java/src/org/chromium/content/browser/input/ImeAdapter.java
++++ b/content/public/android/java/src/org/chromium/content/browser/input/ImeAdapter.java
+@@ -205,12 +205,12 @@ public class ImeAdapter {
+         return mInputConnection != null && mInputConnection.isActive();
+     }
+ 
+-    private boolean isFor(int nativeImeAdapter, int textInputType) {
++    private boolean isFor(long nativeImeAdapter, int textInputType) {
+         return mNativeImeAdapterAndroid == nativeImeAdapter &&
+                mTextInputType == textInputType;
+     }
+ 
+-    public void attachAndShowIfNeeded(int nativeImeAdapter, int textInputType,
++    public void attachAndShowIfNeeded(long nativeImeAdapter, int textInputType,
+             int selectionStart, int selectionEnd, boolean showIfNeeded) {
+         mHandler.removeCallbacks(mDismissInput);
+ 
+diff --git a/content/renderer/media/android/webmediaplayer_android.cc b/content/renderer/media/android/webmediaplayer_android.cc
+index 5fae879..c626c45 100644
+--- a/content/renderer/media/android/webmediaplayer_android.cc
++++ b/content/renderer/media/android/webmediaplayer_android.cc
+@@ -88,7 +88,7 @@ WebMediaPlayerAndroid::WebMediaPlayerAndroid(
+       frame_(frame),
+       client_(client),
+       delegate_(delegate),
+-      buffered_(1u),
++      buffered_(static_cast<size_t>(1)),
+       main_loop_(base::MessageLoopProxy::current()),
+       media_loop_(media_loop),
+       ignore_metadata_duration_change_(false),
+-- 
+1.8.3.2
+

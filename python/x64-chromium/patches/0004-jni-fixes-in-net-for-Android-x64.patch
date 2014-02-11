@@ -1,0 +1,53 @@
+From 6bf5de949f6ffa5cc3966618a04d1660ae3e9ddf Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Sun, 26 Jan 2014 09:29:20 +0800
+Subject: [PATCH 4/9] jni fixes in net/ for Android x64
+
+net/android/java/src/org/chromium/net/AndroidKeyStore.java
+net/android/keystore.cc
+---
+ net/android/java/src/org/chromium/net/AndroidKeyStore.java | 6 +++---
+ net/android/keystore.cc                                    | 2 +-
+ 2 files changed, 4 insertions(+), 4 deletions(-)
+
+diff --git a/net/android/java/src/org/chromium/net/AndroidKeyStore.java b/net/android/java/src/org/chromium/net/AndroidKeyStore.java
+index 1396bf1..d077fdd 100644
+--- a/net/android/java/src/org/chromium/net/AndroidKeyStore.java
++++ b/net/android/java/src/org/chromium/net/AndroidKeyStore.java
+@@ -223,7 +223,7 @@ public class AndroidKeyStore {
+      * @return The EVP_PKEY handle, as a 32-bit integer (0 if not available)
+      */
+     @CalledByNative
+-    public static int getOpenSSLHandleForPrivateKey(PrivateKey privateKey) {
++    public static long getOpenSSLHandleForPrivateKey(PrivateKey privateKey) {
+         // Sanity checks
+         if (privateKey == null) {
+             Log.e(TAG, "privateKey == null");
+@@ -286,9 +286,9 @@ public class AndroidKeyStore {
+                 return 0;
+             }
+             getPkeyContext.setAccessible(true);
+-            int evp_pkey = 0;
++            long evp_pkey = 0;
+             try {
+-                evp_pkey = (Integer) getPkeyContext.invoke(opensslKey);
++                evp_pkey = (Long) getPkeyContext.invoke(opensslKey);
+             } finally {
+                 getPkeyContext.setAccessible(false);
+             }
+diff --git a/net/android/keystore.cc b/net/android/keystore.cc
+index a3d8cc1..9a2136f 100644
+--- a/net/android/keystore.cc
++++ b/net/android/keystore.cc
+@@ -117,7 +117,7 @@ EVP_PKEY* GetOpenSSLSystemHandleForPrivateKey(jobject private_key) {
+   // Given that this routine shall only be called on Android < 4.2,
+   // this won't be a problem in the far future (e.g. when Android gets
+   // ported to 64-bit environments, if ever).
+-  int pkey =
++  jlong pkey =
+       Java_AndroidKeyStore_getOpenSSLHandleForPrivateKey(env, private_key);
+   return reinterpret_cast<EVP_PKEY*>(pkey);
+ }
+-- 
+1.8.3.2
+

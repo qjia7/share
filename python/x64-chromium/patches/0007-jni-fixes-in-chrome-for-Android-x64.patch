@@ -1,0 +1,149 @@
+From 75df0af59d3b08bad0efa78a3774beb449daf75e Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Sun, 26 Jan 2014 10:32:15 +0800
+Subject: [PATCH 7/9] jni fixes in chrome/ for Android x64
+
+---
+ .../java/src/org/chromium/chrome/browser/DevToolsServer.java   | 10 +++++-----
+ .../chromium/chrome/browser/SSLClientCertificateRequest.java   |  8 ++++----
+ chrome/browser/android/dev_tools_server.cc                     | 10 +++++-----
+ chrome/browser/android/omnibox/omnibox_prerender.cc            |  2 +-
+ chrome/browser/ui/android/ssl_client_certificate_request.cc    |  4 ++--
+ 5 files changed, 17 insertions(+), 17 deletions(-)
+
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/DevToolsServer.java b/chrome/android/java/src/org/chromium/chrome/browser/DevToolsServer.java
+index bc47c10..7ed33f9 100644
+--- a/chrome/android/java/src/org/chromium/chrome/browser/DevToolsServer.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/DevToolsServer.java
+@@ -9,7 +9,7 @@ package org.chromium.chrome.browser;
+  */
+ public class DevToolsServer {
+ 
+-    private int mNativeDevToolsServer = 0;
++    private long mNativeDevToolsServer = 0;
+ 
+     public DevToolsServer(String socketNamePrefix) {
+         mNativeDevToolsServer = nativeInitRemoteDebugging(socketNamePrefix);
+@@ -28,8 +28,8 @@ public class DevToolsServer {
+         nativeSetRemoteDebuggingEnabled(mNativeDevToolsServer, enabled);
+     }
+ 
+-    private native int nativeInitRemoteDebugging(String socketNamePrefix);
+-    private native void nativeDestroyRemoteDebugging(int devToolsServer);
+-    private native boolean nativeIsRemoteDebuggingEnabled(int devToolsServer);
+-    private native void nativeSetRemoteDebuggingEnabled(int devToolsServer, boolean enabled);
++    private native long nativeInitRemoteDebugging(String socketNamePrefix);
++    private native void nativeDestroyRemoteDebugging(long devToolsServer);
++    private native boolean nativeIsRemoteDebuggingEnabled(long devToolsServer);
++    private native void nativeSetRemoteDebuggingEnabled(long devToolsServer, boolean enabled);
+ }
+diff --git a/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java b/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
+index c22e7dc..7bbf517 100644
+--- a/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
++++ b/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
+@@ -43,12 +43,12 @@ class SSLClientCertificateRequest extends AsyncTask<Void, Void, Void>
+     // certificate chain and private key in the background, then later send the result back to the
+     // UI thread.
+     //
+-    private final int mNativePtr;
++    private final long mNativePtr;
+     private String mAlias;
+     private byte[][] mEncodedChain;
+     private PrivateKey mPrivateKey;
+ 
+-    private SSLClientCertificateRequest(int nativePtr) {
++    private SSLClientCertificateRequest(long nativePtr) {
+         mNativePtr = nativePtr;
+         mAlias = null;
+         mEncodedChain = null;
+@@ -132,7 +132,7 @@ class SSLClientCertificateRequest extends AsyncTask<Void, Void, Void>
+      * Note that nativeOnSystemRequestComplete will be called iff this method returns true.
+      */
+     @CalledByNative
+-    private static boolean selectClientCertificate(int nativePtr, String[] keyTypes,
++    private static boolean selectClientCertificate(long nativePtr, String[] keyTypes,
+             byte[][] encodedPrincipals, String hostName, int port) {
+         ThreadUtils.assertOnUiThread();
+ 
+@@ -168,5 +168,5 @@ class SSLClientCertificateRequest extends AsyncTask<Void, Void, Void>
+ 
+     // Called to pass request results to native side.
+     private static native void nativeOnSystemRequestCompletion(
+-            int requestPtr, byte[][] certChain, PrivateKey privateKey);
++            long requestPtr, byte[][] certChain, PrivateKey privateKey);
+ }
+diff --git a/chrome/browser/android/dev_tools_server.cc b/chrome/browser/android/dev_tools_server.cc
+index 3318a70..b16e981 100644
+--- a/chrome/browser/android/dev_tools_server.cc
++++ b/chrome/browser/android/dev_tools_server.cc
+@@ -440,27 +440,27 @@ bool RegisterDevToolsServer(JNIEnv* env) {
+   return RegisterNativesImpl(env);
+ }
+ 
+-static jint InitRemoteDebugging(JNIEnv* env,
++static jlong InitRemoteDebugging(JNIEnv* env,
+                                 jobject obj,
+                                 jstring socket_name_prefix) {
+   DevToolsServer* server = new DevToolsServer(
+       base::android::ConvertJavaStringToUTF8(env, socket_name_prefix));
+-  return reinterpret_cast<jint>(server);
++  return reinterpret_cast<intptr_t>(server);
+ }
+ 
+-static void DestroyRemoteDebugging(JNIEnv* env, jobject obj, jint server) {
++static void DestroyRemoteDebugging(JNIEnv* env, jobject obj, jlong server) {
+   delete reinterpret_cast<DevToolsServer*>(server);
+ }
+ 
+ static jboolean IsRemoteDebuggingEnabled(JNIEnv* env,
+                                          jobject obj,
+-                                         jint server) {
++                                         jlong server) {
+   return reinterpret_cast<DevToolsServer*>(server)->IsStarted();
+ }
+ 
+ static void SetRemoteDebuggingEnabled(JNIEnv* env,
+                                       jobject obj,
+-                                      jint server,
++                                      jlong server,
+                                       jboolean enabled) {
+   DevToolsServer* devtools_server = reinterpret_cast<DevToolsServer*>(server);
+   if (enabled) {
+diff --git a/chrome/browser/android/omnibox/omnibox_prerender.cc b/chrome/browser/android/omnibox/omnibox_prerender.cc
+index 8c7b952..8c6a08c 100644
+--- a/chrome/browser/android/omnibox/omnibox_prerender.cc
++++ b/chrome/browser/android/omnibox/omnibox_prerender.cc
+@@ -63,7 +63,7 @@ void OmniboxPrerender::PrerenderMaybe(JNIEnv* env,
+                                       jobject obj,
+                                       jstring j_url,
+                                       jstring j_current_url,
+-                                      jint jsource_match,
++                                      jlong jsource_match,
+                                       jobject j_profile_android,
+                                       jobject j_tab) {
+   AutocompleteResult* autocomplete_result =
+diff --git a/chrome/browser/ui/android/ssl_client_certificate_request.cc b/chrome/browser/ui/android/ssl_client_certificate_request.cc
+index 468b53b..546bf43 100644
+--- a/chrome/browser/ui/android/ssl_client_certificate_request.cc
++++ b/chrome/browser/ui/android/ssl_client_certificate_request.cc
+@@ -100,7 +100,7 @@ void StartClientCertificateRequest(
+   scoped_ptr<chrome::SelectCertificateCallback> request(
+       new chrome::SelectCertificateCallback(callback));
+ 
+-  jint request_id = reinterpret_cast<jint>(request.get());
++  jlong request_id = reinterpret_cast<jlong>(request.get());
+ 
+   if (!chrome::android::
+       Java_SSLClientCertificateRequest_selectClientCertificate(
+@@ -134,7 +134,7 @@ namespace android {
+ static void OnSystemRequestCompletion(
+     JNIEnv* env,
+     jclass clazz,
+-    jint request_id,
++    jlong request_id,
+     jobjectArray encoded_chain_ref,
+     jobject private_key_ref) {
+   DCHECK(content::BrowserThread::CurrentlyOn(content::BrowserThread::UI));
+-- 
+1.8.3.2
+
