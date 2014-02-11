@@ -99,7 +99,7 @@ def setup():
     if args.fail_number_max:
         fail_number_max = args.fail_number_max
 
-    backup_dir(get_script_dir())
+    backup_dir(get_symbolic_link_dir())
     # Packages is split by white space so that you may easily install them all
     ensure_package('libnss3-dev ant libcups2-dev libcap-dev libxtst-dev libasound2-dev libxss-dev')
 
