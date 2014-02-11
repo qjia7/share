@@ -11,7 +11,7 @@
 # android-x86-content_shell: rev.apk, rev.FAIL, rev.NULL. Finished: 235194-238638
 
 # Build master: host all the builds.
-# Build slave: ssh-keygen && ssh-add ~/.ssh/id_rsa. And copy ~/.ssh/id_rsa.pub to ~/.ssh/authorized_keys on host
+# Build slave: ssh-keygen && ssh-add ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub | ssh ubuntu-ygu5-02 cat - >>~/.ssh/authorized_keys
 
 from util import *
 from common import *
