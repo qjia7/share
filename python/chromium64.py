@@ -192,8 +192,8 @@ def sync(force=False):
     if not args.sync and not force:
         return
 
-    execute('repo init -u ssh://aia-review.intel.com/platform/manifest -b topic/64-bit/master')
-    command = 'repo sync -c -j16'
+    execute('./repo init -u ssh://android.intel.com/a/aosp/platform/manifest -b abt/topic/64-bit/master')
+    command = './repo sync -c -j16'
     if args.sync_local:
         command += ' -l'
     result = execute(command, show_progress=True)
