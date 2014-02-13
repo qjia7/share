@@ -8,11 +8,11 @@ repos = []
 android_target_arch = ''
 chromium_target_arch = ''
 
-patches = [
+patches_stage1 = [
     # stage 1
     'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/3 && git checkout FETCH_HEAD',  # upstream change
     'git fetch https://aia-review.intel.com/platform/system/core refs/changes/03/3203/2 && git checkout FETCH_HEAD',  # revert our change, redefinition error
-    'git fetch https://aia-review.intel.com/platform/frameworks/base refs/changes/93/4593/2 && git checkout FETCH_HEAD',  # sync with upstream
+    'git fetch https://aia-review.intel.com/platform/frameworks/base refs/changes/93/4593/3 && git checkout FETCH_HEAD',  # sync with upstream
 
     'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/2 && git checkout FETCH_HEAD',  # no upstream code, necessary change
     'git fetch https://aia-review.intel.com/platform/bootable/userfastboot refs/changes/04/4804/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
@@ -20,6 +20,10 @@ patches = [
     'git fetch https://aia-review.intel.com/platform/frameworks/av refs/changes/94/4594/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
     'git fetch https://aia-review.intel.com/platform/system/netd refs/changes/86/4586/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
     'git fetch https://aia-review.intel.com/platform/system/vold refs/changes/89/4589/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
+
+]
+
+patches_next = [
 
     # stage 2
     # kernel: Give more memory range out for 2G- trick
@@ -153,7 +157,7 @@ examples:
 
     group_other = parser.add_argument_group('other')
     group_other.add_argument('-c', '--combo', dest='combo', help='combos, split with ","', choices=combos + ['all'], default='hsb_64-eng')
-    group_other.add_argument('-m', '--module', dest='module', help='modules, split with ","', choices=modules_common + modules_system.values() + ['all'], default='webviewchromium')
+    group_other.add_argument('-m', '--module', dest='module', help='modules, split with ","', choices=modules_common + modules_system.values() + ['all'], default='droid')
     group_other.add_argument('-d', '--root-dir', dest='root_dir', help='set root directory')
     group_other.add_argument('--dep', dest='dep', help='get dep for each module', action='store_true')
     group_other.add_argument('--git-status', dest='git_status', help='git status for repos', action='store_true')
@@ -204,6 +208,8 @@ def patch(force=False):
     backup_dir(webviewchromium_dir)
     execute('find -name "*linux-x86_64.mk" | xargs rm -f')
     restore_dir()
+
+    patches = patches_stage1
 
     for patch in patches:
         pattern = re.compile('aia-review\.intel\.com/(.*) (.*) &&')
