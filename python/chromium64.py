@@ -10,17 +10,14 @@ chromium_target_arch = ''
 
 patches_stage1 = [
     # stage 1
-    'git fetch https://aia-review.intel.com/platform/bionic refs/changes/92/4592/3 && git checkout FETCH_HEAD',  # upstream change
-    'git fetch https://aia-review.intel.com/platform/system/core refs/changes/03/3203/2 && git checkout FETCH_HEAD',  # revert our change, redefinition error
-    'git fetch https://aia-review.intel.com/platform/frameworks/base refs/changes/93/4593/3 && git checkout FETCH_HEAD',  # sync with upstream
-
-    'git fetch https://aia-review.intel.com/platform/bootable/iago refs/changes/83/4583/2 && git checkout FETCH_HEAD',  # no upstream code, necessary change
-    'git fetch https://aia-review.intel.com/platform/bootable/userfastboot refs/changes/04/4804/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
-
-    'git fetch https://aia-review.intel.com/platform/frameworks/av refs/changes/94/4594/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
-    'git fetch https://aia-review.intel.com/platform/system/netd refs/changes/86/4586/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
-    'git fetch https://aia-review.intel.com/platform/system/vold refs/changes/89/4589/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
-
+    'git fetch https://android.intel.com/a/aosp/platform/bionic refs/changes/00/163200/1 && git checkout FETCH_HEAD',  # upstream change
+    'git fetch https://android.intel.com/a/aosp/platform/frameworks/base refs/changes/06/163206/1 && git checkout FETCH_HEAD',  # upstream change
+    'git fetch https://android.intel.com/a/aosp/platform/system/core refs/changes/09/163209/1 && git checkout FETCH_HEAD',  # revert our change, redefinition error
+    'git fetch https://android.intel.com/a/bsp/platform/bootable/iago refs/changes/12/163212/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
+    'git fetch https://android.intel.com/a/bsp/platform/bootable/userfastboot refs/changes/15/163215/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
+    'git fetch https://android.intel.com/a/aosp/platform/frameworks/av refs/changes/18/163218/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
+    'git fetch https://android.intel.com/a/aosp/platform/system/netd refs/changes/19/163219/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
+    'git fetch https://android.intel.com/a/aosp/platform/system/vold refs/changes/20/163220/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
 ]
 
 patches_next = [
@@ -188,11 +185,33 @@ def setup():
     _ensure_repos()
 
 
+def clean(force=False):
+    if not args.clean and not force:
+        return
+
+    if not force:
+        warning('Clean is very dangerous, your local changes will be lost')
+        sys.stdout.write('Are you sure to do the cleanup? [yes/no]: ')
+        choice = raw_input().lower()
+        if choice not in ['yes', 'y']:
+            return
+
+    for repo in dirty_repos:
+        backup_dir(root_dir + '/' + repo)
+        result = execute('git reset --hard umg/abt/topic/64-bit/master', show_command=False)
+        if result[0]:
+            error('Fail to clean up repo ' + repo)
+        else:
+            info(repo + ' is reset to umg/abt/topic/64-bit/master')
+
+        restore_dir()
+
+
 def sync(force=False):
     if not args.sync and not force:
         return
 
-    execute('./repo init -u ssh://android.intel.com/a/aosp/platform/manifest -b abt/topic/64-bit/master')
+    #execute('./repo init -u ssh://android.intel.com/a/aosp/platform/manifest -b abt/topic/64-bit/master')
     command = './repo sync -c -j16'
     if args.sync_local:
         command += ' -l'
@@ -205,28 +224,48 @@ def patch(force=False):
     if not args.patch and not force:
         return
 
-    backup_dir(webviewchromium_dir)
-    execute('find -name "*linux-x86_64.mk" | xargs rm -f')
-    restore_dir()
+    #backup_dir(webviewchromium_dir)
+    #execute('find -name "*linux-x86_64.mk" | xargs rm -f')
+    #restore_dir()
 
     patches = patches_stage1
+    type = 'new'
 
     for patch in patches:
-        pattern = re.compile('aia-review\.intel\.com/(.*) (.*) &&')
+        if re.search('aia-review', patch):
+            type = 'old'
+
+        if type == 'old':
+            pattern = re.compile('aia-review\.intel\.com/(.*) (.*) &&')
+        else:
+            pattern = re.compile('android\.intel\.com/a/(.*) (.*) &&')
+
         match = pattern.search(patch)
         path = match.group(1)
 
         # Handle repos like platform/build, device/intel/haswell
         repo = path
+        if re.search('^aosp/platform', repo):
+            repo = repo.replace('aosp/platform/', '')
+
+        if re.search('^bsp/platform', repo):
+            repo = repo.replace('bsp/platform/', '')
+
         if re.search('^platform', repo):
             repo = repo.replace('platform/', '')
 
         repo = repo.replace('kernel/intel-uefi', 'linux/kernel-uefi')
 
         change = match.group(2)
+        execute('./repo start x64 ' + repo)
         backup_dir(root_dir + '/' + repo)
 
-        cmd_fetch = 'git fetch ssh://aia-review.intel.com/' + path + ' ' + change
+        cmd_fetch = 'git fetch ssh://'
+        if type == 'old':
+            cmd_fetch += 'aia-review.intel.com'
+        else:
+            cmd_fetch += 'android.intel.com/a'
+        cmd_fetch += '/' + path + ' ' + change
         result = execute(cmd_fetch, show_command=False)
         if result[0]:
             error('Failed to execute command ' + cmd_fetch, error_code=result[0])
@@ -246,24 +285,6 @@ def patch(force=False):
         else:
             warning('Patch has been cherry picked, so it will be skipped: ' + patch)
 
-        restore_dir()
-
-
-def clean(force=False):
-    if not args.clean and not force:
-        return
-
-    if not force:
-        warning('Clean is very dangerous, your local changes will be lost')
-        sys.stdout.write('Are you sure to do the cleanup? [yes/no]: ')
-        choice = raw_input().lower()
-        if choice not in ['yes', 'y']:
-            return
-
-    for repo in dirty_repos:
-        backup_dir(root_dir + '/' + repo)
-        execute('git reset --hard aia/topic/64-bit/master', show_command=False)
-        info(repo + ' is reset to aia/topic/64-bit/master')
         restore_dir()
 
 
@@ -509,13 +530,14 @@ def burn_live():
 
     execute('sudo dd if=' + img + ' of=' + args.burn_live + ' && sync', interactive=True)
 
+
 if __name__ == '__main__':
     handle_option()
     setup()
     clean()
     sync()
     patch()
-    mk64()
+    #mk64()
     build()
     git_status()
     dep()
