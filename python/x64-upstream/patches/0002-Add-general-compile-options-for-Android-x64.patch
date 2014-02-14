@@ -1,17 +1,26 @@
-From 79a532dd8e24b7bdae9aed0d54325b386ea59696 Mon Sep 17 00:00:00 2001
+From ccf69e1cce1441cfdeb12fd9074e4fc0bdd2a943 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Tue, 11 Feb 2014 16:01:23 +0800
 Subject: [PATCH 2/2] Add general compile options for Android x64
 
 ---
- build/common.gypi | 84 +++++++++++++++++++++++++++++++++++++++++++++++++++++++
- 1 file changed, 84 insertions(+)
+ build/common.gypi |   86 ++++++++++++++++++++++++++++++++++++++++++++++++++++-
+ 1 file changed, 85 insertions(+), 1 deletion(-)
 
 diff --git a/build/common.gypi b/build/common.gypi
-index 7cee06f..16e20c1 100644
+index 3252c4e..7b2aa66 100644
 --- a/build/common.gypi
 +++ b/build/common.gypi
-@@ -3182,6 +3182,90 @@
+@@ -1392,7 +1392,7 @@
+             ['target_arch == "x64"', {
+               'android_app_abi%': 'x86_64',
+               'android_gdbserver%': '<(android_ndk_root)/prebuilt/android-x86_64/gdbserver/gdbserver',
+-              'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-14/arch-x86_64',
++              'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-19/arch-x86_64',
+               'android_toolchain%': '<(android_ndk_root)/toolchains/x86_64-4.8/prebuilt/<(host_os)-<(android_host_arch)/bin',
+             }],
+             ['target_arch=="arm"', {
+@@ -3195,6 +3195,90 @@
                }],
              ],
            }],
@@ -103,5 +112,5 @@ index 7cee06f..16e20c1 100644
              'target_conditions': [
                ['_toolset=="target"', {
 -- 
-1.8.3.2
+1.7.9.5
 

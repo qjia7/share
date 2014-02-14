@@ -1,18 +1,18 @@
-From afb1bcbc38cc259b564231badfaf438dd240cb00 Mon Sep 17 00:00:00 2001
-From: Yang Gu <yang.gu@intel.com>
-Date: Tue, 11 Feb 2014 15:31:22 +0800
+From 9c6ac9a09e77204aead7f03a8680e82bdec2c42a Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Thu, 13 Feb 2014 16:20:34 +0800
 Subject: [PATCH] Enable x64 build
 
 ---
- build/android/envsetup_functions.sh |  9 ++++++++-
- build/common.gypi                   |  6 ++++++
- build/config/android/config.gni     |  2 ++
- build/config/sysroot.gni            |  2 ++
- build/toolchain/android/BUILD.gn    | 13 +++++++++++++
- 5 files changed, 31 insertions(+), 1 deletion(-)
+ build/android/envsetup_functions.sh |   13 ++++++++++++-
+ build/common.gypi                   |    6 ++++++
+ build/config/android/config.gni     |    2 ++
+ build/config/sysroot.gni            |    2 ++
+ build/toolchain/android/BUILD.gn    |   13 +++++++++++++
+ 5 files changed, 35 insertions(+), 1 deletion(-)
 
 diff --git a/build/android/envsetup_functions.sh b/build/android/envsetup_functions.sh
-index 20b72b4..e0f2e27 100755
+index af24116..756b743 100755
 --- a/build/android/envsetup_functions.sh
 +++ b/build/android/envsetup_functions.sh
 @@ -25,6 +25,7 @@ common_check_toolchain() {
@@ -42,18 +42,22 @@ index 20b72b4..e0f2e27 100755
    toolchain_target=$(basename \
      ${ANDROID_NDK_ROOT}/toolchains/${toolchain_arch}-${toolchain_version})
    toolchain_path="${ANDROID_NDK_ROOT}/toolchains/${toolchain_target}"\
-@@ -100,6 +104,9 @@ ${ANDROID_SDK_BUILD_TOOLS_VERSION}
-     "x86")
+@@ -125,6 +129,13 @@ ${ANDROID_SDK_BUILD_TOOLS_VERSION}
+       DEFINES+=" host_arch=${host_arch}"
        DEFINES+=" target_arch=ia32"
        ;;
 +    "x64")
++      DEFINES+=" use_libffmpeg=0"
++      host_arch=$(uname -m | sed -e \
++        's/i.86/ia32/;s/x86_64/x64/;s/amd64/x64/;s/arm.*/arm/;s/i86pc/ia32/')
++      DEFINES+=" host_arch=${host_arch}"
 +      DEFINES+=" target_arch=x64"
 +      ;;
      "mips")
        DEFINES+=" target_arch=mipsel"
-       ;;
+       DEFINES+=" mips_arch_variant=mips32r1"
 diff --git a/build/common.gypi b/build/common.gypi
-index 43f73de..7cee06f 100644
+index e1bab1e3e..3252c4e 100644
 --- a/build/common.gypi
 +++ b/build/common.gypi
 @@ -1389,6 +1389,12 @@
@@ -70,10 +74,10 @@ index 43f73de..7cee06f 100644
                'conditions': [
                  ['arm_version<7', {
 diff --git a/build/config/android/config.gni b/build/config/android/config.gni
-index c740812..1d6dd22 100644
+index 9fc6c27..c05de24 100644
 --- a/build/config/android/config.gni
 +++ b/build/config/android/config.gni
-@@ -45,6 +45,8 @@ if (is_android) {
+@@ -40,6 +40,8 @@ if (is_android) {
  
    if (cpu_arch == "x86") {
      android_app_abi = "x86"
@@ -83,7 +87,7 @@ index c740812..1d6dd22 100644
      import("//build/config/arm.gni")
      if (arm_version < 7) {
 diff --git a/build/config/sysroot.gni b/build/config/sysroot.gni
-index 6340c3a..d6a39fe 100644
+index 4d3958a..036f610 100644
 --- a/build/config/sysroot.gni
 +++ b/build/config/sysroot.gni
 @@ -10,6 +10,8 @@ if (is_android) {
@@ -91,7 +95,7 @@ index 6340c3a..d6a39fe 100644
      if (cpu_arch == "x86") {
        sysroot = "$android_ndk_root/platforms/android-14/arch-x86"
 +    } else if (cpu_arch == "x64") {
-+      sysroot = "$android_ndk_root/platforms/android-14/arch-x86_64"
++      sysroot = "$android_ndk_root/platforms/android-19/arch-x86_64"
      } else if (cpu_arch == "arm") {
        sysroot = "$android_ndk_root/platforms/android-14/arch-arm"
      } else if (cpu_arch == "mipsel") {
@@ -127,5 +131,5 @@ index 8f84f69..f0e1842 100644
    prefix = "$android_ndk_root/toolchains/arm-linux-androideabi-4.6/prebuilt/$build_os-$android_host_arch/bin/arm-linux-androideabi-"
    cc  = prefix + "gcc"
 -- 
-1.8.3.2
+1.7.9.5
 
