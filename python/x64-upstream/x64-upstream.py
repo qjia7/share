@@ -23,9 +23,14 @@ patches = {
         '0007-jni-fixes-in-chrome-for-Android-x64.patch',
         '0008-Add-x86_64-ucontext-structure-for-Android-x64.patch',
         '0009-media-64-support.patch',
+        '0010-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
     ],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
-    'src/v8': ['0001-v8-x64-support.patch'],
+    'src/v8': [
+        '0001-v8-x64-support.patch',
+        '0002-walkaround-for-V8_INT64_C.patch'
+    ],
+    'src/third_party/libvpx': ['0001-fix-the-target-arch-mistake-for-android-x86-x64.patch'],
 }
 
 
@@ -85,7 +90,7 @@ def sync(force=False):
     if not args.sync:
         return
 
-    cmd = 'gclient sync -f -n'
+    cmd = 'gclient sync -f -n --revision src@459216a04dd39b744a73876b21266b7ad1ecfdf4'
     result = execute(cmd, show_progress=True)
     if result[0]:
         error('sync failed', error_code=result[0])
@@ -149,6 +154,9 @@ def set_ndk():
 
     if not OS.path.exists('ndk/crazy_linker.gyp'):
         execute('cp ' + dir_script + '/patches/crazy_linker.gyp ndk/')
+
+    if not OS.path.exists('ndk/platforms/android-14/arch-x86_64/usr/include/asm/unistd_64.h'):
+        execute('cd ndk; git init; git add .; git commit -a -m \"orig\"; git apply ../share/python/x64-upstream/patches/ndk-allinone.patch; cd ..;');
 
 if __name__ == '__main__':
     handle_option()

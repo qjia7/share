@@ -1,0 +1,101 @@
+From 61a0c9ffa07e284667f00e98ddc9cae52ee9d950 Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Fri, 14 Feb 2014 15:16:42 +0800
+Subject: [PATCH] walkaround for V8_INT64_C
+
+---
+ src/x64/code-stubs-x64.cc      |    9 ++++++---
+ src/x64/lithium-codegen-x64.cc |    4 +++-
+ src/x64/macro-assembler-x64.cc |    6 ++++--
+ 3 files changed, 13 insertions(+), 6 deletions(-)
+
+diff --git a/src/x64/code-stubs-x64.cc b/src/x64/code-stubs-x64.cc
+index 1e68bdf..0d23145 100644
+--- a/src/x64/code-stubs-x64.cc
++++ b/src/x64/code-stubs-x64.cc
+@@ -756,13 +756,16 @@ void MathPowStub::Generate(MacroAssembler* masm) {
+     __ j(equal, &call_runtime);
+ 
+     if (exponent_type_ == ON_STACK) {
++      static int64_t one_half = V8_INT64_C(0x3FE0000000000000);
++      static int64_t infinity = V8_INT64_C(0xFFF0000000000000);
++
+       // Detect square root case.  Crankshaft detects constant +/-0.5 at
+       // compile time and uses DoMathPowHalf instead.  We then skip this check
+       // for non-constant cases of +/-0.5 as these hardly occur.
+       Label continue_sqrt, continue_rsqrt, not_plus_half;
+       // Test for 0.5.
+       // Load double_scratch with 0.5.
+-      __ movq(scratch, V8_UINT64_C(0x3FE0000000000000));
++      __ movq(scratch, one_half);
+       __ movq(double_scratch, scratch);
+       // Already ruled out NaNs for exponent.
+       __ ucomisd(double_scratch, double_exponent);
+@@ -772,7 +775,7 @@ void MathPowStub::Generate(MacroAssembler* masm) {
+       // Math.pow(-Infinity, 0.5) == Infinity (ECMA spec, 15.8.2.13).
+       // According to IEEE-754, double-precision -Infinity has the highest
+       // 12 bits set and the lowest 52 bits cleared.
+-      __ movq(scratch, V8_UINT64_C(0xFFF0000000000000));
++      __ movq(scratch, infinity);
+       __ movq(double_scratch, scratch);
+       __ ucomisd(double_scratch, double_base);
+       // Comparing -Infinity with NaN results in "unordered", which sets the
+@@ -804,7 +807,7 @@ void MathPowStub::Generate(MacroAssembler* masm) {
+       // case of Math.pow(-Infinity, -0.5) == 0 (ECMA spec, 15.8.2.13).
+       // According to IEEE-754, double-precision -Infinity has the highest
+       // 12 bits set and the lowest 52 bits cleared.
+-      __ movq(scratch, V8_UINT64_C(0xFFF0000000000000));
++      __ movq(scratch, infinity);
+       __ movq(double_scratch, scratch);
+       __ ucomisd(double_scratch, double_base);
+       // Comparing -Infinity with NaN results in "unordered", which sets the
+diff --git a/src/x64/lithium-codegen-x64.cc b/src/x64/lithium-codegen-x64.cc
+index 178e9d1..c90418e 100644
+--- a/src/x64/lithium-codegen-x64.cc
++++ b/src/x64/lithium-codegen-x64.cc
+@@ -3700,13 +3700,15 @@ void LCodeGen::DoMathPowHalf(LMathPowHalf* instr) {
+   XMMRegister input_reg = ToDoubleRegister(instr->value());
+   ASSERT(ToDoubleRegister(instr->result()).is(input_reg));
+ 
++  static int64_t infinity = V8_INT64_C(0xFFF0000000000000);
++
+   // Note that according to ECMA-262 15.8.2.13:
+   // Math.pow(-Infinity, 0.5) == Infinity
+   // Math.sqrt(-Infinity) == NaN
+   Label done, sqrt;
+   // Check base for -Infinity.  According to IEEE-754, double-precision
+   // -Infinity has the highest 12 bits set and the lowest 52 bits cleared.
+-  __ movq(kScratchRegister, V8_INT64_C(0xFFF0000000000000));
++  __ movq(kScratchRegister, infinity);
+   __ movq(xmm_scratch, kScratchRegister);
+   __ ucomisd(xmm_scratch, input_reg);
+   // Comparing -Infinity with NaN results in "unordered", which sets the
+diff --git a/src/x64/macro-assembler-x64.cc b/src/x64/macro-assembler-x64.cc
+index bf3e6e1..cfe711d 100644
+--- a/src/x64/macro-assembler-x64.cc
++++ b/src/x64/macro-assembler-x64.cc
+@@ -3118,8 +3118,9 @@ void MacroAssembler::TruncateHeapNumberToI(Register result_reg,
+ void MacroAssembler::TruncateDoubleToI(Register result_reg,
+                                        XMMRegister input_reg) {
+   Label done;
++  static int64_t value = V8_INT64_C(0x8000000000000000);
+   cvttsd2siq(result_reg, input_reg);
+-  movq(kScratchRegister, V8_INT64_C(0x8000000000000000));
++  movq(kScratchRegister, value);
+   cmpq(result_reg, kScratchRegister);
+   j(not_equal, &done, Label::kNear);
+ 
+@@ -3301,8 +3302,9 @@ void MacroAssembler::AssertSmi(const Operand& object) {
+ 
+ void MacroAssembler::AssertZeroExtended(Register int32_register) {
+   if (emit_debug_code()) {
++    static int64_t value = V8_INT64_C(0x0000000100000000);
+     ASSERT(!int32_register.is(kScratchRegister));
+-    movq(kScratchRegister, V8_INT64_C(0x0000000100000000));
++    movq(kScratchRegister, value);
+     cmpq(kScratchRegister, int32_register);
+     Check(above_equal, k32BitValueInRegisterIsNotZeroExtended);
+   }
+-- 
+1.7.9.5
+

@@ -1,0 +1,25 @@
+From c8f48a46e8aa7378b0dc189b750b0cbc1a795be7 Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Fri, 14 Feb 2014 08:58:28 +0800
+Subject: [PATCH] fix the 'target arch' mistake for android x86/x64
+
+---
+ libvpx.gyp |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/libvpx.gyp b/libvpx.gyp
+index 7df3a48..b97feb0 100644
+--- a/libvpx.gyp
++++ b/libvpx.gyp
+@@ -17,7 +17,7 @@
+         'target_arch_full': 'arm-neon',
+       }, {
+         'conditions': [
+-          ['OS=="android"', {
++          ['OS=="android" and (target_arch=="arm" or target_arch=="armv7")', {
+             'target_arch_full': 'arm-neon-cpu-detect',
+           }, {
+            'target_arch_full': '<(target_arch)',
+-- 
+1.7.9.5
+

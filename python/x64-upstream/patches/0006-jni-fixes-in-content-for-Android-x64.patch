@@ -1,26 +1,26 @@
-From 519667c322cfac13e482252d6bd22354c00221df Mon Sep 17 00:00:00 2001
-From: Yang Gu <yang.gu@intel.com>
-Date: Tue, 11 Feb 2014 12:41:54 +0800
-Subject: [PATCH 6/9] jni fixes in content/ for Android x64
+From ebdbc1a593d7ca3a7a9691e828d5792033fec2de Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Thu, 13 Feb 2014 15:19:09 +0800
+Subject: [PATCH] jni fixes in content/ for Android x64
 
 ---
- content/browser/android/content_view_core_impl.cc                     | 2 +-
- content/browser/android/content_view_core_impl.h                      | 2 +-
- content/browser/android/content_view_render_view.cc                   | 2 +-
- content/browser/android/content_view_render_view.h                    | 2 +-
- content/browser/renderer_host/render_widget_host_view_android.cc      | 4 ++--
- content/browser/renderer_host/render_widget_host_view_android.h       | 2 +-
- .../java/src/org/chromium/content/browser/ContentSettings.java        | 2 +-
- .../java/src/org/chromium/content/browser/ContentViewCore.java        | 4 ++--
- .../java/src/org/chromium/content/browser/input/ImeAdapter.java       | 4 ++--
- content/renderer/media/android/webmediaplayer_android.cc              | 2 +-
+ content/browser/android/content_view_core_impl.cc  |    2 +-
+ content/browser/android/content_view_core_impl.h   |    2 +-
+ .../browser/android/content_view_render_view.cc    |    2 +-
+ content/browser/android/content_view_render_view.h |    2 +-
+ .../render_widget_host_view_android.cc             |    4 ++--
+ .../render_widget_host_view_android.h              |    2 +-
+ .../chromium/content/browser/ContentSettings.java  |    2 +-
+ .../chromium/content/browser/ContentViewCore.java  |    4 ++--
+ .../chromium/content/browser/input/ImeAdapter.java |    4 ++--
+ .../media/android/webmediaplayer_android.cc        |    2 +-
  10 files changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/content/browser/android/content_view_core_impl.cc b/content/browser/android/content_view_core_impl.cc
-index 9bae2ac..e2f6ce2 100644
+index 182c0a6..1fb5024 100644
 --- a/content/browser/android/content_view_core_impl.cc
 +++ b/content/browser/android/content_view_core_impl.cc
-@@ -1719,7 +1719,7 @@ bool ContentViewCoreImpl::GetUseDesktopUserAgent(
+@@ -1552,7 +1552,7 @@ bool ContentViewCoreImpl::GetUseDesktopUserAgent(
    return entry && entry->GetIsOverridingUserAgent();
  }
  
@@ -30,10 +30,10 @@ index 9bae2ac..e2f6ce2 100644
                                             const std::string& text,
                                             int selection_start,
 diff --git a/content/browser/android/content_view_core_impl.h b/content/browser/android/content_view_core_impl.h
-index 7464210..58a9d6f 100644
+index f61e01b..8ac232e 100644
 --- a/content/browser/android/content_view_core_impl.h
 +++ b/content/browser/android/content_view_core_impl.h
-@@ -262,7 +262,7 @@ class ContentViewCoreImpl : public ContentViewCore,
+@@ -259,7 +259,7 @@ class ContentViewCoreImpl : public ContentViewCore,
                         const gfx::Vector2dF& content_offset,
                         float overdraw_bottom_height);
  
@@ -43,10 +43,10 @@ index 7464210..58a9d6f 100644
                          int selection_start, int selection_end,
                          int composition_start, int composition_end,
 diff --git a/content/browser/android/content_view_render_view.cc b/content/browser/android/content_view_render_view.cc
-index 693f569..71f5978 100644
+index 109983f..e335320 100644
 --- a/content/browser/android/content_view_render_view.cc
 +++ b/content/browser/android/content_view_render_view.cc
-@@ -57,7 +57,7 @@ void ContentViewRenderView::Destroy(JNIEnv* env, jobject obj) {
+@@ -56,7 +56,7 @@ void ContentViewRenderView::Destroy(JNIEnv* env, jobject obj) {
  }
  
  void ContentViewRenderView::SetCurrentContentView(
@@ -56,7 +56,7 @@ index 693f569..71f5978 100644
    ContentViewCoreImpl* content_view =
        reinterpret_cast<ContentViewCoreImpl*>(native_content_view);
 diff --git a/content/browser/android/content_view_render_view.h b/content/browser/android/content_view_render_view.h
-index a652864..6ac2831 100644
+index f906da0..4b776a2 100644
 --- a/content/browser/android/content_view_render_view.h
 +++ b/content/browser/android/content_view_render_view.h
 @@ -26,7 +26,7 @@ class ContentViewRenderView : public CompositorClient {
@@ -65,11 +65,11 @@ index a652864..6ac2831 100644
    void Destroy(JNIEnv* env, jobject obj);
 -  void SetCurrentContentView(JNIEnv* env, jobject obj, int native_content_view);
 +  void SetCurrentContentView(JNIEnv* env, jobject obj, jlong native_content_view);
-   void SurfaceCreated(JNIEnv* env, jobject obj);
+   void SurfaceCreated(JNIEnv* env, jobject obj, jobject jsurface);
    void SurfaceDestroyed(JNIEnv* env, jobject obj);
-   void SurfaceChanged(JNIEnv* env, jobject obj,
+   void SurfaceSetSize(JNIEnv* env, jobject obj, jint width, jint height);
 diff --git a/content/browser/renderer_host/render_widget_host_view_android.cc b/content/browser/renderer_host/render_widget_host_view_android.cc
-index 4f1c64d..cc915d9 100644
+index ece82ac..8d07fde 100644
 --- a/content/browser/renderer_host/render_widget_host_view_android.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_android.cc
 @@ -468,8 +468,8 @@ void RenderWidgetHostViewAndroid::TextInputTypeChanged(
@@ -84,10 +84,10 @@ index 4f1c64d..cc915d9 100644
  
  void RenderWidgetHostViewAndroid::OnTextInputStateChanged(
 diff --git a/content/browser/renderer_host/render_widget_host_view_android.h b/content/browser/renderer_host/render_widget_host_view_android.h
-index 67262f7..49f731b 100644
+index dc7a77f..5cc7fa1 100644
 --- a/content/browser/renderer_host/render_widget_host_view_android.h
 +++ b/content/browser/renderer_host/render_widget_host_view_android.h
-@@ -220,7 +220,7 @@ class RenderWidgetHostViewAndroid
+@@ -221,7 +221,7 @@ class RenderWidgetHostViewAndroid
    void LockResources();
    void UnlockResources();
  
@@ -110,10 +110,10 @@ index f8f0942..bd985d2 100644
          mNativeContentSettings = 0;
      }
 diff --git a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
-index 7921262..9b397f0 100644
+index be4e5f9..305ece5 100644
 --- a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
 +++ b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
-@@ -2565,7 +2565,7 @@ public class ContentViewCore
+@@ -2468,7 +2468,7 @@ public class ContentViewCore
      }
  
      @CalledByNative
@@ -122,7 +122,7 @@ index 7921262..9b397f0 100644
              String text, int selectionStart, int selectionEnd,
              int compositionStart, int compositionEnd, boolean showImeIfNeeded, boolean requireAck) {
          TraceEvent.begin();
-@@ -3430,7 +3430,7 @@ public class ContentViewCore
+@@ -3334,7 +3334,7 @@ public class ContentViewCore
      private native void nativeEvaluateJavaScript(long nativeContentViewCoreImpl,
              String script, JavaScriptCallback callback, boolean startRenderer);
  
@@ -151,11 +151,11 @@ index b4e41b9..3b687ab 100644
          mHandler.removeCallbacks(mDismissInput);
  
 diff --git a/content/renderer/media/android/webmediaplayer_android.cc b/content/renderer/media/android/webmediaplayer_android.cc
-index 5fae879..c626c45 100644
+index 7d9ff36..14f4b3a 100644
 --- a/content/renderer/media/android/webmediaplayer_android.cc
 +++ b/content/renderer/media/android/webmediaplayer_android.cc
-@@ -88,7 +88,7 @@ WebMediaPlayerAndroid::WebMediaPlayerAndroid(
-       frame_(frame),
+@@ -83,7 +83,7 @@ WebMediaPlayerAndroid::WebMediaPlayerAndroid(
+     : frame_(frame),
        client_(client),
        delegate_(delegate),
 -      buffered_(1u),
@@ -164,5 +164,5 @@ index 5fae879..c626c45 100644
        media_loop_(media_loop),
        ignore_metadata_duration_change_(false),
 -- 
-1.8.3.2
+1.7.9.5
 
