@@ -24,6 +24,7 @@ patches = {
         '0008-Add-x86_64-ucontext-structure-for-Android-x64.patch',
         '0009-media-64-support.patch',
         '0010-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
+        '0011-suppress-warning-error-in-ppapi.patch',
     ],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
     'src/v8': [
@@ -31,6 +32,7 @@ patches = {
         '0002-walkaround-for-V8_INT64_C.patch'
     ],
     'src/third_party/libvpx': ['0001-fix-the-target-arch-mistake-for-android-x86-x64.patch'],
+    'src/third_party/mesa/src': ['0001-disable-log2.patch'],
 }
 
 
@@ -122,7 +124,7 @@ def build(force=False):
         execute(command)
         restore_dir()
 
-    ninja_cmd = 'ninja -j16 -C src/out/Release android_webview_apk libwebviewchromium'
+    ninja_cmd = 'ninja -j16 -C src/out/Release android_webview_test_apk android_webview_unittests_apk'
     result = execute(ninja_cmd, show_progress=True)
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
@@ -155,7 +157,7 @@ def set_ndk():
     if not OS.path.exists('ndk/crazy_linker.gyp'):
         execute('cp ' + dir_script + '/patches/crazy_linker.gyp ndk/')
 
-    if not OS.path.exists('ndk/platforms/android-14/arch-x86_64/usr/include/asm/unistd_64.h'):
+    if not OS.path.exists('ndk/platforms/android-19/arch-x86_64/usr/include/asm/unistd_64.h'):
         execute('cd ndk; git init; git add .; git commit -a -m \"orig\"; git apply ../share/python/x64-upstream/patches/ndk-allinone.patch; cd ..;');
 
 if __name__ == '__main__':
