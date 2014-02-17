@@ -1,5 +1,5 @@
 .FAIL: Fail to build, which needs further investigation
-.TRUEFAIL: Could not build actually
+.EXPECTFAIL: Failure is expected due to multiple changes need to take place at different places.
 .NULL: No corresponding revision
 .LOCK: Revision in build
 

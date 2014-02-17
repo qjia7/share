@@ -54,6 +54,11 @@ build_every = 1
 
 time_sleep_default = 300
 
+expectfail_list = [
+    233707, 236662, 234213, 234223, 234517, 234689, 237586,
+    241661, 241848
+]
+
 ################################################################################
 
 
@@ -218,6 +223,12 @@ def build():
                     break
 
 
+def patch_func(name):
+    func_name = 'patch_' + name
+    info(func_name)
+    globals()[func_name]()
+
+
 # Patch the problem disable_nacl=1
 def patch_src_disable_nacl():
     backup_dir('src/build')
@@ -285,25 +296,47 @@ def patch_libvpx_neon():
     restore_dir()
 
 
+def patch_opus_celt():
+    backup_dir('src/third_party/opus/src')
+    result = execute('git reset --hard e3ea049fcaee2247e45f0ce793d4313babb4ef69')
+    if result[0]:
+        error('Fail to patch')
+    restore_dir()
+
+
+def patch_src_sampling():
+    backup_dir('src')
+    result = execute('git revert -n 462ceb0a79acbd01421795bf2391643ca6d73f78')
+    if result[0]:
+        error('Fail to patch')
+    restore_dir()
+
+
 # Patch the code to solve some build error problem in upstream
 def patch(os, arch, module, rev):
     dir_repo = dir_project + '/chromium-' + os
     backup_dir(dir_repo)
 
     if rev >= 235053 and rev < 235114:
-        patch_src_disable_nacl()
+        patch_func('src_disable_nacl')
 
     if rev >= 236727 and rev < 237081:
-        patch_src_basename()
+        patch_func('src_basename')
 
     if rev >= 234913 and rev < 234919:
-        patch_openssl_int128()
+        patch_func('openssl_int128')
 
     if rev >= 244572 and rev < 244600:
-        patch_libyuv_neon()
+        patch_func('libyuv_neon')
 
     if rev >= 247840 and rev < 248040:
-        patch_libvpx_neon()
+        patch_func('libvpx_neon')
+
+    if rev >= 233687 and rev < 233690:
+        patch_func('opus_celt')
+
+    if rev >= 242671 and rev < 242679:
+        patch_func('src_sampling')
 
     restore_dir()
 
@@ -318,6 +351,13 @@ def build_one(build_next):
     (os, arch, module, rev, index) = build_next
 
     info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
+    dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
+    if rev in expectfail_list:
+        file_final = dir_comb + '/' + str(rev) + '.EXPECTFAIL'
+        execute('touch ' + file_final)
+        move_to_server(file_final, os, arch, module)
+        return 0
+
     file_log = dir_log + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
 
     if not args.slave_only:
@@ -346,7 +386,6 @@ def build_one(build_next):
             result = execute(command_build, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
-    dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
     if os == 'android' and module == 'content_shell':
         if result[0]:
             file_final = dir_comb + '/' + str(rev) + '.FAIL'
