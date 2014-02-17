@@ -1,0 +1,305 @@
+<?xml version="1.0"?>
+<InternetGatewayDeviceConfig TimeMark="">
+<InternetGatewayDevice DeviceSummary="" LANDeviceNumberOfEntries="0" WANDeviceNumberOfEntries="0">
+<Layer2Bridging MaxBridgeEntries="0" BridgeNumberOfEntries="0" AvailableInterfaceNumberOfEntries="0">
+<Bridge NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<BridgeInstance InstanceID="1" BridgeName="br0"/>
+</Bridge>
+</Layer2Bridging>
+<Time NTPServer1="time.windows.com" NTPServer2="time.nist.gov" CurrentLocalTime="" LocalTimeZoneName="Beijing, Chongquing, Hong Kong, Urumqi" X_ATP_SNTPEnable="1" X_CT-COM_NTPServerType="0" X_CT-COM_NTPInterval="86400"/>
+<X_CT-COM_UserInfo UserId="" Status="0" Limit="10" Times="0" Result="1" UserName=""/>
+<X_ATP_Security MacFilterNumberOfEntries="0" MacFilterPolicy="0" MacFilterRight="0" IpFilterInNumberOfEntries="0" IpFilterInRight="0" IpFilterOutNumberOfEntries="0" IpFilterOutPolicy="0" IpFilterOutRight="0" X_ATP_FirewallGeneralLevel="1" X_ATP_UrlFilterNumberOfEntries="0" X_ATP_UrlFilterEnabled="0" X_ATP_UrlFilterPolicy="0" X_ATP_AttackProtectEnable="1">
+<UrlFilter NumberOfInstances="0"/>
+<IpFilterIn NumberOfInstances="0"/>
+<IpFilterOut NumberOfInstances="0"/>
+<MacFilter NumberOfInstances="0"/>
+</X_ATP_Security>
+<Services>
+<X_ATP_HW_NAT BindingThresholdPerSecond="30" LifeTimeOfBindedEntry="5"/>
+<X_CT-COM_MLD MLDProxyEnable="0" MLDSnoopingEnable="1" Wan6List=""/>
+<X_ATP_MCAST McastEnable="0" McastAddr="239.10.0.100" McastPort="37123"/>
+<X_ATP_Mirror Enable="0" LanInterface="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.1"/>
+<X_CT-COM_MWBAND Mode="1" TotalTerminalNumber="15" STBRestrictEnable="0" STBNumber="1" CameraRestrictEnable="0" CameraNumber="1" ComputerRestrictEnable="0" ComputerNumber="13" PhoneRestrictEnable="0" PhoneNumber="1"/>
+<X_CT-COM_IPTV IGMPEnable="0" STBNumber="0" ProxyEnable="1" WanList="" IGMPVersion="2" SnoopingEnable="1"/>
+<VoiceService NumberOfInstances="1">
+<VoiceServiceInstance InstanceID="1" VoiceProfileNumberOfEntries="1">
+<Capabilities SignalingProtocols="SIP/2.0" FaxT38="1" X_CT-COM_Heartbeat="1" DigitMap="1">
+<Codecs NumberOfInstances="1">
+<CodecsInstance InstanceID="1" EntryID="0" Codec="G.711MuLaw&amp;G.711ALaw&amp;G.729&amp;G.722" PacketizationPeriod="10, 20, 30" SilenceSuppression="1"/>
+</Codecs>
+</Capabilities>
+<VoiceProfile NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<VoiceProfileInstance InstanceID="1" DTMFMethod="InBand" X_CT-COM_ServerType="1" X_CT-COM_StartDigitTimer="10" X_CT-COM_InterDigitTimerShort="5" X_CT-COM_InterDigitTimerLong="20" X_CT-COM_HangingReminderToneTimer="60" X_CT-COM_BusyToneTimer="40" X_CT-COM_NoAnswerTimer="60" Region="CN" X_API_FaxOption="G.711A FAX Passthrough" X_API_PSTNNUMBER="" X_API_AssignTransmitPriority="3" X_API_VoiceTOSPriority="7" X_API_VOIPNUMBER="987654321" PSTNFailOver="1" STUNServer="" X_ATP_STUNServerPort="3478" DigitMapEnable="1" DTMFMethodG711="" DigitMap="" X_API_FAXDETECT="">
+<X_CT-COM_G711FAX Enable="1" ControlType="other"/>
+<FaxT38 Enable="0"/>
+<NumberingPlan PrefixInfoMaxEntries="0" PrefixInfoNumberOfEntries="0" UnResponseInterval="60000" HurryOffTime="60000" BusyRingTime="40000" X_CT-COM_NumberPlan="">
+<X_ATP_OutgoSuffixInfo NumberOfInstances="0"/>
+<X_ATP_OutgoPrefixInfo NumberOfInstances="0"/>
+<X_ATP_IncomSuffixInfo NumberOfInstances="0"/>
+<X_ATP_IncomPrefixInfo NumberOfInstances="0"/>
+<PrefixInfo NumberOfInstances="0"/>
+<X_ATP_DigitMap NumberOfInstances="4">
+<X_ATP_DigitMapInstance InstanceID="1" Type="0" Route="0" DigitMap="11[0249]|120|100xx|20[01]|400xxxxxxx|800xxxxxxx|1[3458]xxxxxxxxx|01[3458]xxxxxxxxx|2[1-9]xxxxxx|3[1-9]xxxxxx|5xxxxxxx|6[1-9]xxxxxx|8[1-9]xxxxxx|955xx|x[0-9*].#|x[0-9*].T|**XX|[*#][*#0-9][0-9*].#|[*#][*#0-9][0-9*].T|[*#]x.T|##"/>
+<X_ATP_DigitMapInstance InstanceID="2" Type="1" Route="1" DigitMap=""/>
+<X_ATP_DigitMapInstance InstanceID="3" Type="2" Route="0" DigitMap="110|119|120"/>
+<X_ATP_DigitMapInstance InstanceID="4" Type="3" Route="2" DigitMap=""/>
+</X_ATP_DigitMap>
+</NumberingPlan>
+<ButtonMap>
+<Button NumberOfInstances="0">
+<ObjExtention MaxInstanceNum="0"/>
+</Button>
+</ButtonMap>
+<SIP ProxyServer="" ProxyServerPort="5060" RegistrarServer="" RegistrarServerPort="5060" UserAgentDomain="" RegisterExpires="3600" RegisterRetryInterval="60" X_ATP_SessionExpires="30" X_ATP_MinSessionExpires="90" X_ATP_HoldMethod="1" X_ATP_InterfaceName="" X_CT-COM_HeartbeatSwitch="0" X_CT-COM_HeartbeatCycle="60" X_CT-COM_HeartbeatCount="3" ProxyServerTransport="UDP" X_CT-COM_Standby-ProxyServer="" X_CT-COM_Standby-ProxyServerPort="5060" X_CT-COM_Standby-ProxyServerTransport="UDP" RegistrarServerTransport="UDP" X_CT-COM_Standby-RegistrarServer="" X_CT-COM_Standby-RegistrarServerPort="5060" X_CT-COM_Standby-RegistrarServerTransport="UDP" OutboundProxy="" OutboundProxyPort="5060" X_CT-COM_Standby-OutboundProxy="" X_CT-COM_Standby-OutboundProxyPort="5060" UserAgentPort="0" UserAgentTransport="UDP" VLANIDMark="0" X_CT-COM_802-1pMark="0" DSCPMark="0" EthernetPriorityMark="0" X_CT-COM_SessionUpdateTimer="30" X_ATP_UnRegisterMethod="0" X_ATP_RegisterMode="0">
+<X_ATP_OptionTime OptionsType="0" IntervalTime="60"/>
+<EventSubscribe NumberOfInstances="1">
+<EventSubscribeInstance InstanceID="1" ExpireTime="200" Event="mwi"/>
+</EventSubscribe>
+</SIP>
+<RTP LocalPortMin="50000" X_API_JitterBuffer="1" X_API_JitterBufferLength="80" X_API_JitterBufferType="1" VLANIDMark="0" X_CT-COM_802-1pMark="0" DSCPMark="0" EthernetPriorityMark="0"/>
+<Line NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<LineInstance InstanceID="1" DirectoryNumber="" Status="Disabled" Enable="Disabled" CallState="Idle" X_ATP_SIPLocalPort="6050" X_ATP_OutgoingPhyList="" X_ATP_IncomingPhyList="" X_ATP_MWISubscribeURI="" X_ATP_NumberDisplayType="0" X_ATP_RegeditAction="0" X_ATP_TPMixMode="0">
+<X_CT-COM_IMS dial-tone-pattern="0" mcid-service="0" no-dialing-behaviour="0" hold-service="0" three-party-service="0" conference-uri="" hotline-uri="" cw-service="0"/>
+<CallingFeatures CallWaitingEnable="1" MWIEnable="0" MaxSessions="2" X_ATP_PrivacyLevel="6" X_ATP_EnableSharpKey="1" X_ATP_HotLineNumber="" CallerIDEnable="1" X_ATP_DigitMapMatchMode="1" X_ATP_DMLongShortTimerMode="1" X_ATP_SharpSendMode="1"/>
+<SIP AuthUserName="" AuthPassword="" URI=""/>
+<VoiceProcessing TransmitGain="0" ReceiveGain="0" EchoCancellationEnable="1" X_ATP_AutoGain="1" EchoCancellationInUse="1" EchoCancellationTail="32"/>
+<Codec TransmitSilenceSuppression="1" TransmitPacketizationPeriod="20">
+<List NumberOfInstances="4">
+<ListInstance InstanceID="1" Priority="2" Codec="" EntryID="0" Enable="1" PacketizationPeriod="20" SilenceSuppression="1"/>
+<ListInstance InstanceID="2" Priority="1" Codec="" EntryID="0" Enable="1" PacketizationPeriod="20" SilenceSuppression="1"/>
+<ListInstance InstanceID="3" Priority="3" Codec="" EntryID="0" Enable="1" PacketizationPeriod="20" SilenceSuppression="1"/>
+<ListInstance InstanceID="4" Priority="4" Codec="" EntryID="0" Enable="1" PacketizationPeriod="20" SilenceSuppression="1"/>
+</List>
+</Codec>
+</LineInstance>
+</Line>
+</VoiceProfileInstance>
+</VoiceProfile>
+<PhyInterface NumberOfInstances="1">
+<PhyInterfaceInstance InstanceID="1" PhyPort="" X_ATP_InCallNumber="11" X_ATP_PortIdentify="11" X_ATP_IncomingRoute="SIP&amp;PSTN" X_ATP_OutgoingRoute="2" X_ATP_PhyPortState="0">
+<Tests TestSelector="X_CT-COM_SimulateTest" TestState="None" PhoneConnectivity="0">
+<X_CT-COM_SimulateTest CalledNumber="" TestType="None" DailDTMFConfirmEnable="1" DailDTMFConfirmNumber="" Status="" Conclusion="" DailDTMFConfirmResult="" CalledFailReason="" CallerFailReason="" FailedResponseCode="0"/>
+</Tests>
+<X_CT-COM_Stats>
+<PoorQualityList NumberOfInstances="10">
+<ObjExtention MaxInstanceNum="10"/>
+<PoorQualityListInstance InstanceID="1" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="2" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="3" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="4" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="5" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="6" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="7" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="8" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="9" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+<PoorQualityListInstance InstanceID="10" StatTime="" TxPackets="0" RxPackets="0" MeanDelay="0" MeanJitter="0" FractionLoss="0" LocalIPAddress="" LocalUDPPort="0" FarEndIPAddress="" FarEndUDPPort="0" MosLq="0" Codec=""/>
+</PoorQualityList>
+</X_CT-COM_Stats>
+</PhyInterfaceInstance>
+</PhyInterface>
+</VoiceServiceInstance>
+</VoiceService>
+</Services>
+<Layer3Forwarding X_ATP_AutoDefaultGatewayEnable="0" DefaultConnectionService="" ForwardNumberOfEntries="0" X_ATP_DefaultGatewayIPAddress="">
+<X_CT-COM_IPv6Forwarding NumberOfInstances="0"/>
+<Forwarding NumberOfInstances="0"/>
+</Layer3Forwarding>
+<DeviceInfo Manufacturer="" ManufacturerOUI="" ModelName="" Description="" ProductClass="" SerialNumber="" HardwareVersion="" SoftwareVersion="" ModemFirmwareVersion="" AdditionalSoftwareVersion="" SpecVersion="" ProvisioningCode="" DeviceLog="" UpTime="0">
+<X_CT-COM_PortalManagement Enable="0" PortalUrl-Computer="" PortalUrl-STB="" PortalUrl-Phone=""/>
+<X_CT-COM_TeleComAccount Enable="1" Password="telecomadmin"/>
+<X_CT-COM_Restore Enable="0"/>
+<X_CT-COM_AVMediaServer Enable="0" DetectPath=""/>
+<X_CT-COM_Alarm Enable="0" AlarmNumberOfEntries="0">
+<AlarmConfig NumberOfInstances="0"/>
+</X_CT-COM_Alarm>
+<X_CT-COM_Monitor Enable="0" MonitorNumberOfEntries="0">
+<MonitorConfig NumberOfInstances="0"/>
+</X_CT-COM_Monitor>
+<X_CT-COM_Syslog Enable="0" Level="3" DisplayLevel="Error" LogServerEnable="0" MainServer="" MainServerPort="514" MinorServer="" MinorServerPort="514"/>
+<X_CT-COM_IPProtocolVersion mode="1"/>
+<X_CT-COM_ServiceManage FtpEnable="1" FtpUserName="Anonymous" FtpPassword="123456" FtpPort="21" FtpPath="/mnt" TelnetEnable="0" TelnetUserName="!!Huawei" TelnetPassword="@HuaweiHgw" TelnetPort="23" WebWanAccessEnable="0"/>
+<X_CT-COM_MiddlewareMgt MiddlewareURL="0.0.0.0:0" Tr069Enable="1" CTMgtIPAddress="19.166.114.17" CTUserIPAddress1="180.158.125.29" MgtDNS="15.192.252.188" InternetPvc="WAN3.PPP1">
+<ObjExtention>
+<MiddlewareURL MidAttribute="12"/>
+<CTMgtIPAddress MidAttribute="12"/>
+<CTUserIPAddress1 MidAttribute="12"/>
+<MgtDNS MidAttribute="12"/>
+<InternetPvc MidAttribute="12"/>
+</ObjExtention>
+</X_CT-COM_MiddlewareMgt>
+<X_CT-COM_ALGAbility H323Enable="1" SIPEnable="0" SIPPort="5060" RTSPEnable="1" L2TPEnable="1" IPSECEnable="1" SIPWanPath="" PPTPEnable="1" FTPEnable="1">
+<PortTrigger NumberOfInstances="0"/>
+</X_CT-COM_ALGAbility>
+<X_CT-COM_UPNP Enable="1"/>
+<X_CT-COM_Ping Enable="1" PingNumberOfEntries="3">
+<PingConfig NumberOfInstances="3">
+<ObjExtention MaxInstanceNum="3"/>
+<PingConfigInstance InstanceID="2" DiagnosticsState="" Interface="" Host="" NumberOfRepetitions="0" Timeout="0" DataBlockSize="0" DSCP="0" Stop="0" Interval="1"/>
+<PingConfigInstance InstanceID="1" DiagnosticsState="Requested" Interface="InternetGatewayDevice.WANDevice.1.WANConnectionDevice.1.WANIPConnection.1" Host="" NumberOfRepetitions="0" Timeout="0" DataBlockSize="0" DSCP="0" Stop="0" Interval="240"/>
+<PingConfigInstance InstanceID="3" DiagnosticsState="" Interface="" Host="" NumberOfRepetitions="0" Timeout="0" DataBlockSize="0" DSCP="0" Stop="0" Interval="1"/>
+</PingConfig>
+</X_CT-COM_Ping>
+</DeviceInfo>
+<ManagementServer URL="http://devacs.edatahome.com:9090/ACS-server/ACS" Username="hgw" Password="hgw33026405" PeriodicInformEnable="1" PeriodicInformInterval="43200" ConnectionRequestUsername="itms" ConnectionRequestPassword="itms62717625" X_ATP_SSLCertEnable="0" UpgradesManaged="1" ParameterKey="" ConnectionRequestURL="" PeriodicInformTime="" X_ATP_BindInterface="" KickURL="" DownloadProgressURL="" ManageableDeviceNumberOfEntries="0" ManageableDeviceNotificationLimit="0" UDPConnectionRequestAddress="" UDPConnectionRequestAddressNotificationLimit="0" STUNEnable="0" STUNServerAddress="" STUNServerPort="3478" STUNUsername="" STUNPassword="" STUNMaximumKeepAlivePeriod="-1" STUNMinimumKeepAlivePeriod="0" NATDetected="0">
+<ObjExtention>
+<URL MidAttribute="12" Notify="0" AccList="Subscriber"/>
+<Username Notify="0" AccList="Subscriber"/>
+<Password Notify="0" AccList="Subscriber"/>
+<ConnectionRequestUsername Notify="0" AccList="Subscriber"/>
+<ConnectionRequestPassword Notify="0" AccList="Subscriber"/>
+</ObjExtention>
+</ManagementServer>
+<UserInterface>
+<X_ATP_Cli TelnetSwitch="0"/>
+<X_ATP_Web Timeout="5" Language="Chinese"/>
+<X_ATP_UserInfo NumberOfInstances="3">
+<ObjExtention MaxInstanceNum="5"/>
+<X_ATP_UserInfoInstance InstanceID="1" Username="telecomadmin" Userpassword="telecomadmin35646731" Userlevel="2" Busy="0" LoginIP=""/>
+<X_ATP_UserInfoInstance InstanceID="3" Username="adminHEllo" Userpassword="adminHEllo" Userlevel="2" Busy="0" LoginIP=""/>
+<X_ATP_UserInfoInstance InstanceID="5" Username="useradmin" Userpassword="fashion" Userlevel="1" Busy="0" LoginIP=""/>
+</X_ATP_UserInfo>
+</UserInterface>
+<LANDevice NumberOfInstances="1">
+<LANDeviceInstance InstanceID="1" LANEthernetInterfaceNumberOfEntries="0" LANWLANConfigurationNumberOfEntries="0" X_ATP_WLANEnable="1">
+<WLANConfiguration NumberOfInstances="1">
+<WLANConfigurationInstance InstanceID="1" OperationalDataTransmissionRates="5.5" X_CT-COM_APModuleEnable="1" X_CT-COM_SSIDHide="0" X_CT-COM_Powerlevel="1" X_CT-COM_PowerValue="20" Enable="1" MaxBitRate="Auto" Channel="0" ChannelsInUse="0" SSID="ChinaNet-fashion" BeaconType="WPAand11i" Standard="b,g,n" BasicDataTransmitRates="1,2,5.5,6,11,12,18,24,36,48,54" WEPKeyIndex="1" BasicEncryptionModes="WEPEncryption" BasicAuthenticationMode="Both" WPAEncryptionModes="AESEncryption" WPAAuthenticationMode="PSKAuthentication" IEEE11iEncryptionModes="AESEncryption" IEEE11iAuthenticationMode="PSKAuthentication" TotalBytesSent="0" TotalBytesReceived="0" TotalPacketsSent="0" TotalPacketsReceived="0" X_ATP_TotalBytesSentError="0" X_ATP_TotalBytesReceivedError="0" X_ATP_TotalPacketsSentError="0" X_ATP_TotalPacketsReceivedError="0" TotalAssociations="0" WEPEncryptionLevel="40-bit" X_ATP_WLANVersion="" Status="" BSSID="" PossibleDataTransmitRates="" MACAddressControlEnabled="0" X_ATP_AssociateDeviceNum="32" RegulatoryDomain="GB" X_ATP_WlanMacFilterpolicy="0" X_ATP_WlanMacFilternum="0" X_ATP_WPSControl="1" X_ATP_WPSMode="ap-pbc" X_ATP_WlanQosControl="1" X_ATP_WlanAPISOControl="0" X_ATP_WlanStaControl="1" X_ATP_WPSPinValue="" WPAWPA2EncryptionModes="AESEncryption" X_ATP_11NHtMcs="33" X_ATP_11NTxRxStream="0" X_CT-COM_RFBand="0" X_CT-COM_ChannelWidth="0" X_CT-COM_GuardInterval="0" X_CT-COM_RetryTimeout="20" X_CT-COM_WPSKeyWord="128" KeyPassphrase="" X_CT-COM_Mode="0" X_CT-COM_VLAN="">
+<ObjExtention>
+<SSID Notify="0" AccList="Subscriber"/>
+<Enable Notify="0" AccList="Subscriber"/>
+<BeaconType Notify="0" AccList="Subscriber"/>
+</ObjExtention>
+<X_ATP_WlanMacFilter NumberOfInstances="0"/>
+<WEPKey NumberOfInstances="4">
+<WEPKeyInstance InstanceID="1" WEPKey="00DA000026"/>
+<WEPKeyInstance InstanceID="2" WEPKey=""/>
+<WEPKeyInstance InstanceID="3" WEPKey=""/>
+<WEPKeyInstance InstanceID="4" WEPKey=""/>
+</WEPKey>
+<PreSharedKey NumberOfInstances="1">
+<PreSharedKeyInstance InstanceID="1" PreSharedKey="todayis626"/>
+</PreSharedKey>
+</WLANConfigurationInstance>
+</WLANConfiguration>
+<LANHostConfigManagement DHCPServerEnable="1" DHCPRelay="0" MinAddress="192.168.1.2" MaxAddress="192.168.1.100" SubnetMask="255.255.255.0" DHCPLeaseTime="604800" AllowedMACAddresses="" IPInterfaceNumberOfEntries="0" X_CT-COM_STB-DHCPRelay="0" X_CT-COM_Phone-DHCPRelay="0" X_CT-COM_Camera-DHCPRelay="0" X_CT-COM_Computer-DHCPRelay="0" DHCPServerConfigurable="1" PassthroughLease="60" X_CT-COM_STB-MinAddress="0.0.0.0" X_CT-COM_STB-MaxAddress="0.0.0.0" X_CT-COM_Phone-MinAddress="0.0.0.0" X_CT-COM_Phone-MaxAddress="0.0.0.0" X_CT-COM_Camera-MinAddress="0.0.0.0" X_CT-COM_Camera-MaxAddress="0.0.0.0" X_CT-COM_Computer-MinAddress="0.0.0.0" X_CT-COM_Computer-MaxAddress="0.0.0.0" X_CT_COM_Port-DHCPRelayEnable="0" X_CT_COM_RelayLanInterface="" ReservedAddresses="" DNSServers="" DomainName="" IPRouters="" UseAllocatedWAN="" AssociatedConnection="" PassthroughMACAddress="">
+<X_CT-COM_DHCPv6 DHCPServerEnable="1" UseAllocatedWAN="UseAllocatedSubnet" AssociatedConnection="" Prefix="" PrefixLength="64" Preferredlifetime="3600" Validlifetime="7200" DNSServer="" DomainName=""/>
+<X_CT-COM_SLAAC RouterAdvertisementEnable="1" UseAllocatedWAN="UseAllocatedSubnet" AssociatedConnection="" Prefix="" PrefixLength="64" Preferredlifetime="3600" Validlifetime="7200" MinRtrAdvInterval="198" MaxRtrAdvInterval="600"/>
+<IPInterface NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<IPInterfaceInstance InstanceID="1" Enable="0" IPInterfaceIPAddress="192.168.1.1" IPInterfaceSubnetMask="255.255.255.0" IPInterfaceAddressingType="DHCP" X_ATP_RouteProtocolRx="Off" X_ATP_RIPOperation="Active"/>
+</IPInterface>
+</LANHostConfigManagement>
+<LANEthernetInterfaceConfig NumberOfInstances="4">
+<ObjExtention MaxInstanceNum="4"/>
+<LANEthernetInterfaceConfigInstance InstanceID="1" Enable="1" Status="" MACAddress="" X_CT-COM_Mode="0" X_CT-COM_VLAN="" MaxBitRate="Auto" DuplexMode="Auto"/>
+<LANEthernetInterfaceConfigInstance InstanceID="2" Enable="1" Status="" MACAddress="" X_CT-COM_Mode="0" X_CT-COM_VLAN="" MaxBitRate="Auto" DuplexMode="Auto"/>
+<LANEthernetInterfaceConfigInstance InstanceID="3" Enable="1" Status="" MACAddress="" X_CT-COM_Mode="0" X_CT-COM_VLAN="" MaxBitRate="Auto" DuplexMode="Auto"/>
+<LANEthernetInterfaceConfigInstance InstanceID="4" Enable="1" Status="" MACAddress="" X_CT-COM_Mode="0" X_CT-COM_VLAN="" MaxBitRate="Auto" DuplexMode="Auto"/>
+</LANEthernetInterfaceConfig>
+</LANDeviceInstance>
+</LANDevice>
+<WANDevice NumberOfInstances="1">
+<WANDeviceInstance InstanceID="1" WANConnectionNumberOfEntries="0">
+<WANConnectionDevice NumberOfInstances="3">
+<ObjExtention MaxInstanceNum="3"/>
+<WANConnectionDeviceInstance InstanceID="1" WANIPConnectionNumberOfEntries="0" WANPPPConnectionNumberOfEntries="0">
+<WANPPPConnection NumberOfInstances="0"/>
+<WANIPConnection NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<WANIPConnectionInstance InstanceID="1" X_CT-COM_LanInterface="" X_CT-COM_ServiceList="TR069_VOIP" X_CT-COM_LanInterface-DHCPEnable="1" Enable="1" ConnectionStatus="" ConnectionType="IP_Routed" X_ATP_VLANEnabled="1" Name="TR069_VOIP_R_VID_46" X_ATP_Priority="6" LastConnectionError="" AutoDisconnectTime="0" NATEnabled="0" AddressingType="DHCP" ExternalIPAddress="" SubnetMask="" DefaultGateway="" DNSEnabled="1" DNSOverrideAllowed="1" DNSServers="" RouteProtocolRx="Off" X_ATP_RIPOperation="Active" X_ATP_RIPAuthMode="" X_ATP_RIPKey_ID="0" X_ATP_RIPAuth_KEY="" PortMappingNumberOfEntries="0" X_HG522_DHCPOptionCode="" MACAddress="" MACAddressOverride="0" WANName="" X_CT-COM_MulticastVlan="-1" X_CT-COM_IPv4Enable="1" X_CT-COM_IPv6Enable="0" X_CT-COM_IPv6ConnectionStatus="" X_CT-COM_IPv6AddressingType="SLAAC" X_CT-COM_IPv6PrefixList="" X_CT-COM_IPv6DefaultGateway="" X_CT-COM_IPv6DNSEnabled="1" X_CT-COM_IPv6DNSOverrideAllowed="0" X_CT-COM_IPv6DNSServers="" X_CT-COM_IPv6Address="" X_CT-COM_IPv6PrefixLength="0" X_CT-COM_IPv6DHCPAddressOption="BOTH" MTU="1500">
+<X_CT-COM_DDNSConfiguration NumberOfInstances="0"/>
+<PortMapping NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<PortMappingInstance InstanceID="1" PortMappingEnabled="1" PortMappingLeaseDuration="0" RemoteHost="" ExternalPort="55633" InternalPort="55633" PortMappingProtocol="UDP" InternalClient="192.168.1.4" PortMappingDescription="TVKOO UNPN PORT MAPING"/>
+</PortMapping>
+<X_ATP_DMZ DMZEnable="0" DMZHostIPAddress=""/>
+<X_CT-COM_DHCPOPTION125 NumberOfInstances="0"/>
+<X_CT-COM_DHCPOPTION60 NumberOfInstances="4">
+<ObjExtention MaxInstanceNum="4"/>
+<X_CT-COM_DHCPOPTION60Instance InstanceID="1" Enable="0" Type="34" ValueMode="2" Value=""/>
+<X_CT-COM_DHCPOPTION60Instance InstanceID="2" Enable="0" Type="34" ValueMode="2" Value=""/>
+<X_CT-COM_DHCPOPTION60Instance InstanceID="3" Enable="0" Type="34" ValueMode="2" Value=""/>
+<X_CT-COM_DHCPOPTION60Instance InstanceID="4" Enable="0" Type="34" ValueMode="2" Value=""/>
+</X_CT-COM_DHCPOPTION60>
+</WANIPConnectionInstance>
+</WANIPConnection>
+<WANEthernetLinkConfig X_CT-COM_Enable="1" X_CT-COM_Mode="2" X_CT-COM_VLANIDMark="46" X_CT-COM_802-1pMark="6"/>
+</WANConnectionDeviceInstance>
+<WANConnectionDeviceInstance InstanceID="2" WANIPConnectionNumberOfEntries="0" WANPPPConnectionNumberOfEntries="0">
+<WANIPConnection NumberOfInstances="0"/>
+<WANPPPConnection NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<WANPPPConnectionInstance InstanceID="1" X_CT-COM_LanInterface="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.2" X_CT-COM_ServiceList="OTHER" X_CT-COM_LanInterface-DHCPEnable="0" X_CT-COM_ProxyEnable="0" X_CT-COM_MAXUser="4" Enable="1" ConnectionStatus="" ConnectionType="PPPoE_Bridged" X_ATP_VLANEnabled="1" X_ATP_Priority="0" Name="Other_B_VID_85" Uptime="0" LastConnectionError="" AutoDisconnectTime="0" IdleDisconnectTime="0" X_ATP_APN="" X_ATP_DialNumber="" X_ATP_ProfileName="" NATEnabled="0" Username="" Password="" PPPAuthenticationProtocol="" ExternalIPAddress="" RemoteIPAddress="" DNSEnabled="0" DNSOverrideAllowed="0" DNSServers="" ConnectionTrigger="AlwaysOn" RouteProtocolRx="Off" X_ATP_RIPOperation="Active" X_ATP_RIPAuthMode="" X_ATP_RIPKey_ID="0" X_ATP_RIPAuth_KEY="" PortMappingNumberOfEntries="0" MACAddress="" MACAddressOverride="0" WANName="" X_CT-COM_MulticastVlan="51" X_CT-COM_IPv4Enable="1" X_CT-COM_IPv6Enable="0" X_CT-COM_IPv6ConnectionStatus="" X_CT-COM_IPv6AddressingType="SLAAC" X_CT-COM_IPv6PrefixList="" X_CT-COM_IPv6DefaultGateway="" X_CT-COM_IPv6DNSEnabled="0" X_CT-COM_IPv6DNSOverrideAllowed="0" X_CT-COM_IPv6DNSServers="" X_CT-COM_IPv6Address="" X_CT-COM_IPv6PrefixLength="0" X_CT-COM_IPv6DHCPAddressOption="" MTU="1492">
+<ObjExtention>
+<Password AccList="Subscriber"/>
+<Username AccList="Subscriber"/>
+</ObjExtention>
+<X_CT-COM_DDNSConfiguration NumberOfInstances="0"/>
+<PortMapping NumberOfInstances="0"/>
+<X_ATP_DMZ DMZEnable="0" DMZHostIPAddress=""/>
+</WANPPPConnectionInstance>
+</WANPPPConnection>
+<WANEthernetLinkConfig X_CT-COM_Enable="1" X_CT-COM_Mode="2" X_CT-COM_VLANIDMark="85" X_CT-COM_802-1pMark="0"/>
+</WANConnectionDeviceInstance>
+<WANConnectionDeviceInstance InstanceID="3" WANIPConnectionNumberOfEntries="0" WANPPPConnectionNumberOfEntries="0">
+<WANIPConnection NumberOfInstances="0"/>
+<WANPPPConnection NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<WANPPPConnectionInstance InstanceID="1" X_CT-COM_LanInterface="InternetGatewayDevice.LANDevice.1.WLANConfiguration.1" X_CT-COM_ServiceList="INTERNET" X_CT-COM_LanInterface-DHCPEnable="1" X_CT-COM_ProxyEnable="0" X_CT-COM_MAXUser="4" Enable="1" ConnectionStatus="" ConnectionType="IP_Routed" X_ATP_VLANEnabled="0" X_ATP_Priority="0" Name="INTERNET_R_VID_" Uptime="0" LastConnectionError="" AutoDisconnectTime="0" IdleDisconnectTime="0" X_ATP_APN="" X_ATP_DialNumber="" X_ATP_ProfileName="" NATEnabled="1" Username="18939776965" Password="83783967" PPPAuthenticationProtocol="" ExternalIPAddress="" RemoteIPAddress="" DNSEnabled="1" DNSOverrideAllowed="1" DNSServers="" ConnectionTrigger="AlwaysOn" RouteProtocolRx="Off" X_ATP_RIPOperation="Active" X_ATP_RIPAuthMode="" X_ATP_RIPKey_ID="0" X_ATP_RIPAuth_KEY="" PortMappingNumberOfEntries="0" MACAddress="" MACAddressOverride="0" WANName="" X_CT-COM_MulticastVlan="-1" X_CT-COM_IPv4Enable="1" X_CT-COM_IPv6Enable="1" X_CT-COM_IPv6ConnectionStatus="" X_CT-COM_IPv6AddressingType="DHCP" X_CT-COM_IPv6PrefixList="" X_CT-COM_IPv6DefaultGateway="" X_CT-COM_IPv6DNSEnabled="1" X_CT-COM_IPv6DNSOverrideAllowed="1" X_CT-COM_IPv6DNSServers="" X_CT-COM_IPv6Address="" X_CT-COM_IPv6PrefixLength="0" X_CT-COM_IPv6DHCPAddressOption="BOTH" MTU="1492">
+<ObjExtention>
+<Password AccList="Subscriber"/>
+<Username AccList="Subscriber"/>
+</ObjExtention>
+<X_CT-COM_DDNSConfiguration NumberOfInstances="0"/>
+<PortMapping NumberOfInstances="5">
+<ObjExtention MaxInstanceNum="2029"/>
+<PortMappingInstance InstanceID="1" PortMappingEnabled="1" PortMappingLeaseDuration="0" RemoteHost="" ExternalPort="11763" InternalPort="7909" PortMappingProtocol="TCP" InternalClient="192.168.1.3" PortMappingDescription="Storm3"/>
+<PortMappingInstance InstanceID="186" PortMappingEnabled="1" PortMappingLeaseDuration="0" RemoteHost="" ExternalPort="8092" InternalPort="8092" PortMappingProtocol="TCP" InternalClient="192.168.0.189" PortMappingDescription="QvodPlayer"/>
+<PortMappingInstance InstanceID="450" PortMappingEnabled="1" PortMappingLeaseDuration="0" RemoteHost="" ExternalPort="11453" InternalPort="11453" PortMappingProtocol="TCP" InternalClient="192.168.1.5" PortMappingDescription="Thunder5"/>
+<PortMappingInstance InstanceID="492" PortMappingEnabled="1" PortMappingLeaseDuration="0" RemoteHost="" ExternalPort="62784" InternalPort="62784" PortMappingProtocol="UDP" InternalClient="192.168.1.7" PortMappingDescription="Teredo"/>
+<PortMappingInstance InstanceID="646" PortMappingEnabled="1" PortMappingLeaseDuration="0" RemoteHost="" ExternalPort="18912" InternalPort="18912" PortMappingProtocol="UDP" InternalClient="192.168.1.5" PortMappingDescription="NdPP"/>
+</PortMapping>
+<X_ATP_DMZ DMZEnable="0" DMZHostIPAddress=""/>
+</WANPPPConnectionInstance>
+</WANPPPConnection>
+<WANEthernetLinkConfig X_CT-COM_Enable="1" X_CT-COM_Mode="0" X_CT-COM_VLANIDMark="0" X_CT-COM_802-1pMark="0"/>
+</WANConnectionDeviceInstance>
+</WANConnectionDevice>
+</WANDeviceInstance>
+</WANDevice>
+<X_CT-COM_UplinkQoS Mode="INTERNET,TR069,VOIP,IPTV" Enable="1" Bandwidth="0" Plan="priority" EnableForceWeight="0" EnableDSCPMark="0" Enable802-1_P="0" EnableUDP_ACC="1">
+<Classification NumberOfInstances="4">
+<ObjExtention MaxInstanceNum="4"/>
+<ClassificationInstance InstanceID="1" ClassQueue="1" DSCPMarkValue="0" 802-1_P_Value="0">
+<type NumberOfInstances="0"/>
+</ClassificationInstance>
+<ClassificationInstance InstanceID="2" ClassQueue="2" DSCPMarkValue="0" 802-1_P_Value="0">
+<type NumberOfInstances="1">
+<ObjExtention MaxInstanceNum="1"/>
+<typeInstance InstanceID="1" Type="LANInterface" Max="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.2" Min="InternetGatewayDevice.LANDevice.1.LANEthernetInterfaceConfig.2" ProtocolList="ALL"/>
+</type>
+</ClassificationInstance>
+<ClassificationInstance InstanceID="3" ClassQueue="3" DSCPMarkValue="0" 802-1_P_Value="0">
+<type NumberOfInstances="0"/>
+</ClassificationInstance>
+<ClassificationInstance InstanceID="4" ClassQueue="4" DSCPMarkValue="0" 802-1_P_Value="0">
+<type NumberOfInstances="0"/>
+</ClassificationInstance>
+</Classification>
+<App NumberOfInstances="2">
+<ObjExtention MaxInstanceNum="2"/>
+<AppInstance InstanceID="1" AppName="VOIP" ClassQueue="1"/>
+<AppInstance InstanceID="2" AppName="TR069" ClassQueue="3"/>
+</App>
+<PriorityQueue NumberOfInstances="4">
+<ObjExtention MaxInstanceNum="4"/>
+<PriorityQueueInstance InstanceID="1" Enable="1" Priority="1" Weight="0"/>
+<PriorityQueueInstance InstanceID="2" Enable="1" Priority="2" Weight="0"/>
+<PriorityQueueInstance InstanceID="3" Enable="1" Priority="3" Weight="0"/>
+<PriorityQueueInstance InstanceID="4" Enable="0" Priority="4" Weight="0"/>
+</PriorityQueue>
+</X_CT-COM_UplinkQoS>
+</InternetGatewayDevice>
+</InternetGatewayDeviceConfig>
