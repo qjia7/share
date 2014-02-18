@@ -158,7 +158,7 @@ def set_ndk():
         execute('cp ' + dir_script + '/patches/crazy_linker.gyp ndk/')
 
     if not OS.path.exists('ndk/platforms/android-19/arch-x86_64/usr/include/asm/unistd_64.h'):
-        execute('cd ndk; git init; git add .; git commit -a -m \"orig\"; git am ../share/python/x64-upstream/patches/ndk-allinone.patch; cd ..;');
+        execute('cd ndk; git init; git add .; git commit -a -m \"orig\"; git am ' + dir_script + '/patches/ndk-allinone.patch; cd ..;');
 
 if __name__ == '__main__':
     handle_option()
