@@ -1,6 +1,6 @@
 # TODO:
 # Update rev_commit once all builds are finished for a rev, which would free some memory.
-
+# From 245002, may need to manually execute "gclient sync -f" with hook to check out gn related code.
 
 # Build speed
 # android_content_shell: 25/hour
@@ -55,8 +55,8 @@ build_every = 1
 time_sleep_default = 300
 
 expectfail_list = [
-    233707, 236662, 234213, 234223, 234517, 234689, 237586,
-    241661, 241848
+    233707, 236662, 234213, 234223, 234517, 234689, 235193, 235194, 237586,
+    241661, 241848,
 ]
 
 ################################################################################
@@ -317,26 +317,29 @@ def patch(os, arch, module, rev):
     dir_repo = dir_project + '/chromium-' + os
     backup_dir(dir_repo)
 
+    if rev >= 233687 and rev < 233690:
+        patch_func('opus_celt')
+
+    if rev >= 234913 and rev < 234919:
+        patch_func('openssl_int128')
+
     if rev >= 235053 and rev < 235114:
         patch_func('src_disable_nacl')
+
+    if rev >= 235193 and rev < 235196:
+        patch_func('webrtc')
 
     if rev >= 236727 and rev < 237081:
         patch_func('src_basename')
 
-    if rev >= 234913 and rev < 234919:
-        patch_func('openssl_int128')
+    if rev >= 242671 and rev < 242679:
+        patch_func('src_sampling')
 
     if rev >= 244572 and rev < 244600:
         patch_func('libyuv_neon')
 
     if rev >= 247840 and rev < 248040:
         patch_func('libvpx_neon')
-
-    if rev >= 233687 and rev < 233690:
-        patch_func('opus_celt')
-
-    if rev >= 242671 and rev < 242679:
-        patch_func('src_sampling')
 
     restore_dir()
 
