@@ -225,7 +225,7 @@ alias -g cp='cp -i'
 
 
 alias -g mv='mv -i'
-alias -g rm='rm -i'
+#alias -g rm='rm -i'
 alias -g ls='ls -F --color=auto'
 alias -g ll='ls -l'
 alias -g grep='grep --color=auto'
@@ -722,7 +722,7 @@ export PATH=$PATH:$JAVA_HOME/bin
 hostname=$(hostname)
 
 if [ $hostname == "ubuntu-ygu5-01" -o $hostname == "ubuntu-ygu5-02" ] ; then
-    cd /workspace/project/abt-x64 && source /workspace/project/android-ia/build/envsetup.sh >/dev/null && lunch hsb_64-eng >/dev/null
+    cd /workspace/project/abt-x64 && source /workspace/project/abt-x64/build/envsetup.sh >/dev/null && lunch hsb_64-eng >/dev/null
 elif [ $hostname == "ubuntu-y560d" ] ; then
     cd /workspace/project/gyagp/share
 else
