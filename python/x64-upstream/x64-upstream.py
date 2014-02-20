@@ -50,7 +50,7 @@ examples:
     parser.add_argument('-s', '--sync', dest='sync', help='sync the repo', action='store_true')
     parser.add_argument('--patch', dest='patch', help='apply patches', action='store_true')
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
-    parser.add_argument('--build-fail', dest='build_fail', help='allow n build failures before it stops', type=int, default=0)
+    parser.add_argument('--build-fail', dest='build_fail', help='allow n build failures before it stops', default='0')
     parser.add_argument('--build-clean', dest='build_clean', help='do a clean build', action='store_true')
     parser.add_argument('--set-ndk', dest='set_ndk', help='set up ndk', action='store_true')
 
@@ -138,7 +138,7 @@ def build(force=False):
         execute(command)
         restore_dir()
 
-    ninja_cmd = 'ninja -j' + args.build_fail + ' -j16 -C src/out/Release android_webview_test_apk android_webview_unittests_apk android_webview_apk'
+    ninja_cmd = 'ninja -k' + args.build_fail + ' -j16 -C src/out/Release android_webview_test_apk android_webview_unittests_apk android_webview_apk'
     result = execute(ninja_cmd, show_progress=True)
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
@@ -151,15 +151,16 @@ def set_ndk(force=False):
     if not OS.path.exists('ndk'):
         error('Please put ndk under ' + get_symbolic_link_dir())
 
-    # Create symbolic link to real ndk
-    if not OS.path.exists('src/third_party/android_tools/ndk_bk'):
-        cmd = 'mv src/third_party/android_tools/ndk src/third_party/android_tools/ndk_bk'
-    else:
-        cmd = 'rm -rf src/third_party/android_tools/ndk'
-    execute(cmd, show_command=True)
-    backup_dir('src/third_party/android_tools')
-    execute('ln -s ../../../ndk ./', show_command=False)
-    restore_dir()
+    if not OS.path.exists('ndk/platforms/android-19/arch-x86_64'):
+        # Create symbolic link to real ndk
+        if not OS.path.exists('src/third_party/android_tools/ndk_bk'):
+            cmd = 'mv src/third_party/android_tools/ndk src/third_party/android_tools/ndk_bk'
+        else:
+            cmd = 'rm -rf src/third_party/android_tools/ndk'
+        execute(cmd, show_command=True)
+        backup_dir('src/third_party/android_tools')
+        execute('ln -s ../../../ndk ./', show_command=False)
+        restore_dir()
 
     # Init a git repo
     if not OS.path.exists('ndk/.git'):
