@@ -1,4 +1,4 @@
-From 2d5c2228dda27b674a492c68e0b2ce9deb249415 Mon Sep 17 00:00:00 2001
+From c95172badc508116592662b9e839029dada31c55 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Tue, 11 Feb 2014 13:24:47 +0800
 Subject: [PATCH] third_party/icu: x64 support

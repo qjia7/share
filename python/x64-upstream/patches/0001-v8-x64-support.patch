@@ -1,7 +1,7 @@
-From 6e0029f4c9a1cd6ddd9bc481ac092ca048339e16 Mon Sep 17 00:00:00 2001
+From ba1171e839abaaa5843a134ea98c1c8e64f845d6 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Tue, 11 Feb 2014 16:26:37 +0800
-Subject: [PATCH] v8: x64 support
+Subject: [PATCH 1/2] v8: x64 support
 
 ---
  build/android.gypi   | 18 +++++++++++++++---

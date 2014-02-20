@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# patch apply again
-
 import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
@@ -15,28 +13,30 @@ dir_script = sys.path[0]
 patches = {
     'src': [
         '0001-Enable-x64-build.patch',
-        '0002-Add-general-compile-options-for-Android-x64.patch',
-        '0003-jni-fixes-in-base-for-Android-x64.patch',
-        '0004-jni-fixes-in-net-for-Android-x64.patch',
-        '0005-jni-fixes-in-android_webview-for-Android-x86.patch',
-        '0006-jni-fixes-in-content-for-Android-x64.patch',
-        '0007-jni-fixes-in-chrome-for-Android-x64.patch',
-        '0008-Add-x86_64-ucontext-structure-for-Android-x64.patch',
-        '0009-media-64-support.patch',
-        '0010-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
-        '0011-suppress-warning-error-in-ppapi.patch',
+        '0002-jni-fixes-in-base-for-Android-x64.patch',
+        '0003-jni-fixes-in-net-for-Android-x64.patch',
+        '0004-jni-fixes-in-android_webview-for-Android-x86.patch',
+        '0005-jni-fixes-in-content-for-Android-x64.patch',
+        '0006-jni-fixes-in-chrome-for-Android-x64.patch',
+        '0007-Add-x86_64-ucontext-structure-for-Android-x64.patch',
+        '0008-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
+        '0009-suppress-warning-error-in-ppapi.patch',
     ],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
+    'src/third_party/mesa/src': ['0001-disable-log2.patch'],
     'src/v8': [
         '0001-v8-x64-support.patch',
         '0002-walkaround-for-V8_INT64_C.patch'
     ],
-    'src/third_party/libvpx': ['0001-fix-the-target-arch-mistake-for-android-x86-x64.patch'],
-    'src/third_party/mesa/src': ['0001-disable-log2.patch'],
+    'ndk': [
+        '0001-ndk-fix-for-Android-x64.patch',
+        '0002-ndk-Add-gyp-files.patch',
+    ],
 }
 
-
 ################################################################################
+
+
 def handle_option():
     global args
     parser = argparse.ArgumentParser(description='Script to sync, build upstream x64 Chromium',
@@ -50,7 +50,9 @@ examples:
     parser.add_argument('-s', '--sync', dest='sync', help='sync the repo', action='store_true')
     parser.add_argument('--patch', dest='patch', help='apply patches', action='store_true')
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
+    parser.add_argument('--build-fail', dest='build_fail', help='allow n build failures before it stops', type=int, default=0)
     parser.add_argument('--build-clean', dest='build_clean', help='do a clean build', action='store_true')
+    parser.add_argument('--set-ndk', dest='set_ndk', help='set up ndk', action='store_true')
 
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
 
@@ -84,7 +86,7 @@ def clean(force=False):
         if choice not in ['yes', 'y']:
             return
 
-    cmd = 'gclient revert -n'
+    cmd = 'gclient revert -n -j16'
     execute(cmd, show_progress=True)
 
 
@@ -92,7 +94,7 @@ def sync(force=False):
     if not args.sync:
         return
 
-    cmd = 'gclient sync -f -n --revision src@459216a04dd39b744a73876b21266b7ad1ecfdf4'
+    cmd = 'gclient sync -f -n -j16 --revision src@b9d59e6c9f165c88e41307e7bb8bc90d563a5b6d'
     result = execute(cmd, show_progress=True)
     if result[0]:
         error('sync failed', error_code=result[0])
@@ -105,10 +107,22 @@ def patch(force=False):
     for repo in patches:
         backup_dir(repo)
         for patch in patches[repo]:
-            cmd = 'git am ' + dir_script + '/patches/' + patch
-            result = execute(cmd, show_progress=True)
+            patch_path = dir_script + '/patches/' + patch
+            file = open(patch_path)
+            lines = file.readlines()
+            file.close()
+
+            pattern = re.compile('Subject: \[PATCH.*\] (.*)')
+            match = pattern.search(lines[3])
+            title = match.group(1)
+            result = execute('git show -s --pretty="format:%s" --max-count=30 |grep "' + title + '"', show_command=False)
             if result[0]:
-                warning('Fail to apply patch ' + patch, error_code=result[0])
+                cmd = 'git am ' + patch_path
+                result = execute(cmd, show_progress=True)
+                if result[0]:
+                    error('Fail to apply patch ' + patch, error_code=result[0])
+            else:
+                info('Patch ' + patch + ' was applied before, so is just skipped here')
         restore_dir()
 
 
@@ -116,56 +130,48 @@ def build(force=False):
     if not args.build and not force:
         return
 
-    set_ndk()
+    set_ndk(force=True)
 
     if args.build_clean:
         backup_dir(dir_src)
-        command = bashify('. build/android/envsetup.sh --target-arch=x64 && android_gyp -Dwerror=')
+        command = bashify('. build/android/envsetup.sh && android_gyp -Dtarget_arch=x64 -Dwerror=')
         execute(command)
         restore_dir()
 
-    ninja_cmd = 'ninja -j16 -C src/out/Release android_webview_test_apk android_webview_unittests_apk'
+    ninja_cmd = 'ninja -j' + args.build_fail + ' -j16 -C src/out/Release android_webview_test_apk android_webview_unittests_apk android_webview_apk'
     result = execute(ninja_cmd, show_progress=True)
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
 
 
+def set_ndk(force=False):
+    if not args.set_ndk and not force:
+        return
 
-
-def set_ndk():
     if not OS.path.exists('ndk'):
         error('Please put ndk under ' + get_symbolic_link_dir())
 
-    if OS.path.exists('src/third_party/android_tools/ndk/toolchains/x86_64-4.8'):
-        return
-
-    info('Your ndk is not set well, and script will set it up for you')
-
+    # Create symbolic link to real ndk
     if not OS.path.exists('src/third_party/android_tools/ndk_bk'):
         cmd = 'mv src/third_party/android_tools/ndk src/third_party/android_tools/ndk_bk'
     else:
         cmd = 'rm -rf src/third_party/android_tools/ndk'
-    execute(cmd, show_command=False)
-
+    execute(cmd, show_command=True)
     backup_dir('src/third_party/android_tools')
     execute('ln -s ../../../ndk ./', show_command=False)
     restore_dir()
 
-    if not OS.path.exists('ndk/android_tools_ndk.gyp'):
-        execute('cp ' + dir_script + '/patches/android_tools_ndk.gyp ndk/')
-
-    if not OS.path.exists('ndk/crazy_linker.gyp'):
-        execute('cp ' + dir_script + '/patches/crazy_linker.gyp ndk/')
-
-    if not OS.path.exists('ndk/platforms/android-19/arch-x86_64/usr/include/asm/unistd_64.h'):
-        execute('cd ndk; git init; git add .; git commit -a -m \"orig\"; git am ' + dir_script + '/patches/ndk-allinone.patch; cd ..;');
+    # Init a git repo
+    if not OS.path.exists('ndk/.git'):
+        backup_dir('ndk')
+        execute('git init && git add . && git commit -a -m "orig"')
+        restore_dir()
 
 if __name__ == '__main__':
     handle_option()
     setup()
-
     clean()
     sync()
+    set_ndk()
     patch()
-
     build()
