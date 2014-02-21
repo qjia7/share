@@ -52,6 +52,7 @@ examples:
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('--build-fail', dest='build_fail', help='allow n build failures before it stops', default='0')
     parser.add_argument('--build-clean', dest='build_clean', help='do a clean build', action='store_true')
+    parser.add_argument('--build-debug', dest='build_debug', help='do a Debug build', action='store_true')
     parser.add_argument('--set-ndk', dest='set_ndk', help='set up ndk', action='store_true')
 
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
@@ -138,7 +139,11 @@ def build(force=False):
         execute(command)
         restore_dir()
 
-    ninja_cmd = 'ninja -k' + args.build_fail + ' -j16 -C src/out/Release android_webview_test_apk android_webview_unittests_apk android_webview_apk'
+    target = 'Release'
+    if args.build_debug:
+        target = 'Debug'
+
+    ninja_cmd = 'ninja -k' + args.build_fail + ' -j16 -C src/out/' + target + ' android_webview_test_apk android_webview_unittests_apk android_webview_apk'
     result = execute(ninja_cmd, show_progress=True)
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
