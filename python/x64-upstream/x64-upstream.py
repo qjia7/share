@@ -100,6 +100,10 @@ def sync(force=False):
     if result[0]:
         error('sync failed', error_code=result[0])
 
+    cmd = 'gclient runhooks'
+    result = execute(cmd, show_progress=True)
+    if result[0]:
+        error('sync failed', error_code=result[0])
 
 def patch(force=False):
     if not args.patch and not force:
