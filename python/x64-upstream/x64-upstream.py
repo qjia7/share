@@ -164,7 +164,7 @@ def set_ndk(force=False):
     if not OS.path.exists('ndk'):
         error('Please put ndk under ' + get_symbolic_link_dir())
 
-    if not OS.path.exists('ndk/platforms/android-19/arch-x86_64'):
+    if not OS.path.islink('src/third_party/android_tools/ndk'):
         # Create symbolic link to real ndk
         if not OS.path.exists('src/third_party/android_tools/ndk_bk'):
             cmd = 'mv src/third_party/android_tools/ndk src/third_party/android_tools/ndk_bk'
