@@ -1,0 +1,160 @@
+From e4566d3a5d0378e1dfb7a83129b7635ed8fbcef2 Mon Sep 17 00:00:00 2001
+From: Jie Chen <jie.a.chen@intel.com>
+Date: Fri, 14 Feb 2014 15:11:49 +0800
+Subject: [PATCH 8/9] trivial fixes to suppress warning and type conversion
+
+---
+ android_webview/native/webview_native.gyp   | 5 +++++
+ android_webview/public/browser/draw_gl.h    | 2 +-
+ base/i18n/number_formatting.cc              | 2 +-
+ content/renderer/webclipboard_impl.cc       | 2 +-
+ content/renderer/webclipboard_impl.h        | 2 +-
+ gpu/gpu.gyp                                 | 6 ++++++
+ net/net.gyp                                 | 3 +++
+ net/quic/iovector.h                         | 2 +-
+ net/quic/quic_data_stream.cc                | 2 +-
+ third_party/leveldatabase/leveldatabase.gyp | 3 +++
+ 10 files changed, 23 insertions(+), 6 deletions(-)
+
+diff --git a/android_webview/native/webview_native.gyp b/android_webview/native/webview_native.gyp
+index 8acb8b9..f36d62a 100644
+--- a/android_webview/native/webview_native.gyp
++++ b/android_webview/native/webview_native.gyp
+@@ -5,6 +5,11 @@
+   'variables': {
+     'chromium_code': 1,
+   },
++  'target_defaults': {
++    'cflags': [
++      '-fpermissive',
++    ],
++  },
+   'targets': [
+     {
+       'target_name': 'webview_native',
+diff --git a/android_webview/public/browser/draw_gl.h b/android_webview/public/browser/draw_gl.h
+index a89db3e..31bb5ab 100644
+--- a/android_webview/public/browser/draw_gl.h
++++ b/android_webview/public/browser/draw_gl.h
+@@ -90,7 +90,7 @@ typedef void AwReleaseGraphicBufferFunction(long buffer_id);
+ // Called to map a GraphicBuffer in |mode|.
+ typedef int AwMapFunction(long buffer_id, AwMapMode mode, void** vaddr);
+ // Called to unmap a GraphicBuffer
+-typedef int AwUnmapFunction(long, buffer_id);
++typedef int AwUnmapFunction(long buffer_id);
+ // Called to get a native buffer pointer
+ typedef void* AwGetNativeBufferFunction(long buffer_id);
+ // Called to get the stride of the buffer
+diff --git a/base/i18n/number_formatting.cc b/base/i18n/number_formatting.cc
+index 47aa14c..6d8635c 100644
+--- a/base/i18n/number_formatting.cc
++++ b/base/i18n/number_formatting.cc
+@@ -54,7 +54,7 @@ string16 FormatNumber(int64 number) {
+     return UTF8ToUTF16(StringPrintf("%" PRId64, number));
+   }
+   icu::UnicodeString ustr;
+-  number_format->format(number, ustr);
++  number_format->format(static_cast<int64_t>(number), ustr);
+ 
+   return string16(ustr.getBuffer(), static_cast<size_t>(ustr.length()));
+ }
+diff --git a/content/renderer/webclipboard_impl.cc b/content/renderer/webclipboard_impl.cc
+index 4f6e54f..449c381 100644
+--- a/content/renderer/webclipboard_impl.cc
++++ b/content/renderer/webclipboard_impl.cc
+@@ -41,7 +41,7 @@ WebClipboardImpl::WebClipboardImpl(ClipboardClient* client)
+ WebClipboardImpl::~WebClipboardImpl() {
+ }
+ 
+-uint64 WebClipboardImpl::sequenceNumber(Buffer buffer) {
++uint64_t WebClipboardImpl::sequenceNumber(Buffer buffer) {
+   ui::ClipboardType clipboard_type;
+   if (!ConvertBufferType(buffer, &clipboard_type))
+     return 0;
+diff --git a/content/renderer/webclipboard_impl.h b/content/renderer/webclipboard_impl.h
+index 477f53b..b638668 100644
+--- a/content/renderer/webclipboard_impl.h
++++ b/content/renderer/webclipboard_impl.h
+@@ -22,7 +22,7 @@ class WebClipboardImpl : public blink::WebClipboard {
+   virtual ~WebClipboardImpl();
+ 
+   // WebClipboard methods:
+-  virtual uint64 sequenceNumber(Buffer buffer);
++  virtual uint64_t sequenceNumber(Buffer buffer);
+   virtual bool isFormatAvailable(Format format, Buffer buffer);
+   virtual blink::WebVector<blink::WebString> readAvailableTypes(
+       Buffer buffer, bool* contains_filenames);
+diff --git a/gpu/gpu.gyp b/gpu/gpu.gyp
+index 477e62a..a7424ad 100644
+--- a/gpu/gpu.gyp
++++ b/gpu/gpu.gyp
+@@ -9,6 +9,12 @@
+   'includes': [
+     'gpu_common.gypi',
+   ],
++  'target_defaults': {
++    'cflags': [
++      '-Wno-unused-local-typedefs',
++      '-fpermissive',
++    ],
++  },
+   'targets': [
+     {
+       # Library emulates GLES2 using command_buffers.
+diff --git a/net/net.gyp b/net/net.gyp
+index c4e47df..9be6d7fc 100644
+--- a/net/net.gyp
++++ b/net/net.gyp
+@@ -39,6 +39,9 @@
+       }],
+     ],
+   },
++  'target_defaults': {
++    'cflags': ['-Wno-narrowing',],
++  },
+   'includes': [
+     '../build/win_precompile.gypi',
+   ],
+diff --git a/net/quic/iovector.h b/net/quic/iovector.h
+index 74fcbef..dd17327 100644
+--- a/net/quic/iovector.h
++++ b/net/quic/iovector.h
+@@ -78,7 +78,7 @@ class NET_EXPORT_PRIVATE IOVector {
+                                 size_t max_bytes) {
+     size_t bytes_appended = 0;
+     for (size_t i = 0; i < iovcnt && max_bytes > 0; ++i) {
+-      const size_t length = std::min(max_bytes, iov[i].iov_len);
++      const size_t length = std::min(max_bytes, static_cast<size_t>(iov[i].iov_len));
+       Append(static_cast<char*>(iov[i].iov_base), length);
+       max_bytes -= length;
+       bytes_appended += length;
+diff --git a/net/quic/quic_data_stream.cc b/net/quic/quic_data_stream.cc
+index 2e1bcdf..6296947 100644
+--- a/net/quic/quic_data_stream.cc
++++ b/net/quic/quic_data_stream.cc
+@@ -89,7 +89,7 @@ size_t QuicDataStream::Readv(const struct iovec* iov, size_t iov_len) {
+   size_t iov_index = 0;
+   while (iov_index < iov_len &&
+          decompressed_headers_.length() > bytes_consumed) {
+-    size_t bytes_to_read = min(iov[iov_index].iov_len,
++    size_t bytes_to_read = min(static_cast<size_t>(iov[iov_index].iov_len),
+                                decompressed_headers_.length() - bytes_consumed);
+     char* iov_ptr = static_cast<char*>(iov[iov_index].iov_base);
+     memcpy(iov_ptr,
+diff --git a/third_party/leveldatabase/leveldatabase.gyp b/third_party/leveldatabase/leveldatabase.gyp
+index 3cb8869..4de055e 100644
+--- a/third_party/leveldatabase/leveldatabase.gyp
++++ b/third_party/leveldatabase/leveldatabase.gyp
+@@ -24,6 +24,9 @@
+       'src/',
+       'src/include/',
+     ],
++    'cflags': [
++      '-fpermissive',
++    ],
+     'conditions': [
+       ['use_snappy', {
+         'defines': [
+-- 
+1.8.3.2
+
