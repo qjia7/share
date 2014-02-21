@@ -1,17 +1,15 @@
-From e2ec277091b7d3c41dca0c2b31875ba7975a8962 Mon Sep 17 00:00:00 2001
-From: Jie Chen <jie.a.chen@intel.com>
-Date: Sun, 26 Jan 2014 09:19:09 +0800
+From 687ec6f0a079b1f743622874a11afd36f1079127 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 21 Feb 2014 21:59:35 +0800
 Subject: [PATCH 2/9] jni fixes in base/ for Android x64
 
-Atomic operations support
-Fixed type of 'nativeEvent' in JavaHandlerThread.java
-base/i18n/rtl.cc
 ---
  base/android/java_handler_thread.cc |  2 +-
  base/android/java_handler_thread.h  |  2 +-
  base/base.gyp                       |  2 +-
  base/i18n/rtl.cc                    | 14 +++++++++-----
- 4 files changed, 12 insertions(+), 8 deletions(-)
+ base/json/json_writer.cc            |  4 ++--
+ 5 files changed, 14 insertions(+), 10 deletions(-)
 
 diff --git a/base/android/java_handler_thread.cc b/base/android/java_handler_thread.cc
 index ce5d0fe..b9cf81a 100644
@@ -99,6 +97,23 @@ index 851b036..75a6b15 100644
  
    // Inserting a PDF (Pop Directional Formatting) mark as the last character.
    text->push_back(kPopDirectionalFormatting);
+diff --git a/base/json/json_writer.cc b/base/json/json_writer.cc
+index efe57ec..d14c92c 100644
+--- a/base/json/json_writer.cc
++++ b/base/json/json_writer.cc
+@@ -96,10 +96,10 @@ bool JSONWriter::BuildJSONString(const Value* const node, size_t depth) {
+       // The JSON spec requires that non-integer values in the range (-1,1)
+       // have a zero before the decimal point - ".52" is not valid, "0.52" is.
+       if (real[0] == '.') {
+-        real.insert(0U, 1U, '0');
++        real.insert(static_cast<size_t>(0), static_cast<size_t>(1), '0');
+       } else if (real.length() > 1 && real[0] == '-' && real[1] == '.') {
+         // "-.1" bad "-0.1" good
+-        real.insert(1U, 1U, '0');
++        real.insert(static_cast<size_t>(1), static_cast<size_t>(1), '0');
+       }
+       json_string_->append(real);
+       return result;
 -- 
 1.8.3.2
 

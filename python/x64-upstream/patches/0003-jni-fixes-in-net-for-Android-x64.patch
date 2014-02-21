@@ -1,13 +1,14 @@
-From fd2c223bbc6a71e94e26bf65b3b5ba8a8086a863 Mon Sep 17 00:00:00 2001
+From 0ed589ac712450520b5b8d9640b17a87c4d449cf Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Thu, 20 Feb 2014 15:10:17 +0800
+Date: Fri, 21 Feb 2014 22:01:42 +0800
 Subject: [PATCH 3/9] jni fixes in net/ for Android x64
 
 ---
  net/android/java/src/org/chromium/net/AndroidKeyStore.java        | 2 +-
- net/android/java/src/org/chromium/net/DefaultAndroidKeyStore.java | 4 ++--
+ net/android/java/src/org/chromium/net/DefaultAndroidKeyStore.java | 6 +++---
+ net/android/java/src/org/chromium/net/RemoteAndroidKeyStore.java  | 2 +-
  net/android/keystore.cc                                           | 2 +-
- 3 files changed, 4 insertions(+), 4 deletions(-)
+ 4 files changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/net/android/java/src/org/chromium/net/AndroidKeyStore.java b/net/android/java/src/org/chromium/net/AndroidKeyStore.java
 index 6db0d0a..8c85a47 100644
@@ -23,9 +24,18 @@ index 6db0d0a..8c85a47 100644
      /**
       * Called when the native OpenSSL engine no longer needs access to the underlying key.
 diff --git a/net/android/java/src/org/chromium/net/DefaultAndroidKeyStore.java b/net/android/java/src/org/chromium/net/DefaultAndroidKeyStore.java
-index 5232e46..67a57cc 100644
+index 5232e46..cc61657 100644
 --- a/net/android/java/src/org/chromium/net/DefaultAndroidKeyStore.java
 +++ b/net/android/java/src/org/chromium/net/DefaultAndroidKeyStore.java
+@@ -143,7 +143,7 @@ public class DefaultAndroidKeyStore implements AndroidKeyStore {
+     }
+ 
+     @Override
+-    public int getOpenSSLHandleForPrivateKey(AndroidPrivateKey key) {
++    public long getOpenSSLHandleForPrivateKey(AndroidPrivateKey key) {
+         PrivateKey javaKey = ((DefaultAndroidPrivateKey) key).getJavaKey();
+         // Sanity checks
+         if (javaKey == null) {
 @@ -207,9 +207,9 @@ public class DefaultAndroidKeyStore implements AndroidKeyStore {
                  return 0;
              }
@@ -38,6 +48,19 @@ index 5232e46..67a57cc 100644
              } finally {
                  getPkeyContext.setAccessible(false);
              }
+diff --git a/net/android/java/src/org/chromium/net/RemoteAndroidKeyStore.java b/net/android/java/src/org/chromium/net/RemoteAndroidKeyStore.java
+index e979036..96037f8 100644
+--- a/net/android/java/src/org/chromium/net/RemoteAndroidKeyStore.java
++++ b/net/android/java/src/org/chromium/net/RemoteAndroidKeyStore.java
+@@ -110,7 +110,7 @@ public class RemoteAndroidKeyStore implements AndroidKeyStore {
+     }
+ 
+     @Override
+-    public int getOpenSSLHandleForPrivateKey(AndroidPrivateKey privateKey) {
++    public long getOpenSSLHandleForPrivateKey(AndroidPrivateKey privateKey) {
+         // This should not be called as it's only for older versions of Android.
+         assert false;
+         return 0;
 diff --git a/net/android/keystore.cc b/net/android/keystore.cc
 index cefd4f4..de36c95 100644
 --- a/net/android/keystore.cc

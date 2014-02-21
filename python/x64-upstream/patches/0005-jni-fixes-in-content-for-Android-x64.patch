@@ -1,6 +1,6 @@
-From 403a8496199e6e7720364f6249ecd1c5ad6e1144 Mon Sep 17 00:00:00 2001
+From 1ba6de60eff08ca30c0d14816204dd0839283258 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Thu, 20 Feb 2014 15:22:21 +0800
+Date: Fri, 21 Feb 2014 22:06:39 +0800
 Subject: [PATCH 5/9] jni fixes in content/ for Android x64
 
 ---
@@ -56,7 +56,7 @@ index d009548..db42223 100644
    ContentViewCoreImpl* content_view =
        reinterpret_cast<ContentViewCoreImpl*>(native_content_view);
 diff --git a/content/browser/android/content_view_render_view.h b/content/browser/android/content_view_render_view.h
-index a652864..f43af94 100644
+index a652864..6ac2831 100644
 --- a/content/browser/android/content_view_render_view.h
 +++ b/content/browser/android/content_view_render_view.h
 @@ -26,7 +26,7 @@ class ContentViewRenderView : public CompositorClient {
@@ -64,7 +64,7 @@ index a652864..f43af94 100644
    // Methods called from Java via JNI -----------------------------------------
    void Destroy(JNIEnv* env, jobject obj);
 -  void SetCurrentContentView(JNIEnv* env, jobject obj, int native_content_view);
-+  void SetCurrentContentView(JNIEnv* env, jobject obj, long native_content_view);
++  void SetCurrentContentView(JNIEnv* env, jobject obj, jlong native_content_view);
    void SurfaceCreated(JNIEnv* env, jobject obj);
    void SurfaceDestroyed(JNIEnv* env, jobject obj);
    void SurfaceChanged(JNIEnv* env, jobject obj,

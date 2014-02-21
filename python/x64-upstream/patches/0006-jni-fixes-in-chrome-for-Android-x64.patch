@@ -1,4 +1,4 @@
-From 8e51f947c67ab9305104137aced5317f11d7defe Mon Sep 17 00:00:00 2001
+From c59eac27dc5a7b97213a3fcbc474a6a8404e7fb1 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Thu, 20 Feb 2014 15:27:44 +0800
 Subject: [PATCH 6/9] jni fixes in chrome/ for Android x64

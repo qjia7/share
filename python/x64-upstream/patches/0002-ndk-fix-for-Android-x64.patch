@@ -1,19 +1,20 @@
-From b227bc394bcaae150ee2f151a38d5abd36f37f73 Mon Sep 17 00:00:00 2001
-From: Jie Chen <jie.a.chen@intel.com>
-Date: Mon, 17 Feb 2014 10:26:11 +0800
-Subject: [PATCH 1/2] ndk fix for Android x64
+From 265c07f97e3b6ac2fef577c37e82250f89f88c98 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 21 Feb 2014 18:02:59 +0800
+Subject: [PATCH 2/2] ndk fix for Android x64
 
 ---
  .../usr/include/android/native_window_jni.h        |   1 +
  .../arch-x86_64/usr/include/asm/unistd.h           |   2 +-
  .../arch-x86_64/usr/include/asm/unistd_64.h        | 717 +++++++++++++++++++++
+ .../arch-x86_64/usr/include/machine/_types.h       |   4 +-
  .../android-19/arch-x86_64/usr/include/sys/cdefs.h |  10 +-
  .../android-19/arch-x86_64/usr/include/sys/types.h |   2 +
  .../arch-x86_64/usr/lib/crtbegin_dynamic.o         | Bin 2016 -> 2517 bytes
  .../android-19/arch-x86_64/usr/lib/crtbegin_so.o   | Bin 1800 -> 1976 bytes
  .../arch-x86_64/usr/lib/crtend_android.o           | Bin 704 -> 1231 bytes
  .../android-19/arch-x86_64/usr/lib/crtend_so.o     | Bin 648 -> 1119 bytes
- 9 files changed, 726 insertions(+), 6 deletions(-)
+ 10 files changed, 728 insertions(+), 8 deletions(-)
  create mode 100644 platforms/android-19/arch-x86_64/usr/include/asm/unistd_64.h
 
 diff --git a/platforms/android-19/arch-x86_64/usr/include/android/native_window_jni.h b/platforms/android-19/arch-x86_64/usr/include/android/native_window_jni.h
@@ -761,6 +762,22 @@ index 0000000..2fe0ce4
 +
 +
 +#endif /* _ASM_X86_UNISTD_64_H */
+diff --git a/platforms/android-19/arch-x86_64/usr/include/machine/_types.h b/platforms/android-19/arch-x86_64/usr/include/machine/_types.h
+index d217822..c4fd126 100644
+--- a/platforms/android-19/arch-x86_64/usr/include/machine/_types.h
++++ b/platforms/android-19/arch-x86_64/usr/include/machine/_types.h
+@@ -43,9 +43,9 @@ typedef	unsigned short		__uint16_t;
+ typedef	int			__int32_t;
+ typedef	unsigned int		__uint32_t;
+ /* LONGLONG */
+-typedef	long long		__int64_t;
++typedef	long		__int64_t;
+ /* LONGLONG */
+-typedef	unsigned long long	__uint64_t;
++typedef	unsigned long	__uint64_t;
+ 
+ /* 7.18.1.2 Minimum-width integer types */
+ typedef	__int8_t		__int_least8_t;
 diff --git a/platforms/android-19/arch-x86_64/usr/include/sys/cdefs.h b/platforms/android-19/arch-x86_64/usr/include/sys/cdefs.h
 index beb35c4..07a0d4e 100644
 --- a/platforms/android-19/arch-x86_64/usr/include/sys/cdefs.h

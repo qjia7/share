@@ -1,4 +1,4 @@
-From e4566d3a5d0378e1dfb7a83129b7635ed8fbcef2 Mon Sep 17 00:00:00 2001
+From 73b1f17f94a8f47839d19663cd7b93072f247de7 Mon Sep 17 00:00:00 2001
 From: Jie Chen <jie.a.chen@intel.com>
 Date: Fri, 14 Feb 2014 15:11:49 +0800
 Subject: [PATCH 8/9] trivial fixes to suppress warning and type conversion

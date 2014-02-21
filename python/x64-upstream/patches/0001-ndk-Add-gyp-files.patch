@@ -1,7 +1,7 @@
-From c27830297314bb06b363d459076988461c9f3b53 Mon Sep 17 00:00:00 2001
+From 4b3d5a1d8d83529c22269a933affe1167b0d22d5 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Thu, 20 Feb 2014 16:25:33 +0800
-Subject: [PATCH 2/2] ndk: Add gyp files
+Subject: [PATCH 1/2] ndk: Add gyp files
 
 ---
  android_tools_ndk.gyp | 20 ++++++++++++++++++

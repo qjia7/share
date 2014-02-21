@@ -29,8 +29,8 @@ patches = {
         '0002-walkaround-for-V8_INT64_C.patch'
     ],
     'ndk': [
-        '0001-ndk-fix-for-Android-x64.patch',
-        '0002-ndk-Add-gyp-files.patch',
+        '0001-ndk-Add-gyp-files.patch',
+        '0002-ndk-fix-for-Android-x64.patch',
     ],
 }
 
@@ -95,6 +95,7 @@ def clean(force=False):
     execute(cmd)
     restore_dir()
 
+
 def sync(force=False):
     if not args.sync:
         return
@@ -108,6 +109,7 @@ def sync(force=False):
     result = execute(cmd, show_progress=True)
     if result[0]:
         error('sync failed', error_code=result[0])
+
 
 def patch(force=False):
     if not args.patch and not force:
@@ -152,6 +154,7 @@ def build(force=False):
         target = 'Debug'
 
     ninja_cmd = 'ninja -k' + args.build_fail + ' -j16 -C src/out/' + target + ' android_webview_test_apk android_webview_unittests_apk android_webview_apk'
+    ninja_cmd += ' 2>&1 |tee ' + dir_root + '/build.log'
     result = execute(ninja_cmd, show_progress=True)
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
