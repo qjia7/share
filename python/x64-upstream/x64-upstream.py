@@ -90,6 +90,10 @@ def clean(force=False):
     cmd = 'gclient revert -n -j16'
     execute(cmd, show_progress=True)
 
+    backup_dir('ndk')
+    cmd = bashify('git reset --hard $(git log --oneline|tail -1|awk \'{print $1}\') && rm -rf android_tools_ndk.gyp crazy_linker.gyp .git')
+    execute(cmd)
+    restore_dir()
 
 def sync(force=False):
     if not args.sync:
@@ -108,6 +112,8 @@ def sync(force=False):
 def patch(force=False):
     if not args.patch and not force:
         return
+
+    set_ndk(force=True)
 
     for repo in patches:
         backup_dir(repo)
@@ -134,8 +140,6 @@ def patch(force=False):
 def build(force=False):
     if not args.build and not force:
         return
-
-    set_ndk(force=True)
 
     if args.build_clean:
         backup_dir(dir_src)
