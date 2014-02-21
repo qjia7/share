@@ -76,7 +76,7 @@ def sync():
     if args.sync != 'master':
         cmd += ' -b ' + args.sync
     execute(cmd)
-    execute('repo sync', show_progress=True)
+    execute('repo sync -j16', show_progress=True)
 
 
 def build():
