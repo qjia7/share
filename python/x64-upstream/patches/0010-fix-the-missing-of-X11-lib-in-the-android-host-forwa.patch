@@ -1,0 +1,42 @@
+From 9457b1a7ed3b45855e0d85b59d29d4fa3c565938 Mon Sep 17 00:00:00 2001
+From: "jie.chen" <jie.a.chen@intel.com>
+Date: Mon, 24 Feb 2014 06:42:33 +0800
+Subject: [PATCH] fix the missing of X11 lib in the android host forwarder
+ tools
+
+---
+ tools/android/forwarder/forwarder.gyp  | 3 +++
+ tools/android/forwarder2/forwarder.gyp | 3 +++
+ 2 files changed, 6 insertions(+)
+
+diff --git a/tools/android/forwarder/forwarder.gyp b/tools/android/forwarder/forwarder.gyp
+index 1df518b..c7f75c7 100644
+--- a/tools/android/forwarder/forwarder.gyp
++++ b/tools/android/forwarder/forwarder.gyp
+@@ -37,6 +37,9 @@
+       'sources': [
+         'forwarder.cc',
+       ],
++      'libraries': [
++        '-lX11',
++      ],
+     },
+   ],
+ }
+diff --git a/tools/android/forwarder2/forwarder.gyp b/tools/android/forwarder2/forwarder.gyp
+index a3f2898..7051dea 100644
+--- a/tools/android/forwarder2/forwarder.gyp
++++ b/tools/android/forwarder2/forwarder.gyp
+@@ -82,6 +82,9 @@
+         '../../../base/message_loop/message_pump_glib.cc',
+         '../../../base/message_loop/message_pump_gtk.cc',
+       ],
++      'libraries': [
++        '-lX11',
++      ],
+     },
+   ],
+ }
+-- 
+1.8.3.2
+

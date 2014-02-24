@@ -1,34 +1,19 @@
-From 265c07f97e3b6ac2fef577c37e82250f89f88c98 Mon Sep 17 00:00:00 2001
+From de88be7a83b230ab935a7df802e2a082f16b37f1 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 21 Feb 2014 18:02:59 +0800
-Subject: [PATCH 2/2] ndk fix for Android x64
+Subject: [PATCH] ndk fix for Android x64
 
 ---
- .../usr/include/android/native_window_jni.h        |   1 +
  .../arch-x86_64/usr/include/asm/unistd.h           |   2 +-
  .../arch-x86_64/usr/include/asm/unistd_64.h        | 717 +++++++++++++++++++++
  .../arch-x86_64/usr/include/machine/_types.h       |   4 +-
- .../android-19/arch-x86_64/usr/include/sys/cdefs.h |  10 +-
- .../android-19/arch-x86_64/usr/include/sys/types.h |   2 +
  .../arch-x86_64/usr/lib/crtbegin_dynamic.o         | Bin 2016 -> 2517 bytes
  .../android-19/arch-x86_64/usr/lib/crtbegin_so.o   | Bin 1800 -> 1976 bytes
  .../arch-x86_64/usr/lib/crtend_android.o           | Bin 704 -> 1231 bytes
  .../android-19/arch-x86_64/usr/lib/crtend_so.o     | Bin 648 -> 1119 bytes
- 10 files changed, 728 insertions(+), 8 deletions(-)
+ 7 files changed, 720 insertions(+), 3 deletions(-)
  create mode 100644 platforms/android-19/arch-x86_64/usr/include/asm/unistd_64.h
 
-diff --git a/platforms/android-19/arch-x86_64/usr/include/android/native_window_jni.h b/platforms/android-19/arch-x86_64/usr/include/android/native_window_jni.h
-index b9e72ef..0f64247 100644
---- a/platforms/android-19/arch-x86_64/usr/include/android/native_window_jni.h
-+++ b/platforms/android-19/arch-x86_64/usr/include/android/native_window_jni.h
-@@ -17,6 +17,7 @@
- #ifndef ANDROID_NATIVE_WINDOW_JNI_H
- #define ANDROID_NATIVE_WINDOW_JNI_H
- 
-+#include <stdint.h>
- #include <android/native_window.h>
- 
- #include <jni.h>
 diff --git a/platforms/android-19/arch-x86_64/usr/include/asm/unistd.h b/platforms/android-19/arch-x86_64/usr/include/asm/unistd.h
 index d109f5f..a649176 100644
 --- a/platforms/android-19/arch-x86_64/usr/include/asm/unistd.h
@@ -778,40 +763,6 @@ index d217822..c4fd126 100644
  
  /* 7.18.1.2 Minimum-width integer types */
  typedef	__int8_t		__int_least8_t;
-diff --git a/platforms/android-19/arch-x86_64/usr/include/sys/cdefs.h b/platforms/android-19/arch-x86_64/usr/include/sys/cdefs.h
-index beb35c4..07a0d4e 100644
---- a/platforms/android-19/arch-x86_64/usr/include/sys/cdefs.h
-+++ b/platforms/android-19/arch-x86_64/usr/include/sys/cdefs.h
-@@ -171,11 +171,11 @@
- #define	__pure
- #endif
- 
--#if __GNUC_PREREQ__(2, 7)
--#define	__unused	__attribute__((__unused__))
--#else
--#define	__unused	/* delete */
--#endif
-+//#if __GNUC_PREREQ__(2, 7)
-+//#define	__unused	__attribute__((__unused__))
-+//#else
-+//#define	__unused	/* delete */
-+//#endif
- 
- #if __GNUC_PREREQ__(3, 1)
- #define	__used		__attribute__((__used__))
-diff --git a/platforms/android-19/arch-x86_64/usr/include/sys/types.h b/platforms/android-19/arch-x86_64/usr/include/sys/types.h
-index 15ecb37..66efeb8 100644
---- a/platforms/android-19/arch-x86_64/usr/include/sys/types.h
-+++ b/platforms/android-19/arch-x86_64/usr/include/sys/types.h
-@@ -69,6 +69,8 @@ typedef __kernel_off_t       off_t;
- typedef __kernel_loff_t      loff_t;
- typedef loff_t               off64_t;  /* GLibc-specific */
- 
-+typedef long int             __off64_t;
-+
- typedef __kernel_pid_t		 pid_t;
- 
- /* while POSIX wants these in <sys/types.h>, we
 diff --git a/platforms/android-19/arch-x86_64/usr/lib/crtbegin_dynamic.o b/platforms/android-19/arch-x86_64/usr/lib/crtbegin_dynamic.o
 index a340eac22b1a404f7227b6e256ac646c678db539..59d69ce3da47e9f6f3136049c23b20141d5909f3 100644
 GIT binary patch

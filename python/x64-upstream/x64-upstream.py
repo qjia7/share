@@ -21,6 +21,7 @@ patches = {
         '0007-Add-x86_64-ucontext-structure-for-Android-x64.patch',
         '0008-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
         '0009-suppress-warning-error-in-ppapi.patch',
+        '0010-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
     ],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
     'src/third_party/mesa/src': ['0001-disable-log2.patch'],
