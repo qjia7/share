@@ -22,6 +22,7 @@ patches = {
         '0008-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
         '0009-suppress-warning-error-in-ppapi.patch',
         '0010-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
+        '0011-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
     ],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
     'src/third_party/mesa/src': ['0001-disable-log2.patch'],
