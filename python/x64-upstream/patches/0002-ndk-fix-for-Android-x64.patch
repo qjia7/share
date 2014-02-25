@@ -1,19 +1,116 @@
-From de88be7a83b230ab935a7df802e2a082f16b37f1 Mon Sep 17 00:00:00 2001
+From 5da682fc4b6867818f4446868849a5c4bfd438d7 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 21 Feb 2014 18:02:59 +0800
 Subject: [PATCH] ndk fix for Android x64
 
 ---
- .../arch-x86_64/usr/include/asm/unistd.h           |   2 +-
- .../arch-x86_64/usr/include/asm/unistd_64.h        | 717 +++++++++++++++++++++
- .../arch-x86_64/usr/include/machine/_types.h       |   4 +-
- .../arch-x86_64/usr/lib/crtbegin_dynamic.o         | Bin 2016 -> 2517 bytes
- .../android-19/arch-x86_64/usr/lib/crtbegin_so.o   | Bin 1800 -> 1976 bytes
- .../arch-x86_64/usr/lib/crtend_android.o           | Bin 704 -> 1231 bytes
- .../android-19/arch-x86_64/usr/lib/crtend_so.o     | Bin 648 -> 1119 bytes
- 7 files changed, 720 insertions(+), 3 deletions(-)
+ .../arch-x86_64/usr/include/asm/posix_types.h      |    2 +-
+ .../arch-x86_64/usr/include/asm/posix_types_64.h   |   78 +++
+ .../arch-x86_64/usr/include/asm/unistd.h           |    2 +-
+ .../arch-x86_64/usr/include/asm/unistd_64.h        |  717 ++++++++++++++++++++
+ .../arch-x86_64/usr/include/machine/_types.h       |    4 +-
+ .../arch-x86_64/usr/lib/crtbegin_dynamic.o         |  Bin 2016 -> 2517 bytes
+ .../android-19/arch-x86_64/usr/lib/crtbegin_so.o   |  Bin 1800 -> 1976 bytes
+ .../arch-x86_64/usr/lib/crtend_android.o           |  Bin 704 -> 1231 bytes
+ .../android-19/arch-x86_64/usr/lib/crtend_so.o     |  Bin 648 -> 1119 bytes
+ 9 files changed, 799 insertions(+), 4 deletions(-)
+ create mode 100644 platforms/android-19/arch-x86_64/usr/include/asm/posix_types_64.h
  create mode 100644 platforms/android-19/arch-x86_64/usr/include/asm/unistd_64.h
 
+diff --git a/platforms/android-19/arch-x86_64/usr/include/asm/posix_types.h b/platforms/android-19/arch-x86_64/usr/include/asm/posix_types.h
+index 4e26788..16b406a 100644
+--- a/platforms/android-19/arch-x86_64/usr/include/asm/posix_types.h
++++ b/platforms/android-19/arch-x86_64/usr/include/asm/posix_types.h
+@@ -16,4 +16,4 @@
+  ***
+  ****************************************************************************
+  ****************************************************************************/
+-#include "posix_types_32.h"
++#include "posix_types_64.h"
+diff --git a/platforms/android-19/arch-x86_64/usr/include/asm/posix_types_64.h b/platforms/android-19/arch-x86_64/usr/include/asm/posix_types_64.h
+new file mode 100644
+index 0000000..7e031ba
+--- /dev/null
++++ b/platforms/android-19/arch-x86_64/usr/include/asm/posix_types_64.h
+@@ -0,0 +1,78 @@
++/****************************************************************************
++ ****************************************************************************
++ ***
++ ***   This header was automatically generated from a Linux kernel header
++ ***   of the same name, to make information necessary for userspace to
++ ***   call into the kernel available to libc.  It contains only constants,
++ ***   structures, and macros generated from the original header, and thus,
++ ***   contains no copyrightable information.
++ ***
++ ***   To edit the content of this header, modify the corresponding
++ ***   source file (e.g. under external/kernel-headers/original/) then
++ ***   run bionic/libc/kernel/tools/update_all.py
++ ***
++ ***   Any manual change here will be lost the next time this script will
++ ***   be run. You've been warned!
++ ***
++ ****************************************************************************
++ ****************************************************************************/
++#ifndef __ARCH_I386_POSIX_TYPES_H
++#define __ARCH_I386_POSIX_TYPES_H
++typedef unsigned long __kernel_ino_t;
++typedef unsigned short __kernel_mode_t;
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++typedef unsigned short __kernel_nlink_t;
++typedef long __kernel_off_t;
++typedef int __kernel_pid_t;
++typedef unsigned short __kernel_ipc_pid_t;
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++typedef unsigned short __kernel_uid_t;
++typedef unsigned short __kernel_gid_t;
++typedef unsigned long __kernel_size_t;
++typedef long __kernel_ssize_t;
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++typedef long __kernel_ptrdiff_t;
++typedef long __kernel_time_t;
++typedef long __kernel_suseconds_t;
++typedef long __kernel_clock_t;
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++typedef int __kernel_timer_t;
++typedef int __kernel_clockid_t;
++typedef int __kernel_daddr_t;
++typedef char * __kernel_caddr_t;
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++typedef unsigned short __kernel_uid16_t;
++typedef unsigned short __kernel_gid16_t;
++typedef unsigned int __kernel_uid32_t;
++typedef unsigned int __kernel_gid32_t;
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++typedef unsigned short __kernel_old_uid_t;
++typedef unsigned short __kernel_old_gid_t;
++typedef unsigned short __kernel_old_dev_t;
++#ifdef __GNUC__
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++typedef long long __kernel_loff_t;
++#endif
++typedef struct {
++#ifdef __USE_ALL
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++ int val[2];
++#else
++ int __val[2];
++#endif
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++} __kernel_fsid_t;
++#if !defined(__GLIBC__) || __GLIBC__ < 2
++#undef __FD_SET
++#define __FD_SET(fd,fdsetp)   __asm__ __volatile__("btsl %1,%0":   "+m" (*(__kernel_fd_set *) (fdsetp)):"r" ((int) (fd)))
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++#undef __FD_CLR
++#define __FD_CLR(fd,fdsetp)   __asm__ __volatile__("btrl %1,%0":   "+m" (*(__kernel_fd_set *) (fdsetp)):"r" ((int) (fd)))
++#undef __FD_ISSET
++#define __FD_ISSET(fd,fdsetp) (__extension__ ({   unsigned char __result;   __asm__ __volatile__("btl %1,%2 ; setb %0"   :"=q" (__result) :"r" ((int) (fd)),   "m" (*(__kernel_fd_set *) (fdsetp)));   __result; }))
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
++#undef __FD_ZERO
++#define __FD_ZERO(fdsetp)  do {   int __d0, __d1;   __asm__ __volatile__("cld ; rep ; stosl"   :"=m" (*(__kernel_fd_set *) (fdsetp)),   "=&c" (__d0), "=&D" (__d1)   :"a" (0), "1" (__FDSET_LONGS),   "2" ((__kernel_fd_set *) (fdsetp)) : "memory");  } while (0)
++#endif
++#endif
++/* WARNING: DO NOT EDIT, AUTO-GENERATED CODE - SEE TOP FOR INSTRUCTIONS */
 diff --git a/platforms/android-19/arch-x86_64/usr/include/asm/unistd.h b/platforms/android-19/arch-x86_64/usr/include/asm/unistd.h
 index d109f5f..a649176 100644
 --- a/platforms/android-19/arch-x86_64/usr/include/asm/unistd.h
@@ -884,5 +981,5 @@ zj|ho7qUck8!@Br1I!gBPfLdost3zB9HA3n#?~-^X^j1>55wfp_zID$+(YK)<tBF~C
 E-<G*6)c^nh
 
 -- 
-1.8.3.2
+1.7.10.4
 
