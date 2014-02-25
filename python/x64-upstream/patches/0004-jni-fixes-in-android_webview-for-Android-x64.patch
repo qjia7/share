@@ -1,20 +1,20 @@
-From d4e81fcf608050d1a4c1f9ca6fcb809f4d33066f Mon Sep 17 00:00:00 2001
+From bc636610992601dfd62f212491aa990f03e370c3 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Tue, 25 Feb 2014 10:55:31 +0800
 Subject: [PATCH 4/4] jni fixes in android_webview/ for Android x64
 
 ---
- .../browser/gpu_memory_buffer_factory_impl.cc      |  4 ++--
- .../org/chromium/android_webview/AwContents.java   | 28 +++++++++++-----------
- .../chromium/android_webview/AwDevToolsServer.java |  8 +++----
- .../chromium/android_webview/AwPdfExporter.java    |  2 +-
- .../org/chromium/android_webview/AwSettings.java   |  2 +-
- android_webview/native/aw_contents.cc              | 20 ++++++++--------
- android_webview/native/aw_contents.h               |  6 ++---
- android_webview/native/aw_dev_tools_server.cc      |  8 +++----
- android_webview/native/aw_pdf_exporter.cc          |  2 +-
- android_webview/public/browser/draw_gl.h           | 14 +++++------
- 10 files changed, 47 insertions(+), 47 deletions(-)
+ .../browser/gpu_memory_buffer_factory_impl.cc      |    4 +--
+ .../org/chromium/android_webview/AwContents.java   |   28 ++++++++++----------
+ .../chromium/android_webview/AwDevToolsServer.java |    8 +++---
+ .../chromium/android_webview/AwPdfExporter.java    |    2 +-
+ .../org/chromium/android_webview/AwSettings.java   |    2 +-
+ android_webview/native/aw_contents.cc              |   22 +++++++--------
+ android_webview/native/aw_contents.h               |    6 ++---
+ android_webview/native/aw_dev_tools_server.cc      |    8 +++---
+ android_webview/native/aw_pdf_exporter.cc          |    2 +-
+ android_webview/public/browser/draw_gl.h           |   14 +++++-----
+ 10 files changed, 48 insertions(+), 48 deletions(-)
 
 diff --git a/android_webview/browser/gpu_memory_buffer_factory_impl.cc b/android_webview/browser/gpu_memory_buffer_factory_impl.cc
 index c4a6cac..7b8b9d0 100644
@@ -193,7 +193,7 @@ index 9c8f3b4..a00235b 100644
              if (mNativeAwSettings != 0) {
                  nativeDestroy(mNativeAwSettings);
 diff --git a/android_webview/native/aw_contents.cc b/android_webview/native/aw_contents.cc
-index 9c964eb0..6a52533 100644
+index 9c964eb0..4fcf630 100644
 --- a/android_webview/native/aw_contents.cc
 +++ b/android_webview/native/aw_contents.cc
 @@ -81,7 +81,7 @@ using content::WebContents;
@@ -205,7 +205,7 @@ index 9c964eb0..6a52533 100644
                             AwDrawGLInfo* draw_info,
                             void* spare) {
    // |view_context| is the value that was returned from the java
-@@ -314,7 +314,7 @@ AwContents::~AwContents() {
+@@ -314,10 +314,10 @@ AwContents::~AwContents() {
    }
  }
  
@@ -213,7 +213,11 @@ index 9c964eb0..6a52533 100644
 +jlong AwContents::GetWebContents(JNIEnv* env, jobject obj) {
    DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
    DCHECK(web_contents_);
-   return reinterpret_cast<jint>(web_contents_.get());
+-  return reinterpret_cast<jint>(web_contents_.get());
++  return reinterpret_cast<intptr_t>(web_contents_.get());
+ }
+ 
+ void AwContents::Destroy(JNIEnv* env, jobject obj) {
 @@ -338,18 +338,18 @@ static jlong Init(JNIEnv* env, jclass, jobject browser_context) {
    return reinterpret_cast<intptr_t>(new AwContents(web_contents.Pass()));
  }
@@ -371,5 +375,5 @@ index e3108d5..a89db3e 100644
  // Set of functions used in rendering in hardware mode
  struct AwDrawGLFunctionTable {
 -- 
-1.8.3.2
+1.7.10.4
 
