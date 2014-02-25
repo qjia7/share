@@ -1,7 +1,7 @@
-From c59eac27dc5a7b97213a3fcbc474a6a8404e7fb1 Mon Sep 17 00:00:00 2001
+From 79946a661fea7949f13e07bb559fa12e909ff306 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Thu, 20 Feb 2014 15:27:44 +0800
-Subject: [PATCH 6/9] jni fixes in chrome/ for Android x64
+Date: Tue, 25 Feb 2014 11:00:08 +0800
+Subject: [PATCH 6/6] jni fixes in chrome/ for Android x64
 
 ---
  .../src/org/chromium/chrome/browser/DevToolsServer.java  | 10 +++++-----
@@ -38,7 +38,7 @@ index bc47c10..7ed33f9 100644
 +    private native void nativeSetRemoteDebuggingEnabled(long devToolsServer, boolean enabled);
  }
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java b/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
-index f95cca1..ee603ff 100644
+index a8c3bf3..2c58fbd 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
 @@ -54,9 +54,9 @@ public class SSLClientCertificateRequest {
@@ -84,16 +84,16 @@ index f95cca1..ee603ff 100644
              mContext = context;
              mNativePtr = nativePtr;
          }
-@@ -223,7 +223,7 @@ public class SSLClientCertificateRequest {
+@@ -224,7 +224,7 @@ public class SSLClientCertificateRequest {
       * Note that nativeOnSystemRequestComplete will be called iff this method returns true.
       */
      @CalledByNative
--    private static boolean selectClientCertificate(final int nativePtr, final String[] keyTypes,
-+    private static boolean selectClientCertificate(final long nativePtr, final String[] keyTypes,
-             byte[][] encodedPrincipals, final String hostName, final int port) {
+-    private static boolean selectClientCertificate(final int nativePtr, final WindowAndroid window,
++    private static boolean selectClientCertificate(final long nativePtr, final WindowAndroid window,
+             final String[] keyTypes, byte[][] encodedPrincipals, final String hostName,
+             final int port) {
          ThreadUtils.assertOnUiThread();
-         final Activity activity = ActivityStatus.getActivity();
-@@ -304,5 +304,5 @@ public class SSLClientCertificateRequest {
+@@ -308,5 +308,5 @@ public class SSLClientCertificateRequest {
  
      // Called to pass request results to native side.
      private static native void nativeOnSystemRequestCompletion(
@@ -151,10 +151,10 @@ index 8c7b952..8c6a08c 100644
                                        jobject j_tab) {
    AutocompleteResult* autocomplete_result =
 diff --git a/chrome/browser/ui/android/ssl_client_certificate_request.cc b/chrome/browser/ui/android/ssl_client_certificate_request.cc
-index f752dbb..61d1080 100644
+index e86eb27..189de53 100644
 --- a/chrome/browser/ui/android/ssl_client_certificate_request.cc
 +++ b/chrome/browser/ui/android/ssl_client_certificate_request.cc
-@@ -102,7 +102,7 @@ void StartClientCertificateRequest(
+@@ -105,7 +105,7 @@ void StartClientCertificateRequest(
    scoped_ptr<chrome::SelectCertificateCallback> request(
        new chrome::SelectCertificateCallback(callback));
  
@@ -163,7 +163,7 @@ index f752dbb..61d1080 100644
  
    if (!chrome::android::
        Java_SSLClientCertificateRequest_selectClientCertificate(
-@@ -136,7 +136,7 @@ namespace android {
+@@ -144,7 +144,7 @@ namespace android {
  static void OnSystemRequestCompletion(
      JNIEnv* env,
      jclass clazz,

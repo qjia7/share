@@ -15,7 +15,7 @@ patches = {
         '0001-Enable-x64-build.patch',
         '0002-jni-fixes-in-base-for-Android-x64.patch',
         '0003-jni-fixes-in-net-for-Android-x64.patch',
-        '0004-jni-fixes-in-android_webview-for-Android-x86.patch',
+        '0004-jni-fixes-in-android_webview-for-Android-x64.patch',
         '0005-jni-fixes-in-content-for-Android-x64.patch',
         '0006-jni-fixes-in-chrome-for-Android-x64.patch',
         '0007-Add-x86_64-ucontext-structure-for-Android-x64.patch',
@@ -101,7 +101,7 @@ def sync(force=False):
     if not args.sync:
         return
 
-    cmd = 'gclient sync -f -n -j16 --revision src@b9d59e6c9f165c88e41307e7bb8bc90d563a5b6d'
+    cmd = 'gclient sync -f -n -j16 --revision src@37a3df899064aa4b7820fb3839e1ba29081ecfc1'
     result = execute(cmd, show_progress=True)
     if result[0]:
         error('sync failed', error_code=result[0])
@@ -147,7 +147,7 @@ def build(force=False):
     if args.build_clean:
         backup_dir(dir_src)
         command = bashify('. build/android/envsetup.sh && android_gyp -Dtarget_arch=x64 -Dwerror=')
-        execute(command)
+        execute(command, show_progress=True)
         restore_dir()
 
     target = 'Release'
