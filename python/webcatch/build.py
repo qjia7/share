@@ -13,6 +13,8 @@
 # Build master: host all the builds.
 # Build slave: ssh-keygen && ssh-add ~/.ssh/id_rsa && cat ~/.ssh/id_rsa.pub | ssh ubuntu-ygu5-02 cat - >>~/.ssh/authorized_keys
 
+# Chromium revision can be checked at https://src.chromium.org/viewvc/chrome?view=revision&revision=xxxxxx
+
 from util import *
 from common import *
 
