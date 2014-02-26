@@ -6,9 +6,6 @@ Subject: [PATCH 07/11] trivial fixes to suppress warning and type conversion
 ---
  android_webview/native/webview_native.gyp   | 5 +++++
  android_webview/public/browser/draw_gl.h    | 2 +-
- base/i18n/number_formatting.cc              | 2 +-
- content/renderer/webclipboard_impl.cc       | 2 +-
- content/renderer/webclipboard_impl.h        | 2 +-
  gpu/gpu.gyp                                 | 6 ++++++
  net/net.gyp                                 | 3 +++
  net/quic/iovector.h                         | 2 +-
@@ -45,45 +42,6 @@ index a89db3e..31bb5ab 100644
  // Called to get a native buffer pointer
  typedef void* AwGetNativeBufferFunction(long buffer_id);
  // Called to get the stride of the buffer
-diff --git a/base/i18n/number_formatting.cc b/base/i18n/number_formatting.cc
-index 47aa14c..6d8635c 100644
---- a/base/i18n/number_formatting.cc
-+++ b/base/i18n/number_formatting.cc
-@@ -54,7 +54,7 @@ string16 FormatNumber(int64 number) {
-     return UTF8ToUTF16(StringPrintf("%" PRId64, number));
-   }
-   icu::UnicodeString ustr;
--  number_format->format(number, ustr);
-+  number_format->format(static_cast<int64_t>(number), ustr);
- 
-   return string16(ustr.getBuffer(), static_cast<size_t>(ustr.length()));
- }
-diff --git a/content/renderer/webclipboard_impl.cc b/content/renderer/webclipboard_impl.cc
-index 4f6e54f..449c381 100644
---- a/content/renderer/webclipboard_impl.cc
-+++ b/content/renderer/webclipboard_impl.cc
-@@ -41,7 +41,7 @@ WebClipboardImpl::WebClipboardImpl(ClipboardClient* client)
- WebClipboardImpl::~WebClipboardImpl() {
- }
- 
--uint64 WebClipboardImpl::sequenceNumber(Buffer buffer) {
-+uint64_t WebClipboardImpl::sequenceNumber(Buffer buffer) {
-   ui::ClipboardType clipboard_type;
-   if (!ConvertBufferType(buffer, &clipboard_type))
-     return 0;
-diff --git a/content/renderer/webclipboard_impl.h b/content/renderer/webclipboard_impl.h
-index 477f53b..b638668 100644
---- a/content/renderer/webclipboard_impl.h
-+++ b/content/renderer/webclipboard_impl.h
-@@ -22,7 +22,7 @@ class WebClipboardImpl : public blink::WebClipboard {
-   virtual ~WebClipboardImpl();
- 
-   // WebClipboard methods:
--  virtual uint64 sequenceNumber(Buffer buffer);
-+  virtual uint64_t sequenceNumber(Buffer buffer);
-   virtual bool isFormatAvailable(Format format, Buffer buffer);
-   virtual blink::WebVector<blink::WebString> readAvailableTypes(
-       Buffer buffer, bool* contains_filenames);
 diff --git a/gpu/gpu.gyp b/gpu/gpu.gyp
 index 477e62a..a7424ad 100644
 --- a/gpu/gpu.gyp
