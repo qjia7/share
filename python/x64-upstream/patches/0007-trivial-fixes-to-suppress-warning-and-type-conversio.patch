@@ -1,7 +1,7 @@
-From 73b1f17f94a8f47839d19663cd7b93072f247de7 Mon Sep 17 00:00:00 2001
+From e13ee8b369636e5af3482826d2997bd18e1a3012 Mon Sep 17 00:00:00 2001
 From: Jie Chen <jie.a.chen@intel.com>
 Date: Fri, 14 Feb 2014 15:11:49 +0800
-Subject: [PATCH 8/9] trivial fixes to suppress warning and type conversion
+Subject: [PATCH 07/11] trivial fixes to suppress warning and type conversion
 
 ---
  android_webview/native/webview_native.gyp   | 5 +++++
@@ -17,7 +17,7 @@ Subject: [PATCH 8/9] trivial fixes to suppress warning and type conversion
  10 files changed, 23 insertions(+), 6 deletions(-)
 
 diff --git a/android_webview/native/webview_native.gyp b/android_webview/native/webview_native.gyp
-index 8acb8b9..f36d62a 100644
+index bfacd3b..73f94fb 100644
 --- a/android_webview/native/webview_native.gyp
 +++ b/android_webview/native/webview_native.gyp
 @@ -5,6 +5,11 @@
@@ -102,7 +102,7 @@ index 477e62a..a7424ad 100644
      {
        # Library emulates GLES2 using command_buffers.
 diff --git a/net/net.gyp b/net/net.gyp
-index c4e47df..9be6d7fc 100644
+index 6120f92..8ef7a45 100644
 --- a/net/net.gyp
 +++ b/net/net.gyp
 @@ -39,6 +39,9 @@
@@ -129,7 +129,7 @@ index 74fcbef..dd17327 100644
        max_bytes -= length;
        bytes_appended += length;
 diff --git a/net/quic/quic_data_stream.cc b/net/quic/quic_data_stream.cc
-index 2e1bcdf..6296947 100644
+index 647bf9a..a0744f9 100644
 --- a/net/quic/quic_data_stream.cc
 +++ b/net/quic/quic_data_stream.cc
 @@ -89,7 +89,7 @@ size_t QuicDataStream::Readv(const struct iovec* iov, size_t iov_len) {

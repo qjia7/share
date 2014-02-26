@@ -1,7 +1,7 @@
-From 37274e642741d9f0e91ad16bc106d0c80a73ca7b Mon Sep 17 00:00:00 2001
+From 1d00568d80e97e095744888cc3e75712516a5b60 Mon Sep 17 00:00:00 2001
 From: Zhenyu Liang <zhenyu.liang@intel.com>
 Date: Tue, 25 Feb 2014 18:29:46 +0800
-Subject: [PATCH] Use pthread_cond_timedwait_relative_np in Android
+Subject: [PATCH 10/11] Use pthread_cond_timedwait_relative_np in Android
 
 Because pthread_cond_timedwait_monotonic_np is obsoleted in 64bit
 Android. It is not clear whether pthread_cond_timedwait_relative_np
@@ -9,7 +9,7 @@ will be also obsoleted. But Mac OS X does support it.
 We should use pthread_condattr_setclock here as Linux, but it isn't
 supported by bionic currently.
 ---
- base/synchronization/condition_variable_posix.cc |    7 +------
+ base/synchronization/condition_variable_posix.cc | 7 +------
  1 file changed, 1 insertion(+), 6 deletions(-)
 
 diff --git a/base/synchronization/condition_variable_posix.cc b/base/synchronization/condition_variable_posix.cc
@@ -39,5 +39,5 @@ index e70a301..499d5f7 100644
  
    DCHECK(rv == 0 || rv == ETIMEDOUT);
 -- 
-1.7.10.4
+1.8.3.2
 

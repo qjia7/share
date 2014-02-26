@@ -1,14 +1,14 @@
-From 64653557bc9b510d2462c03a25e9b0cb645112e1 Mon Sep 17 00:00:00 2001
+From e54ab7f7e4e44eb163472ddbc1c0be15d1a62643 Mon Sep 17 00:00:00 2001
 From: Jie Chen <jie.a.chen@intel.com>
 Date: Mon, 17 Feb 2014 14:45:40 +0800
-Subject: [PATCH 9/9] suppress warning error in ppapi
+Subject: [PATCH 08/11] suppress warning error in ppapi
 
 ---
  ppapi/ppapi_proxy.gypi | 3 +++
  1 file changed, 3 insertions(+)
 
 diff --git a/ppapi/ppapi_proxy.gypi b/ppapi/ppapi_proxy.gypi
-index f345414..d1f6e5d 100644
+index d6fc604..496890b 100644
 --- a/ppapi/ppapi_proxy.gypi
 +++ b/ppapi/ppapi_proxy.gypi
 @@ -7,6 +7,9 @@

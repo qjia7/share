@@ -1,10 +1,8 @@
-From 99a8e36189f21a880edb458c595962cf4a956e1a Mon Sep 17 00:00:00 2001
-From: Jie Chen <jie.a.chen@intel.com>
-Date: Sun, 26 Jan 2014 10:40:07 +0800
-Subject: [PATCH 7/9] Add x86_64 ucontext structure for Android x64
+From 5cda9a039a5c6e959b83c9bd470709b6518165c7 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Wed, 26 Feb 2014 17:18:26 +0800
+Subject: [PATCH 06/11] Add x86_64 ucontext structure for Android x64
 
-ucontext structure is used by seccomp-bpf sandbox on Linux.
-This change is based on Gu, yang's effort.
 ---
  sandbox/linux/services/android_ucontext.h        |   2 +
  sandbox/linux/services/android_x86_64_ucontext.h | 153 +++++++++++++++++++++++

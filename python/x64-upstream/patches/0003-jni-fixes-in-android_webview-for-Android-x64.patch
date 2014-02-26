@@ -1,19 +1,19 @@
-From bc636610992601dfd62f212491aa990f03e370c3 Mon Sep 17 00:00:00 2001
+From 27f40bed157e04de93df1f0181da43699ee8bbab Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Tue, 25 Feb 2014 10:55:31 +0800
-Subject: [PATCH 4/4] jni fixes in android_webview/ for Android x64
+Subject: [PATCH 03/11] jni fixes in android_webview/ for Android x64
 
 ---
- .../browser/gpu_memory_buffer_factory_impl.cc      |    4 +--
- .../org/chromium/android_webview/AwContents.java   |   28 ++++++++++----------
- .../chromium/android_webview/AwDevToolsServer.java |    8 +++---
- .../chromium/android_webview/AwPdfExporter.java    |    2 +-
- .../org/chromium/android_webview/AwSettings.java   |    2 +-
- android_webview/native/aw_contents.cc              |   22 +++++++--------
- android_webview/native/aw_contents.h               |    6 ++---
- android_webview/native/aw_dev_tools_server.cc      |    8 +++---
- android_webview/native/aw_pdf_exporter.cc          |    2 +-
- android_webview/public/browser/draw_gl.h           |   14 +++++-----
+ .../browser/gpu_memory_buffer_factory_impl.cc      |  4 ++--
+ .../org/chromium/android_webview/AwContents.java   | 28 +++++++++++-----------
+ .../chromium/android_webview/AwDevToolsServer.java |  8 +++----
+ .../chromium/android_webview/AwPdfExporter.java    |  2 +-
+ .../org/chromium/android_webview/AwSettings.java   |  2 +-
+ android_webview/native/aw_contents.cc              | 22 ++++++++---------
+ android_webview/native/aw_contents.h               |  6 ++---
+ android_webview/native/aw_dev_tools_server.cc      |  8 +++----
+ android_webview/native/aw_pdf_exporter.cc          |  2 +-
+ android_webview/public/browser/draw_gl.h           | 14 +++++------
  10 files changed, 48 insertions(+), 48 deletions(-)
 
 diff --git a/android_webview/browser/gpu_memory_buffer_factory_impl.cc b/android_webview/browser/gpu_memory_buffer_factory_impl.cc
@@ -375,5 +375,5 @@ index e3108d5..a89db3e 100644
  // Set of functions used in rendering in hardware mode
  struct AwDrawGLFunctionTable {
 -- 
-1.7.10.4
+1.8.3.2
 

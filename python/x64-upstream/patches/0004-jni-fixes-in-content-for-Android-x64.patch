@@ -1,7 +1,7 @@
-From 1ba6de60eff08ca30c0d14816204dd0839283258 Mon Sep 17 00:00:00 2001
+From bd9307a796d8219d2a757730e67ab98f188700d2 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 21 Feb 2014 22:06:39 +0800
-Subject: [PATCH 5/9] jni fixes in content/ for Android x64
+Subject: [PATCH 04/11] jni fixes in content/ for Android x64
 
 ---
  content/browser/android/content_view_core_impl.cc                     | 2 +-
@@ -17,10 +17,10 @@ Subject: [PATCH 5/9] jni fixes in content/ for Android x64
  10 files changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/content/browser/android/content_view_core_impl.cc b/content/browser/android/content_view_core_impl.cc
-index 795caa2..d49cff8 100644
+index eff3a93..37b19e4 100644
 --- a/content/browser/android/content_view_core_impl.cc
 +++ b/content/browser/android/content_view_core_impl.cc
-@@ -1705,7 +1705,7 @@ bool ContentViewCoreImpl::GetUseDesktopUserAgent(
+@@ -1682,7 +1682,7 @@ bool ContentViewCoreImpl::GetUseDesktopUserAgent(
    return entry && entry->GetIsOverridingUserAgent();
  }
  
@@ -30,10 +30,10 @@ index 795caa2..d49cff8 100644
                                             const std::string& text,
                                             int selection_start,
 diff --git a/content/browser/android/content_view_core_impl.h b/content/browser/android/content_view_core_impl.h
-index 9299f1c..e673b36 100644
+index ad71671..075cd70 100644
 --- a/content/browser/android/content_view_core_impl.h
 +++ b/content/browser/android/content_view_core_impl.h
-@@ -261,7 +261,7 @@ class ContentViewCoreImpl : public ContentViewCore,
+@@ -259,7 +259,7 @@ class ContentViewCoreImpl : public ContentViewCore,
                         const gfx::Vector2dF& content_offset,
                         float overdraw_bottom_height);
  
@@ -110,10 +110,10 @@ index f8f0942..bd985d2 100644
          mNativeContentSettings = 0;
      }
 diff --git a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
-index 9dea1cf..a186ae6 100644
+index 83a974d..7c93c83 100644
 --- a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
 +++ b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
-@@ -2559,7 +2559,7 @@ public class ContentViewCore
+@@ -2553,7 +2553,7 @@ public class ContentViewCore
      }
  
      @CalledByNative
@@ -122,7 +122,7 @@ index 9dea1cf..a186ae6 100644
              String text, int selectionStart, int selectionEnd,
              int compositionStart, int compositionEnd, boolean showImeIfNeeded, boolean requireAck) {
          TraceEvent.begin();
-@@ -3418,7 +3418,7 @@ public class ContentViewCore
+@@ -3406,7 +3406,7 @@ public class ContentViewCore
      private native void nativeEvaluateJavaScript(long nativeContentViewCoreImpl,
              String script, JavaScriptCallback callback, boolean startRenderer);
  
@@ -151,7 +151,7 @@ index b4e41b9..3b687ab 100644
          mHandler.removeCallbacks(mDismissInput);
  
 diff --git a/content/renderer/media/android/webmediaplayer_android.cc b/content/renderer/media/android/webmediaplayer_android.cc
-index 43f2cf5..03d077e 100644
+index ba6000b..99bc11d 100644
 --- a/content/renderer/media/android/webmediaplayer_android.cc
 +++ b/content/renderer/media/android/webmediaplayer_android.cc
 @@ -89,7 +89,7 @@ WebMediaPlayerAndroid::WebMediaPlayerAndroid(
