@@ -375,26 +375,33 @@ def build_one(build_next):
     cmd_sync = 'python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + dir_repo
     result = execute(cmd_sync, dryrun=DRYRUN, show_progress=True)
     if result[0]:
+        execute(remotify_cmd('rm -f ' + file_lock))
         error('Sync failed', error_code=result[0])
 
     patch(os, arch, module, rev)
 
-    cmd_build = 'python chromium.py -b -c --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --log-file ' + file_log
+    cmd_gen_mk = 'python chromium.py --gen-mk --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo
+    result = execute(cmd_gen_mk, dryrun=DRYRUN, show_progress=True)
+    if result[0]:
+        # Run hook to retry. E.g., for revision >=252065, we have to run with hook to update gn tool.
+        cmd_sync_hook = cmd_sync.replace('-n ', '')
+        execute(cmd_sync_hook, dryrun=DRYRUN, show_progress=True)
+        result = execute(cmd_gen_mk, dryrun=DRYRUN)
+        if result[0]:
+            execute(remotify_cmd('rm -f ' + file_lock))
+            error('Failed to generate makefile')
+
+    cmd_build = 'python chromium.py -b --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --log-file ' + file_log
     result = execute(cmd_build, dryrun=DRYRUN, show_progress=True)
 
     # Retry here
     if result[0]:
-        # Run hook to retry. E.g., for revision >=252065, we have to run with hook to update gn tool.
-        cmd_sync_nohook = cmd_sync.replace('-n ', '')
-        execute(cmd_sync_nohook, dryrun=DRYRUN, show_progress=True)
-        result = execute(cmd_build, dryrun=DRYRUN)
-        if result[0]:
-            if os == 'android':
-                execute('sudo ' + dir_repo + '/src/build/install-build-deps-android.sh', dryrun=DRYRUN)
-            if result[0] and not args.keep_out:
-                execute('rm -rf ' + dir_repo + '/src/out', dryrun=DRYRUN)
+        if os == 'android':
+            execute('sudo ' + dir_repo + '/src/build/install-build-deps-android.sh', dryrun=DRYRUN)
+        if result[0] and not args.keep_out:
+            execute('rm -rf ' + dir_repo + '/src/out', dryrun=DRYRUN)
 
-            result = execute(cmd_build, dryrun=DRYRUN)
+        result = execute(cmd_build, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
     if os == 'android' and module == 'content_shell':
