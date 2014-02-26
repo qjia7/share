@@ -23,6 +23,7 @@ patches = {
         '0009-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
         '0010-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
         '0011-Enable-x64-build.patch',
+        '0012-fix-build-error-in-base-and-content.patch',
     ],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
     'src/third_party/mesa/src': ['0001-disable-log2.patch'],

@@ -1,0 +1,85 @@
+From 02a3f7d65ccb782b75293e3292c099351804c725 Mon Sep 17 00:00:00 2001
+From: "jie.chen" <jie.a.chen@intel.com>
+Date: Wed, 26 Feb 2014 08:01:57 +0800
+Subject: [PATCH] fix build error in base and content
+
+---
+ base/strings/string_piece_unittest.cc                     |  6 ++++--
+ .../indexed_db/indexed_db_leveldb_coding_unittest.cc      | 15 ++++++++++-----
+ 2 files changed, 14 insertions(+), 7 deletions(-)
+
+diff --git a/base/strings/string_piece_unittest.cc b/base/strings/string_piece_unittest.cc
+index 84ed9ef..bcd7dc6 100644
+--- a/base/strings/string_piece_unittest.cc
++++ b/base/strings/string_piece_unittest.cc
+@@ -664,9 +664,11 @@ TYPED_TEST(CommonStringPieceTest, CheckConstructors) {
+   ASSERT_TRUE(str == BasicStringPiece<TypeParam>(str.c_str()));
+   ASSERT_TRUE(TestFixture::as_string("hello") ==
+               BasicStringPiece<TypeParam>(str.c_str(), 5));
+-  ASSERT_TRUE(empty == BasicStringPiece<TypeParam>(str.c_str(), 0U));
++  ASSERT_TRUE(empty == BasicStringPiece<TypeParam>(str.c_str(),
++    static_cast<typename BasicStringPiece<TypeParam>::size_type>(0)));
+   ASSERT_TRUE(empty == BasicStringPiece<TypeParam>(NULL));
+-  ASSERT_TRUE(empty == BasicStringPiece<TypeParam>(NULL, 0U));
++  ASSERT_TRUE(empty == BasicStringPiece<TypeParam>(NULL,
++    static_cast<typename BasicStringPiece<TypeParam>::size_type>(0)));
+   ASSERT_TRUE(empty == BasicStringPiece<TypeParam>());
+   ASSERT_TRUE(str == BasicStringPiece<TypeParam>(str.begin(), str.end()));
+   ASSERT_TRUE(empty == BasicStringPiece<TypeParam>(str.begin(), str.begin()));
+diff --git a/content/browser/indexed_db/indexed_db_leveldb_coding_unittest.cc b/content/browser/indexed_db/indexed_db_leveldb_coding_unittest.cc
+index ed9abcd..2ddb301 100644
+--- a/content/browser/indexed_db/indexed_db_leveldb_coding_unittest.cc
++++ b/content/browser/indexed_db/indexed_db_leveldb_coding_unittest.cc
+@@ -296,7 +296,8 @@ TEST(IndexedDBLevelDBCodingTest, DecodeVarInt) {
+     slice = StringPiece(&*v.begin(), v.size() - 1);
+     EXPECT_FALSE(DecodeVarInt(&slice, &res));
+ 
+-    slice = StringPiece(&*v.begin(), 0u);
++    slice = StringPiece(&*v.begin(),
++      static_cast<typename StringPiece::size_type>(0));
+     EXPECT_FALSE(DecodeVarInt(&slice, &res));
+ 
+     // Verify decoding at an offset, to detect unaligned memory access.
+@@ -408,7 +409,8 @@ TEST(IndexedDBLevelDBCodingTest, DecodeStringWithLength) {
+     slice = StringPiece(&*v.begin(), v.size() - 1);
+     EXPECT_FALSE(DecodeStringWithLength(&slice, &res));
+ 
+-    slice = StringPiece(&*v.begin(), 0u);
++    slice = StringPiece(&*v.begin(),
++      static_cast<typename StringPiece::size_type>(0));
+     EXPECT_FALSE(DecodeStringWithLength(&slice, &res));
+ 
+     // Verify decoding at an offset, to detect unaligned memory access.
+@@ -516,7 +518,8 @@ TEST(IndexedDBLevelDBCodingTest, DecodeBinary) {
+     slice = StringPiece(&*v.begin(), v.size() - 1);
+     EXPECT_FALSE(DecodeBinary(&slice, &result));
+ 
+-    slice = StringPiece(&*v.begin(), 0u);
++    slice = StringPiece(&*v.begin(),
++      static_cast<typename StringPiece::size_type>(0));
+     EXPECT_FALSE(DecodeBinary(&slice, &result));
+ 
+     // Verify decoding at an offset, to detect unaligned memory access.
+@@ -557,7 +560,8 @@ TEST(IndexedDBLevelDBCodingTest, DecodeDouble) {
+     slice = StringPiece(&*v.begin(), v.size() - 1);
+     EXPECT_FALSE(DecodeDouble(&slice, &result));
+ 
+-    slice = StringPiece(&*v.begin(), 0u);
++    slice = StringPiece(&*v.begin(),
++      static_cast<typename StringPiece::size_type>(0));
+     EXPECT_FALSE(DecodeDouble(&slice, &result));
+ 
+     // Verify decoding at an offset, to detect unaligned memory access.
+@@ -602,7 +606,8 @@ TEST(IndexedDBLevelDBCodingTest, EncodeDecodeIDBKey) {
+     slice = StringPiece(&*v.begin(), v.size() - 1);
+     EXPECT_FALSE(DecodeIDBKey(&slice, &decoded_key));
+ 
+-    slice = StringPiece(&*v.begin(), 0u);
++    slice = StringPiece(&*v.begin(),
++      static_cast<typename StringPiece::size_type>(0));
+     EXPECT_FALSE(DecodeIDBKey(&slice, &decoded_key));
+   }
+ }
+-- 
+1.8.3.2
+
