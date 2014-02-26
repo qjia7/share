@@ -35,6 +35,10 @@ patches = [
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/02/164402/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/03/164403/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/04/164404/2 && git checkout FETCH_HEAD',
+    # Below patches is for chromium upstream webview work, no plan to integrate
+    # ABT, will try to work on AOSP upstream first.
+    'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/81/166881/1 && git checkout FETCH_HEAD',
+    'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/82/166882/1 && git checkout FETCH_HEAD',
 
     #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/98/4798/1 && git checkout FETCH_HEAD',  # android_webview/ upstream r237788
     #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/60/4560/3 && git checkout FETCH_HEAD',  # android_webview/
