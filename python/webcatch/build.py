@@ -505,6 +505,7 @@ def get_rev_next(os, index):
 
         if rev_is_built(os, arch, module, rev):
             info(str(rev) + ' has been built')
+            os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_REV_NEXT] = rev + 1
             continue
 
         # Does not exist from here
