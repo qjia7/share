@@ -1,8 +1,10 @@
 from util import *
 
+args = ''
 root_dir = ''     # e.g., /workspace/project/chromium-linux
 src_dir = ''      # e.g., /workspace/project/chromium-linux/src
 build_dir = ''    # e.g., /workspace/project/chromium-linux/src/out/Release
+gen_mk = ''
 target_os = ''
 target_arch = ''
 target_module = ''
@@ -72,7 +74,7 @@ examples:
 
     groupBuild = parser.add_argument_group('build')
     groupBuild.add_argument('-b', '--build', dest='build', help='build', action='store_true')
-    groupBuild.add_argument('-c', '--build-clean', dest='build_clean', help='regenerate gyp', action='store_true')
+    groupBuild.add_argument('--gen-mk', dest='gen_mk', help='generate makefile', action='store_true')
     groupBuild.add_argument('-v', '--build-verbose', dest='build_verbose', help='output verbose info. Find log at out/Release/.ninja_log', action='store_true')
 
     groupRun = parser.add_argument_group('run')
@@ -101,7 +103,7 @@ examples:
 
 
 def setup():
-    global root_dir, src_dir, build_dir, target_os, target_module, target_arch
+    global root_dir, src_dir, build_dir, target_os, target_module, target_arch, gen_mk
 
     if args.root_dir:
         root_dir = args.root_dir
@@ -136,9 +138,9 @@ def setup():
         os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 component=shared_library enable_svg=0')
         os.putenv('CHROME_DEVEL_SANDBOX', '/usr/local/sbin/chrome-devel-sandbox')
     elif target_os == 'android':
-        os.chdir(src_dir)
-
+        backup_dir(src_dir)
         shell_source('build/android/envsetup.sh --target-arch=' + target_arch, use_bash=True)
+        restore_dir()
         if not os.getenv('ANDROID_SDK_ROOT'):
             error('Environment is not well set')
 
@@ -152,8 +154,12 @@ def setup():
     else:
         target_module = args.target_module
 
+    gen_mk = args.gen_mk
+    if not has_build_dir():
+        gen_mk = True
 
-def update(args):
+
+def update():
     if not args.update:
         return()
 
@@ -161,7 +167,7 @@ def update(args):
     repos = ['./', 'third_party/WebKit']
     for repo in repos:
         is_master = False
-        os.chdir(src_dir + '/' + repo)
+        backup_dir(src_dir + '/' + repo)
         branches = commands.getoutput('git branch').split('\n')
         for branch in branches:
             if branch == '* master':
@@ -170,7 +176,9 @@ def update(args):
         if not is_master:
             error('Repo ' + repo + ' is not on master')
 
-    os.chdir(root_dir)
+        restore_dir()
+
+    backup_dir(root_dir)
 
     if host_os == 'Linux' and not has_process('privoxy'):
         execute('sudo privoxy /etc/privoxy/config')
@@ -178,7 +186,7 @@ def update(args):
     cmd = 'gclient ' + args.update
     if target_os == 'android':
         cmd = 'source src/build/android/envsetup.sh --target-arch=' + target_arch + ' && ' + cmd
-    result = execute(bashify(cmd), log_file=args.log_file, show_progress=True)
+    result = execute(bashify(cmd), show_progress=True)
 
     if host_os == 'Linux':
         execute('sudo killall privoxy')
@@ -186,36 +194,41 @@ def update(args):
     if result[0]:
         error('Fail to execute command: ' + cmd, error_code=result[0])
 
+    restore_dir()
 
-def build(args):
+
+def gen_makefile():
+    if not gen_mk:
+        return
+
+    backup_dir(src_dir)
+    if target_os == 'android':
+        # We can't omit this step as android_gyp is a built-in command, instead of environmental variable.
+        cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror= -Duse_goma=0')
+    else:
+        cmd = 'build/gyp_chromium -Dwerror='
+
+    result = execute(cmd)
+    if result[0]:
+        error('Fail to execute command: ' + cmd, error_code=result[0])
+
+    restore_dir()
+
+
+def build():
     if not args.build:
         return()
 
-    os.chdir(src_dir)
-
-    build_clean = args.build_clean
-    if not has_build_dir():
-        build_clean = True
+    backup_dir(src_dir)
 
     print '== Build Environment =='
     print 'Directory of root: ' + root_dir
     print 'Build type: ' + args.type
     print 'Build system: Ninja'
-    print 'Need clean build: ' + str(build_clean)
+    print 'Need clean build: ' + str(gen_mk)
     print 'Host OS: ' + host_os
     print 'Target OS: ' + target_os.capitalize()
     print '======================='
-
-    if build_clean:
-        if target_os == 'android':
-            # We can't omit this step as android_gyp is a built-in command, instead of environmental variable.
-            cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror= -Duse_goma=0')
-        else:
-            cmd = 'build/gyp_chromium -Dwerror='
-
-        result = execute(cmd)
-        if result[0]:
-            error('Fail to execute command: ' + cmd, error_code=result[0])
 
     ninja_cmd = 'ninja -j16'
 
@@ -235,19 +248,22 @@ def build(args):
     if result[0]:
         error('Fail to execute command: ' + ninja_cmd, error_code=result[0])
 
+    restore_dir()
 
-def install(args):
+
+def install():
     if not args.install:
         return
 
     if not target_os == 'android':
         return
 
-    os.chdir(src_dir)
+    backup_dir(src_dir)
     execute('python build/android/adb_install_apk.py --apk ContentShell.apk --' + args.install)
+    restore_dir()
 
 
-def run(args):
+def run():
     if not args.run:
         return()
 
@@ -273,11 +289,11 @@ def run(args):
     execute(cmd)
 
 
-def find_owner(args):
+def find_owner():
     if not args.owner:
         return()
 
-    os.chdir(src_dir)
+    backup_dir(src_dir)
     files = commands.getoutput('git diff --name-only HEAD origin/master').split('\n')
     owner_file_map = {}  # map from OWNERS file to list of modified files
     for file in files:
@@ -300,27 +316,32 @@ def find_owner(args):
         print '[OWNERS File]'
         print owner
 
+    restore_dir()
 
-def layout_test(args):
+
+def layout_test():
     if not args.layout_test:
         return()
 
-    os.chdir(src_dir + '/out/Release')
+    backup_dir(src_dir + '/out/Release')
     if os.path.isdir('content_shell'):
         execute('rm -rf content_shell_dir')
         execute('mv content_shell content_shell_dir')
+    restore_dir()
 
-    os.chdir(src_dir)
+    backup_dir(src_dir)
     execute('ninja -C out/Release content_shell')
     execute('webkit/tools/layout_tests/run_webkit_tests.sh ' + args.layout_test)
+    restore_dir()
 
 if __name__ == '__main__':
     check()
     handle_option()
     setup()
-    update(args)
-    build(args)
-    install(args)
-    run(args)
-    find_owner(args)
-    layout_test(args)
+    update()
+    gen_makefile()
+    build()
+    install()
+    run()
+    find_owner()
+    layout_test()
