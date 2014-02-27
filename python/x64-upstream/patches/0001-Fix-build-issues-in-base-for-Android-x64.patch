@@ -1,7 +1,7 @@
-From ddead3c1b91bf0ab96d52a2bad41882102281854 Mon Sep 17 00:00:00 2001
+From 08feb0c6b3e9f015885910155b03bdcbb1355658 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Tue, 25 Feb 2014 16:02:20 +0800
-Subject: [PATCH 01/11] Fix build issues in base/ for Android x64
+Date: Thu, 27 Feb 2014 13:35:15 +0800
+Subject: [PATCH 01/12] Fix build issues in base/ for Android x64
 
 This CL fixes several issues when building files under base/ for
 Android x64.
@@ -9,9 +9,9 @@ Android x64.
  base/android/java_handler_thread.cc |  3 ++-
  base/android/java_handler_thread.h  |  2 +-
  base/base.gyp                       |  2 +-
- base/i18n/rtl.cc                    | 14 +++++++++-----
+ base/i18n/rtl.cc                    | 15 ++++++++++-----
  base/json/json_writer.cc            |  4 ++--
- 5 files changed, 15 insertions(+), 10 deletions(-)
+ 5 files changed, 16 insertions(+), 10 deletions(-)
 
 diff --git a/base/android/java_handler_thread.cc b/base/android/java_handler_thread.cc
 index ce5d0fe..18e1440 100644
@@ -41,7 +41,7 @@ index 9f66d66..5670f7d 100644
    static bool RegisterBindings(JNIEnv* env);
  
 diff --git a/base/base.gyp b/base/base.gyp
-index dc29040..d4b40f5 100644
+index 12e365d..7c55e6b 100644
 --- a/base/base.gyp
 +++ b/base/base.gyp
 @@ -128,7 +128,7 @@
@@ -54,33 +54,32 @@ index dc29040..d4b40f5 100644
                  ['include', '^atomicops_internals_x86_gcc\\.cc$'],
                ],
 diff --git a/base/i18n/rtl.cc b/base/i18n/rtl.cc
-index 851b036..75a6b15 100644
+index 851b036..84dc51f 100644
 --- a/base/i18n/rtl.cc
 +++ b/base/i18n/rtl.cc
-@@ -261,17 +261,19 @@ bool AdjustStringForLocaleDirection(string16* text) {
-   bool ui_direction_is_rtl = IsRTL();
- 
+@@ -263,15 +263,18 @@ bool AdjustStringForLocaleDirection(string16* text) {
    bool has_rtl_chars = StringContainsStrongRTLChars(*text);
-+  const size_t pos = 0;
-+  const size_t num = 1;
    if (!ui_direction_is_rtl && has_rtl_chars) {
      WrapStringWithRTLFormatting(text);
 -    text->insert(0U, 1U, kLeftToRightMark);
-+    text->insert(pos, num, kLeftToRightMark);
++    text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
++                 kLeftToRightMark);
      text->push_back(kLeftToRightMark);
    } else if (ui_direction_is_rtl && has_rtl_chars) {
      WrapStringWithRTLFormatting(text);
 -    text->insert(0U, 1U, kRightToLeftMark);
-+    text->insert(pos, num, kRightToLeftMark);
++    text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
++                 kRightToLeftMark);
      text->push_back(kRightToLeftMark);
    } else if (ui_direction_is_rtl) {
      WrapStringWithLTRFormatting(text);
 -    text->insert(0U, 1U, kRightToLeftMark);
-+    text->insert(pos, num, kRightToLeftMark);
++    text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
++                 kRightToLeftMark);
      text->push_back(kRightToLeftMark);
    } else {
      return false;
-@@ -332,7 +334,8 @@ void WrapStringWithLTRFormatting(string16* text) {
+@@ -332,7 +335,8 @@ void WrapStringWithLTRFormatting(string16* text) {
      return;
  
    // Inserting an LRE (Left-To-Right Embedding) mark as the first character.
@@ -90,7 +89,7 @@ index 851b036..75a6b15 100644
  
    // Inserting a PDF (Pop Directional Formatting) mark as the last character.
    text->push_back(kPopDirectionalFormatting);
-@@ -343,7 +346,8 @@ void WrapStringWithRTLFormatting(string16* text) {
+@@ -343,7 +347,8 @@ void WrapStringWithRTLFormatting(string16* text) {
      return;
  
    // Inserting an RLE (Right-To-Left Embedding) mark as the first character.

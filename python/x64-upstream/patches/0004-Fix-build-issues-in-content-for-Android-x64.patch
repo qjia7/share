@@ -1,7 +1,7 @@
-From 50e64949829aac2e5f0832cc773fa2ea5af543e5 Mon Sep 17 00:00:00 2001
+From d8de2584936f12181b02dcced44146cf3e493200 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 21 Feb 2014 22:06:39 +0800
-Subject: [PATCH 04/11] jni fixes in content/ for Android x64
+Subject: [PATCH 04/12] Fix build issues in content/ for Android x64
 
 ---
  content/browser/android/content_view_core_impl.cc                     | 2 +-
@@ -17,10 +17,10 @@ Subject: [PATCH 04/11] jni fixes in content/ for Android x64
  10 files changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/content/browser/android/content_view_core_impl.cc b/content/browser/android/content_view_core_impl.cc
-index eff3a93..37b19e4 100644
+index 357d2a9..0e4c18c 100644
 --- a/content/browser/android/content_view_core_impl.cc
 +++ b/content/browser/android/content_view_core_impl.cc
-@@ -1682,7 +1682,7 @@ bool ContentViewCoreImpl::GetUseDesktopUserAgent(
+@@ -1673,7 +1673,7 @@ bool ContentViewCoreImpl::GetUseDesktopUserAgent(
    return entry && entry->GetIsOverridingUserAgent();
  }
  
@@ -30,10 +30,10 @@ index eff3a93..37b19e4 100644
                                             const std::string& text,
                                             int selection_start,
 diff --git a/content/browser/android/content_view_core_impl.h b/content/browser/android/content_view_core_impl.h
-index ad71671..075cd70 100644
+index 1e63521..a454514 100644
 --- a/content/browser/android/content_view_core_impl.h
 +++ b/content/browser/android/content_view_core_impl.h
-@@ -259,7 +259,7 @@ class ContentViewCoreImpl : public ContentViewCore,
+@@ -257,7 +257,7 @@ class ContentViewCoreImpl : public ContentViewCore,
                         const gfx::Vector2dF& content_offset,
                         float overdraw_bottom_height);
  
@@ -69,10 +69,10 @@ index a652864..6ac2831 100644
    void SurfaceDestroyed(JNIEnv* env, jobject obj);
    void SurfaceChanged(JNIEnv* env, jobject obj,
 diff --git a/content/browser/renderer_host/render_widget_host_view_android.cc b/content/browser/renderer_host/render_widget_host_view_android.cc
-index 44d060a..7a3bb5e 100644
+index 8db7f7c..8fa3e4e 100644
 --- a/content/browser/renderer_host/render_widget_host_view_android.cc
 +++ b/content/browser/renderer_host/render_widget_host_view_android.cc
-@@ -460,8 +460,8 @@ void RenderWidgetHostViewAndroid::TextInputTypeChanged(
+@@ -458,8 +458,8 @@ void RenderWidgetHostViewAndroid::TextInputTypeChanged(
    // Unused on Android, which uses OnTextInputChanged instead.
  }
  
@@ -84,7 +84,7 @@ index 44d060a..7a3bb5e 100644
  
  void RenderWidgetHostViewAndroid::OnTextInputStateChanged(
 diff --git a/content/browser/renderer_host/render_widget_host_view_android.h b/content/browser/renderer_host/render_widget_host_view_android.h
-index 25d0f0d..a585d6d 100644
+index 9709180..ae538b1 100644
 --- a/content/browser/renderer_host/render_widget_host_view_android.h
 +++ b/content/browser/renderer_host/render_widget_host_view_android.h
 @@ -220,7 +220,7 @@ class RenderWidgetHostViewAndroid
@@ -110,10 +110,10 @@ index f8f0942..bd985d2 100644
          mNativeContentSettings = 0;
      }
 diff --git a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
-index 83a974d..7c93c83 100644
+index 43e166f..f63c45f 100644
 --- a/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
 +++ b/content/public/android/java/src/org/chromium/content/browser/ContentViewCore.java
-@@ -2553,7 +2553,7 @@ public class ContentViewCore
+@@ -2554,7 +2554,7 @@ public class ContentViewCore
      }
  
      @CalledByNative
@@ -122,7 +122,7 @@ index 83a974d..7c93c83 100644
              String text, int selectionStart, int selectionEnd,
              int compositionStart, int compositionEnd, boolean showImeIfNeeded, boolean requireAck) {
          TraceEvent.begin();
-@@ -3406,7 +3406,7 @@ public class ContentViewCore
+@@ -3407,7 +3407,7 @@ public class ContentViewCore
      private native void nativeEvaluateJavaScript(long nativeContentViewCoreImpl,
              String script, JavaScriptCallback callback, boolean startRenderer);
  

@@ -13,10 +13,10 @@ dir_script = sys.path[0]
 patches = {
     'src': [
         '0001-Fix-build-issues-in-base-for-Android-x64.patch',
-        '0002-jni-fixes-in-net-for-Android-x64.patch',
-        '0003-jni-fixes-in-android_webview-for-Android-x64.patch',
-        '0004-jni-fixes-in-content-for-Android-x64.patch',
-        '0005-jni-fixes-in-chrome-for-Android-x64.patch',
+        '0002-Fix-build-issues-in-net-for-Android-x64.patch',
+        '0003-Fix-build-issues-in-android_webview-for-Android-x64.patch',
+        '0004-Fix-build-issues-in-content-for-Android-x64.patch',
+        '0005-Fix-build-issues-in-chrome-for-Android-x64.patch',
         '0006-Add-x86_64-ucontext-structure-for-Android-x64.patch',
         '0007-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
         '0008-suppress-warning-error-in-ppapi.patch',
@@ -44,16 +44,20 @@ def handle_option():
                                      epilog='''
 examples:
   python %(prog)s --clean -s --patch -b
+  python %(prog)s --test-build
+  python %(prog)s --test-build --sync-upstream
 ''')
 
     parser.add_argument('--clean', dest='clean', help='clean patches and local changes', action='store_true')
     parser.add_argument('-s', '--sync', dest='sync', help='sync the repo', action='store_true')
+    parser.add_argument('--sync-upstream', dest='sync_upstream', help='sync with upstream', action='store_true')
     parser.add_argument('--patch', dest='patch', help='apply patches', action='store_true')
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('--build-fail', dest='build_fail', help='allow n build failures before it stops', default='0')
-    parser.add_argument('--build-clean', dest='build_clean', help='do a clean build', action='store_true')
+    parser.add_argument('--skip-mk', dest='skip_mk', help='skip the generation of makefile', action='store_true')
     parser.add_argument('--build-debug', dest='build_debug', help='do a Debug build', action='store_true')
     parser.add_argument('--set-ndk', dest='set_ndk', help='set up ndk', action='store_true')
+    parser.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
 
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
 
@@ -97,10 +101,13 @@ def clean(force=False):
 
 
 def sync(force=False):
-    if not args.sync:
+    if not args.sync and not force:
         return
 
-    cmd = 'gclient sync -f -n -j16 --revision src@37a3df899064aa4b7820fb3839e1ba29081ecfc1'
+    cmd = 'gclient sync -f -n -j16'
+    if not args.sync_upstream:
+        rev = 'e330a51eb70194ef1c817c3f56ccb520654aaea7'
+        cmd += ' --revision src@' + rev
     result = execute(cmd, show_progress=True)
     if result[0]:
         error('sync failed', error_code=result[0])
@@ -143,7 +150,7 @@ def build(force=False):
     if not args.build and not force:
         return
 
-    if args.build_clean:
+    if not args.skip_mk:
         backup_dir(dir_src)
         command = bashify('. build/android/envsetup.sh && android_gyp -Dtarget_arch=x64 -Dwerror=')
         execute(command, show_progress=True)
@@ -184,6 +191,17 @@ def set_ndk(force=False):
         execute('git init && git add . && git commit -a -m "orig"')
         restore_dir()
 
+
+def test_build():
+    if not args.test_build:
+        return
+
+    clean(force=True)
+    sync(force=True)
+    patch(force=True)
+    build(force=True)
+
+
 if __name__ == '__main__':
     handle_option()
     setup()
@@ -192,3 +210,4 @@ if __name__ == '__main__':
     set_ndk()
     patch()
     build()
+    test_build()

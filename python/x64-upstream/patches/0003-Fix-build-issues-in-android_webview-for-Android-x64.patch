@@ -1,7 +1,7 @@
-From 5b59122550afd45bfe2dc2ece240f61dbc6ceb2f Mon Sep 17 00:00:00 2001
+From ef99141cfbcfa8a5a47ede3b32ae0f15a736cb30 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Tue, 25 Feb 2014 10:55:31 +0800
-Subject: [PATCH 03/11] jni fixes in android_webview/ for Android x64
+Date: Thu, 27 Feb 2014 13:29:51 +0800
+Subject: [PATCH 03/12] Fix build issues in android_webview/ for Android x64
 
 ---
  .../browser/gpu_memory_buffer_factory_impl.cc      |  4 ++--
@@ -193,7 +193,7 @@ index 9c8f3b4..a00235b 100644
              if (mNativeAwSettings != 0) {
                  nativeDestroy(mNativeAwSettings);
 diff --git a/android_webview/native/aw_contents.cc b/android_webview/native/aw_contents.cc
-index 9c964eb0..4fcf630 100644
+index 2b35fc5..c139bbb 100644
 --- a/android_webview/native/aw_contents.cc
 +++ b/android_webview/native/aw_contents.cc
 @@ -81,7 +81,7 @@ using content::WebContents;
@@ -205,7 +205,7 @@ index 9c964eb0..4fcf630 100644
                             AwDrawGLInfo* draw_info,
                             void* spare) {
    // |view_context| is the value that was returned from the java
-@@ -314,10 +314,10 @@ AwContents::~AwContents() {
+@@ -317,10 +317,10 @@ AwContents::~AwContents() {
    }
  }
  
@@ -218,7 +218,7 @@ index 9c964eb0..4fcf630 100644
  }
  
  void AwContents::Destroy(JNIEnv* env, jobject obj) {
-@@ -338,18 +338,18 @@ static jlong Init(JNIEnv* env, jclass, jobject browser_context) {
+@@ -341,18 +341,18 @@ static jlong Init(JNIEnv* env, jclass, jobject browser_context) {
    return reinterpret_cast<intptr_t>(new AwContents(web_contents.Pass()));
  }
  
@@ -241,19 +241,19 @@ index 9c964eb0..4fcf630 100644
  }
  
  // static
-@@ -357,9 +357,9 @@ jint GetNativeInstanceCount(JNIEnv* env, jclass) {
+@@ -360,9 +360,9 @@ jint GetNativeInstanceCount(JNIEnv* env, jclass) {
    return base::subtle::NoBarrier_Load(&g_instance_count);
  }
  
 -jint AwContents::GetAwDrawGLViewContext(JNIEnv* env, jobject obj) {
 +jlong AwContents::GetAwDrawGLViewContext(JNIEnv* env, jobject obj) {
    DCHECK(BrowserThread::CurrentlyOn(BrowserThread::UI));
--  return reinterpret_cast<jint>(browser_view_renderer_.get());
-+  return reinterpret_cast<intptr_t>(browser_view_renderer_.get());
+-  return reinterpret_cast<jint>(&browser_view_renderer_);
++  return reinterpret_cast<intptr_t>(&browser_view_renderer_);
  }
  
  namespace {
-@@ -857,9 +857,9 @@ void AwContents::SetBackgroundColor(JNIEnv* env, jobject obj, jint color) {
+@@ -859,9 +859,9 @@ void AwContents::SetBackgroundColor(JNIEnv* env, jobject obj, jint color) {
    render_view_host_ext_->SetBackgroundColor(color);
  }
  
@@ -266,10 +266,10 @@ index 9c964eb0..4fcf630 100644
  
  gfx::Point AwContents::GetLocationOnScreen() {
 diff --git a/android_webview/native/aw_contents.h b/android_webview/native/aw_contents.h
-index 1548981..42cef54 100644
+index 5b11de1..b448f0c 100644
 --- a/android_webview/native/aw_contents.h
 +++ b/android_webview/native/aw_contents.h
-@@ -79,7 +79,7 @@ class AwContents : public FindHelper::Listener,
+@@ -81,7 +81,7 @@ class AwContents : public FindHelper::Listener,
                      jobject contents_client_bridge,
                      jobject io_thread_client,
                      jobject intercept_navigation_delegate);
@@ -278,7 +278,7 @@ index 1548981..42cef54 100644
  
    void Destroy(JNIEnv* env, jobject obj);
    void DocumentHasImages(JNIEnv* env, jobject obj, jobject message);
-@@ -117,7 +117,7 @@ class AwContents : public FindHelper::Listener,
+@@ -119,7 +119,7 @@ class AwContents : public FindHelper::Listener,
                              jint visible_top,
                              jint visible_right,
                              jint visible_bottom);
@@ -287,7 +287,7 @@ index 1548981..42cef54 100644
    jlong CapturePicture(JNIEnv* env, jobject obj, int width, int height);
    void EnableOnNewPicture(JNIEnv* env, jobject obj, jboolean enabled);
    void ClearView(JNIEnv* env, jobject obj);
-@@ -174,7 +174,7 @@ class AwContents : public FindHelper::Listener,
+@@ -178,7 +178,7 @@ class AwContents : public FindHelper::Listener,
  
    void ClearCache(JNIEnv* env, jobject obj, jboolean include_disk_files);
    void SetPendingWebContentsForPopup(scoped_ptr<content::WebContents> pending);
@@ -297,10 +297,10 @@ index 1548981..42cef54 100644
    void ScrollTo(JNIEnv* env, jobject obj, jint x, jint y);
    void SetDipScale(JNIEnv* env, jobject obj, jfloat dip_scale);
 diff --git a/android_webview/native/aw_dev_tools_server.cc b/android_webview/native/aw_dev_tools_server.cc
-index e1cdc72..915b9f9 100644
+index 8d4584d..4e1bdad 100644
 --- a/android_webview/native/aw_dev_tools_server.cc
 +++ b/android_webview/native/aw_dev_tools_server.cc
-@@ -199,19 +199,19 @@ bool RegisterAwDevToolsServer(JNIEnv* env) {
+@@ -200,19 +200,19 @@ bool RegisterAwDevToolsServer(JNIEnv* env) {
    return RegisterNativesImpl(env);
  }
  
@@ -325,10 +325,10 @@ index e1cdc72..915b9f9 100644
    AwDevToolsServer* devtools_server =
        reinterpret_cast<AwDevToolsServer*>(server);
 diff --git a/android_webview/native/aw_pdf_exporter.cc b/android_webview/native/aw_pdf_exporter.cc
-index fbf1d07..a87a007 100644
+index b72a7a2..7a13fd7 100644
 --- a/android_webview/native/aw_pdf_exporter.cc
 +++ b/android_webview/native/aw_pdf_exporter.cc
-@@ -33,7 +33,7 @@ AwPdfExporter::AwPdfExporter(JNIEnv* env,
+@@ -30,7 +30,7 @@ AwPdfExporter::AwPdfExporter(JNIEnv* env,
        web_contents_(web_contents) {
    DCHECK(obj);
    Java_AwPdfExporter_setNativeAwPdfExporter(

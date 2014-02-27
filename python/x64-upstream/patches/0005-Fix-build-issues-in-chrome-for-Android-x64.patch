@@ -1,7 +1,7 @@
-From d44a91b410655427faa20ddaaa3f697a39f1d10f Mon Sep 17 00:00:00 2001
+From e7b91d8d075e8d68fefee29d9a79b016b8e4dc2d Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Tue, 25 Feb 2014 11:00:08 +0800
-Subject: [PATCH 05/11] jni fixes in chrome/ for Android x64
+Date: Thu, 27 Feb 2014 13:47:33 +0800
+Subject: [PATCH 05/12] Fix build issues in chrome/ for Android x64
 
 ---
  .../src/org/chromium/chrome/browser/DevToolsServer.java  | 10 +++++-----
@@ -38,7 +38,7 @@ index bc47c10..7ed33f9 100644
 +    private native void nativeSetRemoteDebuggingEnabled(long devToolsServer, boolean enabled);
  }
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java b/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
-index a8c3bf3..2c58fbd 100644
+index 4b0b6da..703eb64 100644
 --- a/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
 +++ b/chrome/android/java/src/org/chromium/chrome/browser/SSLClientCertificateRequest.java
 @@ -54,9 +54,9 @@ public class SSLClientCertificateRequest {
@@ -93,7 +93,7 @@ index a8c3bf3..2c58fbd 100644
              final String[] keyTypes, byte[][] encodedPrincipals, final String hostName,
              final int port) {
          ThreadUtils.assertOnUiThread();
-@@ -308,5 +308,5 @@ public class SSLClientCertificateRequest {
+@@ -305,5 +305,5 @@ public class SSLClientCertificateRequest {
  
      // Called to pass request results to native side.
      private static native void nativeOnSystemRequestCompletion(
@@ -151,7 +151,7 @@ index 8c7b952..8c6a08c 100644
                                        jobject j_tab) {
    AutocompleteResult* autocomplete_result =
 diff --git a/chrome/browser/ui/android/ssl_client_certificate_request.cc b/chrome/browser/ui/android/ssl_client_certificate_request.cc
-index e86eb27..189de53 100644
+index e86eb27..a6f3359 100644
 --- a/chrome/browser/ui/android/ssl_client_certificate_request.cc
 +++ b/chrome/browser/ui/android/ssl_client_certificate_request.cc
 @@ -105,7 +105,7 @@ void StartClientCertificateRequest(
@@ -159,7 +159,7 @@ index e86eb27..189de53 100644
        new chrome::SelectCertificateCallback(callback));
  
 -  jint request_id = reinterpret_cast<jint>(request.get());
-+  jlong request_id = reinterpret_cast<jlong>(request.get());
++  jlong request_id = reinterpret_cast<intptr_t>(request.get());
  
    if (!chrome::android::
        Java_SSLClientCertificateRequest_selectClientCertificate(
