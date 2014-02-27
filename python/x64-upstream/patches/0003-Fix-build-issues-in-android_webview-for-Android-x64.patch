@@ -1,7 +1,7 @@
-From ef99141cfbcfa8a5a47ede3b32ae0f15a736cb30 Mon Sep 17 00:00:00 2001
+From adb14d7322d8b4e80e853dab142c42664660c838 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Thu, 27 Feb 2014 13:29:51 +0800
-Subject: [PATCH 03/12] Fix build issues in android_webview/ for Android x64
+Date: Thu, 27 Feb 2014 18:02:07 +0800
+Subject: [PATCH] Fix build issues in android_webview/ for Android x64
 
 ---
  .../browser/gpu_memory_buffer_factory_impl.cc      |  4 ++--
@@ -9,12 +9,12 @@ Subject: [PATCH 03/12] Fix build issues in android_webview/ for Android x64
  .../chromium/android_webview/AwDevToolsServer.java |  8 +++----
  .../chromium/android_webview/AwPdfExporter.java    |  2 +-
  .../org/chromium/android_webview/AwSettings.java   |  2 +-
- android_webview/native/aw_contents.cc              | 22 ++++++++---------
+ android_webview/native/aw_contents.cc              | 24 ++++++++++---------
  android_webview/native/aw_contents.h               |  6 ++---
  android_webview/native/aw_dev_tools_server.cc      |  8 +++----
  android_webview/native/aw_pdf_exporter.cc          |  2 +-
  android_webview/public/browser/draw_gl.h           | 14 +++++------
- 10 files changed, 48 insertions(+), 48 deletions(-)
+ 10 files changed, 50 insertions(+), 48 deletions(-)
 
 diff --git a/android_webview/browser/gpu_memory_buffer_factory_impl.cc b/android_webview/browser/gpu_memory_buffer_factory_impl.cc
 index c4a6cac..7b8b9d0 100644
@@ -193,7 +193,7 @@ index 9c8f3b4..a00235b 100644
              if (mNativeAwSettings != 0) {
                  nativeDestroy(mNativeAwSettings);
 diff --git a/android_webview/native/aw_contents.cc b/android_webview/native/aw_contents.cc
-index 2b35fc5..c139bbb 100644
+index 2b35fc5..0c69826 100644
 --- a/android_webview/native/aw_contents.cc
 +++ b/android_webview/native/aw_contents.cc
 @@ -81,7 +81,7 @@ using content::WebContents;
@@ -218,18 +218,20 @@ index 2b35fc5..c139bbb 100644
  }
  
  void AwContents::Destroy(JNIEnv* env, jobject obj) {
-@@ -341,18 +341,18 @@ static jlong Init(JNIEnv* env, jclass, jobject browser_context) {
+@@ -341,18 +341,20 @@ static jlong Init(JNIEnv* env, jclass, jobject browser_context) {
    return reinterpret_cast<intptr_t>(new AwContents(web_contents.Pass()));
  }
  
 -static void SetAwDrawSWFunctionTable(JNIEnv* env, jclass, jint function_table) {
-+static void SetAwDrawSWFunctionTable(JNIEnv* env, jclass, jlong function_table) {
++static void SetAwDrawSWFunctionTable(JNIEnv* env, jclass,
++                                     jlong function_table) {
    JavaBrowserViewRendererHelper::SetAwDrawSWFunctionTable(
        reinterpret_cast<AwDrawSWFunctionTable*>(function_table));
  }
  
 -static void SetAwDrawGLFunctionTable(JNIEnv* env, jclass, jint function_table) {
-+static void SetAwDrawGLFunctionTable(JNIEnv* env, jclass, jlong function_table) {
++static void SetAwDrawGLFunctionTable(JNIEnv* env, jclass,
++                            `        jlong function_table) {
    GpuMemoryBufferFactoryImpl::SetAwDrawGLFunctionTable(
        reinterpret_cast<AwDrawGLFunctionTable*>(function_table));
  }
@@ -241,7 +243,7 @@ index 2b35fc5..c139bbb 100644
  }
  
  // static
-@@ -360,9 +360,9 @@ jint GetNativeInstanceCount(JNIEnv* env, jclass) {
+@@ -360,9 +362,9 @@ jint GetNativeInstanceCount(JNIEnv* env, jclass) {
    return base::subtle::NoBarrier_Load(&g_instance_count);
  }
  
@@ -253,7 +255,7 @@ index 2b35fc5..c139bbb 100644
  }
  
  namespace {
-@@ -859,9 +859,9 @@ void AwContents::SetBackgroundColor(JNIEnv* env, jobject obj, jint color) {
+@@ -859,9 +861,9 @@ void AwContents::SetBackgroundColor(JNIEnv* env, jobject obj, jint color) {
    render_view_host_ext_->SetBackgroundColor(color);
  }
  

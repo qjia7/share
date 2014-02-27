@@ -1,20 +1,20 @@
-From d8de2584936f12181b02dcced44146cf3e493200 Mon Sep 17 00:00:00 2001
+From dced8fcbd4446c972b79347095e51ce6f533e56d Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Fri, 21 Feb 2014 22:06:39 +0800
-Subject: [PATCH 04/12] Fix build issues in content/ for Android x64
+Date: Thu, 27 Feb 2014 18:11:13 +0800
+Subject: [PATCH] Fix build issues in content/ for Android x64
 
 ---
  content/browser/android/content_view_core_impl.cc                     | 2 +-
  content/browser/android/content_view_core_impl.h                      | 2 +-
  content/browser/android/content_view_render_view.cc                   | 2 +-
- content/browser/android/content_view_render_view.h                    | 2 +-
+ content/browser/android/content_view_render_view.h                    | 3 ++-
  content/browser/renderer_host/render_widget_host_view_android.cc      | 4 ++--
  content/browser/renderer_host/render_widget_host_view_android.h       | 2 +-
  .../java/src/org/chromium/content/browser/ContentSettings.java        | 2 +-
  .../java/src/org/chromium/content/browser/ContentViewCore.java        | 4 ++--
  .../java/src/org/chromium/content/browser/input/ImeAdapter.java       | 4 ++--
  content/renderer/media/android/webmediaplayer_android.cc              | 2 +-
- 10 files changed, 13 insertions(+), 13 deletions(-)
+ 10 files changed, 14 insertions(+), 13 deletions(-)
 
 diff --git a/content/browser/android/content_view_core_impl.cc b/content/browser/android/content_view_core_impl.cc
 index 357d2a9..0e4c18c 100644
@@ -56,15 +56,16 @@ index d009548..db42223 100644
    ContentViewCoreImpl* content_view =
        reinterpret_cast<ContentViewCoreImpl*>(native_content_view);
 diff --git a/content/browser/android/content_view_render_view.h b/content/browser/android/content_view_render_view.h
-index a652864..6ac2831 100644
+index a652864..1830008 100644
 --- a/content/browser/android/content_view_render_view.h
 +++ b/content/browser/android/content_view_render_view.h
-@@ -26,7 +26,7 @@ class ContentViewRenderView : public CompositorClient {
+@@ -26,7 +26,8 @@ class ContentViewRenderView : public CompositorClient {
  
    // Methods called from Java via JNI -----------------------------------------
    void Destroy(JNIEnv* env, jobject obj);
 -  void SetCurrentContentView(JNIEnv* env, jobject obj, int native_content_view);
-+  void SetCurrentContentView(JNIEnv* env, jobject obj, jlong native_content_view);
++  void SetCurrentContentView(JNIEnv* env, jobject obj,
++                             jlong native_content_view);
    void SurfaceCreated(JNIEnv* env, jobject obj);
    void SurfaceDestroyed(JNIEnv* env, jobject obj);
    void SurfaceChanged(JNIEnv* env, jobject obj,
