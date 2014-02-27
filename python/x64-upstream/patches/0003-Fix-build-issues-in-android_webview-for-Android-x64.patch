@@ -1,6 +1,6 @@
-From adb14d7322d8b4e80e853dab142c42664660c838 Mon Sep 17 00:00:00 2001
+From 3593842bab38897b6a5166472e804f723caed27d Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Thu, 27 Feb 2014 18:02:07 +0800
+Date: Thu, 27 Feb 2014 18:35:47 +0800
 Subject: [PATCH] Fix build issues in android_webview/ for Android x64
 
 ---
@@ -193,7 +193,7 @@ index 9c8f3b4..a00235b 100644
              if (mNativeAwSettings != 0) {
                  nativeDestroy(mNativeAwSettings);
 diff --git a/android_webview/native/aw_contents.cc b/android_webview/native/aw_contents.cc
-index 2b35fc5..0c69826 100644
+index 2b35fc5..5346102 100644
 --- a/android_webview/native/aw_contents.cc
 +++ b/android_webview/native/aw_contents.cc
 @@ -81,7 +81,7 @@ using content::WebContents;
@@ -231,7 +231,7 @@ index 2b35fc5..0c69826 100644
  
 -static void SetAwDrawGLFunctionTable(JNIEnv* env, jclass, jint function_table) {
 +static void SetAwDrawGLFunctionTable(JNIEnv* env, jclass,
-+                            `        jlong function_table) {
++                                     jlong function_table) {
    GpuMemoryBufferFactoryImpl::SetAwDrawGLFunctionTable(
        reinterpret_cast<AwDrawGLFunctionTable*>(function_table));
  }
