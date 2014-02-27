@@ -1,20 +1,20 @@
-From f6db71a44a0e171240cf7324f461f196daef6de9 Mon Sep 17 00:00:00 2001
+From 270abf7103e9d5fa4e7eb06f45417d1f98461641 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Thu, 20 Feb 2014 13:16:56 +0800
 Subject: [PATCH 11/11] Enable x64 build
 
 ---
- build/common.gypi                | 90 ++++++++++++++++++++++++++++++++++++++++
- build/config/android/config.gni  |  2 +
- build/config/sysroot.gni         |  2 +
- build/toolchain/android/BUILD.gn | 13 ++++++
- 4 files changed, 107 insertions(+)
+ build/common.gypi                |   38 ++++++++++++++++++++++++++++++++++++--
+ build/config/android/config.gni  |    2 ++
+ build/config/sysroot.gni         |    2 ++
+ build/toolchain/android/BUILD.gn |   13 +++++++++++++
+ 4 files changed, 53 insertions(+), 2 deletions(-)
 
 diff --git a/build/common.gypi b/build/common.gypi
-index 4d68880..bb40edb 100644
+index f0201a8..d93fa10 100644
 --- a/build/common.gypi
 +++ b/build/common.gypi
-@@ -1423,6 +1423,12 @@
+@@ -1420,6 +1420,12 @@
                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-14/arch-x86',
                'android_toolchain%': '<(android_ndk_root)/toolchains/x86-4.6/prebuilt/<(host_os)-<(android_host_arch)/bin',
              }],
@@ -27,7 +27,7 @@ index 4d68880..bb40edb 100644
              ['target_arch=="arm"', {
                'conditions': [
                  ['arm_version<7', {
-@@ -3241,6 +3247,90 @@
+@@ -3253,6 +3259,35 @@
                }],
              ],
            }],
@@ -35,79 +35,24 @@ index 4d68880..bb40edb 100644
 +            'target_conditions': [
 +              ['_toolset=="target"', {
 +                'asflags': [
-+                  # Needed so that libs with .s files (e.g. libicudata.a)
-+                  # are compatible with the general 64-bit-ness.
++                  # FIXME: Do we really need this?
 +                  '-64',
 +                ],
-+                # All floating-point computations on x87 happens in 80-bit
-+                # precision.  Because the C and C++ language standards allow
-+                # the compiler to keep the floating-point values in higher
-+                # precision than what's specified in the source and doing so
-+                # is more efficient than constantly rounding up to 64-bit or
-+                # 32-bit precision as specified in the source, the compiler,
-+                # especially in the optimized mode, tries very hard to keep
-+                # values in x87 floating-point stack (in 80-bit precision)
-+                # as long as possible. This has important side effects, that
-+                # the real value used in computation may change depending on
-+                # how the compiler did the optimization - that is, the value
-+                # kept in 80-bit is different than the value rounded down to
-+                # 64-bit or 32-bit. There are possible compiler options to
-+                # make this behavior consistent (e.g. -ffloat-store would keep
-+                # all floating-values in the memory, thus force them to be
-+                # rounded to its original precision) but they have significant
-+                # runtime performance penalty.
-+                #
-+                # -mfpmath=sse -msse2 makes the compiler use SSE instructions
-+                # which keep floating-point values in SSE registers in its
-+                # native precision (32-bit for single precision, and 64-bit
-+                # for double precision values). This means the floating-point
-+                # value used during computation does not change depending on
-+                # how the compiler optimized the code, since the value is
-+                # always kept in its specified precision.
 +                'conditions': [
-+                  ['branding=="Chromium" and disable_sse2==0', {
-+                    'cflags': [
-+                      '-march=x86-64',
-+                      '-msse2',
-+                      '-mfpmath=sse',
-+                    ],
-+                  }],
-+                  # ChromeOS targets Pinetrail, which is sse3, but most of the
-+                  # benefit comes from sse2 so this setting allows ChromeOS
-+                  # to build on other CPUs.  In the future -march=atom would
-+                  # help but requires a newer compiler.
-+                  ['chromeos==1 and disable_sse2==0', {
-+                    'cflags': [
-+                      '-msse2',
-+                      '-mfpmath=sse',
-+                    ],
-+                  }],
-+                  # Use gold linker for Android ia32 target.
++                  # Use gold linker for Android x64 target.
 +                  ['OS=="android"', {
 +                    'cflags': [
 +                      '-fuse-ld=gold',
++                      '-Wno-unused-local-typedefs',
 +                    ],
 +                    'ldflags': [
 +                      '-fuse-ld=gold',
 +                    ],
 +                  }],
-+                  # Install packages have started cropping up with
-+                  # different headers between the 32-bit and 64-bit
-+                  # versions, so we have to shadow those differences off
-+                  # and make sure a 32-bit-on-64-bit build picks up the
-+                  # right files.
-+                  # For android build, use NDK headers instead of host headers
-+                  ['host_arch!="ia32" and OS!="android"', {
-+                    'include_dirs+': [
-+                      '/usr/include32',
-+                    ],
-+                  }],
 +                ],
-+                # -mmmx allows mmintrin.h to be used for mmx intrinsics.
-+                # video playback is mmx and sse2 optimized.
 +                'cflags': [
 +                  '-m64',
-+                  '-mmmx',
++                  '-march=x86-64',
 +                ],
 +                'ldflags': [
 +                  '-m64',
@@ -118,6 +63,23 @@ index 4d68880..bb40edb 100644
            ['target_arch=="arm"', {
              'target_conditions': [
                ['_toolset=="target"', {
+@@ -3979,7 +4014,7 @@
+                   '-L<(android_stlport_libs_dir)',
+                 ],
+               }],
+-              ['target_arch=="ia32"', {
++              ['target_arch=="ia32" or target_arch=="x64"', {
+                 # The x86 toolchain currently has problems with stack-protector.
+                 'cflags!': [
+                   '-fstack-protector',
+@@ -3993,7 +4028,6 @@
+               ['_type=="executable"', {
+                 'ldflags': [
+                   '-Bdynamic',
+-                  '-Wl,-dynamic-linker,/system/bin/linker',
+                   '-Wl,--gc-sections',
+                   '-Wl,-z,nocopyreloc',
+                   # crtbegin_dynamic.o should be the last item in ldflags.
 diff --git a/build/config/android/config.gni b/build/config/android/config.gni
 index 6a9080b..e892f53 100644
 --- a/build/config/android/config.gni
@@ -176,5 +138,5 @@ index 8f84f69..f0e1842 100644
    prefix = "$android_ndk_root/toolchains/arm-linux-androideabi-4.6/prebuilt/$build_os-$android_host_arch/bin/arm-linux-androideabi-"
    cc  = prefix + "gcc"
 -- 
-1.8.3.2
+1.7.10.4
 

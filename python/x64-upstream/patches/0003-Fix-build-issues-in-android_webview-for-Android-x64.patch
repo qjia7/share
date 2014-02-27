@@ -366,7 +366,7 @@ index e3108d5..a89db3e 100644
 +typedef int AwMapFunction(long buffer_id, AwMapMode mode, void** vaddr);
  // Called to unmap a GraphicBuffer
 -typedef int AwUnmapFunction(int buffer_id);
-+typedef int AwUnmapFunction(long, buffer_id);
++typedef int AwUnmapFunction(long buffer_id);
  // Called to get a native buffer pointer
 -typedef void* AwGetNativeBufferFunction(int buffer_id);
 +typedef void* AwGetNativeBufferFunction(long buffer_id);

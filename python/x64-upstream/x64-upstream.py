@@ -18,8 +18,6 @@ patches = {
         '0004-Fix-build-issues-in-content-for-Android-x64.patch',
         '0005-Fix-build-issues-in-chrome-for-Android-x64.patch',
         '0006-Add-x86_64-ucontext-structure-for-Android-x64.patch',
-        '0007-trivial-fixes-to-suppress-warning-and-type-conversio.patch',
-        '0008-suppress-warning-error-in-ppapi.patch',
         '0009-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
         '0010-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
         '0011-Enable-x64-build.patch',
