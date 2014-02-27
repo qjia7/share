@@ -1,4 +1,4 @@
-From 08feb0c6b3e9f015885910155b03bdcbb1355658 Mon Sep 17 00:00:00 2001
+From 46b493f161067489e1f637eb76588f01206ae08b Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Thu, 27 Feb 2014 13:35:15 +0800
 Subject: [PATCH 01/12] Fix build issues in base/ for Android x64
@@ -6,12 +6,15 @@ Subject: [PATCH 01/12] Fix build issues in base/ for Android x64
 This CL fixes several issues when building files under base/ for
 Android x64.
 ---
- base/android/java_handler_thread.cc |  3 ++-
- base/android/java_handler_thread.h  |  2 +-
- base/base.gyp                       |  2 +-
- base/i18n/rtl.cc                    | 15 ++++++++++-----
- base/json/json_writer.cc            |  4 ++--
- 5 files changed, 16 insertions(+), 10 deletions(-)
+ base/android/java_handler_thread.cc |    3 ++-
+ base/android/java_handler_thread.h  |    2 +-
+ base/base.gyp                       |    2 +-
+ base/debug/proc_maps_linux.cc       |    4 ++++
+ base/debug/stack_trace_android.cc   |    9 +++++++--
+ base/i18n/rtl.cc                    |   15 ++++++++++-----
+ base/json/json_writer.cc            |    4 ++--
+ base/os_compat_android.cc           |    4 ++--
+ 8 files changed, 29 insertions(+), 14 deletions(-)
 
 diff --git a/base/android/java_handler_thread.cc b/base/android/java_handler_thread.cc
 index ce5d0fe..18e1440 100644
@@ -41,7 +44,7 @@ index 9f66d66..5670f7d 100644
    static bool RegisterBindings(JNIEnv* env);
  
 diff --git a/base/base.gyp b/base/base.gyp
-index 12e365d..7c55e6b 100644
+index dc29040..d4b40f5 100644
 --- a/base/base.gyp
 +++ b/base/base.gyp
 @@ -128,7 +128,7 @@
@@ -53,6 +56,47 @@ index 12e365d..7c55e6b 100644
                'sources/': [
                  ['include', '^atomicops_internals_x86_gcc\\.cc$'],
                ],
+diff --git a/base/debug/proc_maps_linux.cc b/base/debug/proc_maps_linux.cc
+index b7a5862..ad4c466 100644
+--- a/base/debug/proc_maps_linux.cc
++++ b/base/debug/proc_maps_linux.cc
+@@ -18,8 +18,12 @@
+ // is incompatible with Bionic's stdint.h defining uintptr_t as a unsigned int:
+ // https://code.google.com/p/android/issues/detail?id=57218
+ #undef SCNxPTR
++#ifdef __LP64__
++#define SCNxPTR "lx"
++#else
+ #define SCNxPTR "x"
+ #endif
++#endif
+ 
+ namespace base {
+ namespace debug {
+diff --git a/base/debug/stack_trace_android.cc b/base/debug/stack_trace_android.cc
+index 257e823..7ed5795 100644
+--- a/base/debug/stack_trace_android.cc
++++ b/base/debug/stack_trace_android.cc
+@@ -104,12 +104,17 @@ void StackTrace::OutputToStream(std::ostream* os) const {
+       ++iter;
+     }
+ 
+-    *os << base::StringPrintf("#%02d 0x%08x ", i, address);
++#ifdef __LP64__
++#define FMT_ADDR  "0x%016lx"
++#else
++#define FMT_ADDR  "0x%08x"
++#endif
++    *os << base::StringPrintf("#%02zd " FMT_ADDR " ", i, address);
+ 
+     if (iter != regions.end()) {
+       uintptr_t rel_pc = address - iter->start + iter->offset;
+       const char* path = iter->path.c_str();
+-      *os << base::StringPrintf("%s+0x%08x", path, rel_pc);
++      *os << base::StringPrintf("%s+" FMT_ADDR, path, rel_pc);
+     } else {
+       *os << "<unknown>";
+     }
 diff --git a/base/i18n/rtl.cc b/base/i18n/rtl.cc
 index 851b036..84dc51f 100644
 --- a/base/i18n/rtl.cc
@@ -116,6 +160,21 @@ index efe57ec..d14c92c 100644
        }
        json_string_->append(real);
        return result;
+diff --git a/base/os_compat_android.cc b/base/os_compat_android.cc
+index ec221e4..dc7922a 100644
+--- a/base/os_compat_android.cc
++++ b/base/os_compat_android.cc
+@@ -41,8 +41,8 @@ int futimes(int fd, const struct timeval tv[2]) {
+ // We replicate the behaviour of timegm() when the result overflows time_t.
+ time_t timegm(struct tm* const t) {
+   // time_t is signed on Android.
+-  static const time_t kTimeMax = ~(1 << (sizeof(time_t) * CHAR_BIT - 1));
+-  static const time_t kTimeMin = (1 << (sizeof(time_t) * CHAR_BIT - 1));
++  static const time_t kTimeMax = ~(1L << (sizeof(time_t) * CHAR_BIT - 1));
++  static const time_t kTimeMin = (1L << (sizeof(time_t) * CHAR_BIT - 1));
+   time64_t result = timegm64(t);
+   if (result < kTimeMin || result > kTimeMax)
+     return -1;
 -- 
-1.8.3.2
+1.7.10.4
 
