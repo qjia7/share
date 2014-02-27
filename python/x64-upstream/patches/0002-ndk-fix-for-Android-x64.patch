@@ -1,4 +1,4 @@
-From 3b75da45d9d0006b5ca708a564f5d83f69cef16a Mon Sep 17 00:00:00 2001
+From 8e816e13f753d507bd16fb17ac1c1ce712e8be20 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 21 Feb 2014 18:02:59 +0800
 Subject: [PATCH] ndk fix for Android x64
@@ -8,13 +8,13 @@ Subject: [PATCH] ndk fix for Android x64
  .../arch-x86_64/usr/include/asm/posix_types_64.h   |   78 +++
  .../arch-x86_64/usr/include/asm/unistd.h           |    2 +-
  .../arch-x86_64/usr/include/asm/unistd_64.h        |  717 ++++++++++++++++++++
- .../android-19/arch-x86_64/usr/include/inttypes.h  |  104 +--
+ .../android-19/arch-x86_64/usr/include/inttypes.h  |   99 +--
  .../arch-x86_64/usr/include/machine/_types.h       |    4 +-
  .../arch-x86_64/usr/lib/crtbegin_dynamic.o         |  Bin 2016 -> 2517 bytes
  .../android-19/arch-x86_64/usr/lib/crtbegin_so.o   |  Bin 1800 -> 1976 bytes
  .../arch-x86_64/usr/lib/crtend_android.o           |  Bin 704 -> 1231 bytes
  .../android-19/arch-x86_64/usr/lib/crtend_so.o     |  Bin 648 -> 1119 bytes
- 10 files changed, 858 insertions(+), 49 deletions(-)
+ 10 files changed, 853 insertions(+), 49 deletions(-)
  create mode 100644 platforms/android-19/arch-x86_64/usr/include/asm/posix_types_64.h
  create mode 100644 platforms/android-19/arch-x86_64/usr/include/asm/unistd_64.h
 
@@ -846,7 +846,7 @@ index 0000000..2fe0ce4
 +
 +#endif /* _ASM_X86_UNISTD_64_H */
 diff --git a/platforms/android-19/arch-x86_64/usr/include/inttypes.h b/platforms/android-19/arch-x86_64/usr/include/inttypes.h
-index 62e12c6..7c9a2fc 100644
+index 62e12c6..14eaac1 100644
 --- a/platforms/android-19/arch-x86_64/usr/include/inttypes.h
 +++ b/platforms/android-19/arch-x86_64/usr/include/inttypes.h
 @@ -22,7 +22,16 @@
@@ -1115,23 +1115,6 @@ index 62e12c6..7c9a2fc 100644
  
  #endif /* __cplusplus || __STDC_FORMAT_MACROS */
  
-@@ -249,11 +258,16 @@ typedef struct {
- } imaxdiv_t;
- 
- __BEGIN_DECLS
-+
-+intmax_t	imaxabs(intmax_t) __pure2;
-+imaxdiv_t	imaxdiv(intmax_t, intmax_t) __pure2;
-+
- intmax_t	strtoimax(const char *, char **, int);
- uintmax_t	strtoumax(const char *, char **, int);
- 
- intmax_t	strntoimax(const char *nptr, char **endptr, int base, size_t n);
- uintmax_t	strntoumax(const char *nptr, char **endptr, int base, size_t n);
-+
- __END_DECLS
- 
- #endif /* _INTTYPES_H_ */
 diff --git a/platforms/android-19/arch-x86_64/usr/include/machine/_types.h b/platforms/android-19/arch-x86_64/usr/include/machine/_types.h
 index d217822..c4fd126 100644
 --- a/platforms/android-19/arch-x86_64/usr/include/machine/_types.h
