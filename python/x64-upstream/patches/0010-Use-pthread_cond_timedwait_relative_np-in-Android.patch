@@ -1,4 +1,4 @@
-From 1d00568d80e97e095744888cc3e75712516a5b60 Mon Sep 17 00:00:00 2001
+From 874f28086bfd1c9c004a11e2f00fe2a881f07a75 Mon Sep 17 00:00:00 2001
 From: Zhenyu Liang <zhenyu.liang@intel.com>
 Date: Tue, 25 Feb 2014 18:29:46 +0800
 Subject: [PATCH 10/11] Use pthread_cond_timedwait_relative_np in Android

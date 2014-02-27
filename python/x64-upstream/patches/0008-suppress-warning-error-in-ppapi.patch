@@ -1,4 +1,4 @@
-From e54ab7f7e4e44eb163472ddbc1c0be15d1a62643 Mon Sep 17 00:00:00 2001
+From e8fc30c94183347d59100493fb8e27a974fa164b Mon Sep 17 00:00:00 2001
 From: Jie Chen <jie.a.chen@intel.com>
 Date: Mon, 17 Feb 2014 14:45:40 +0800
 Subject: [PATCH 08/11] suppress warning error in ppapi

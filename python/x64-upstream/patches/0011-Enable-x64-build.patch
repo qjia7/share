@@ -1,0 +1,180 @@
+From f6db71a44a0e171240cf7324f461f196daef6de9 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Thu, 20 Feb 2014 13:16:56 +0800
+Subject: [PATCH 11/11] Enable x64 build
+
+---
+ build/common.gypi                | 90 ++++++++++++++++++++++++++++++++++++++++
+ build/config/android/config.gni  |  2 +
+ build/config/sysroot.gni         |  2 +
+ build/toolchain/android/BUILD.gn | 13 ++++++
+ 4 files changed, 107 insertions(+)
+
+diff --git a/build/common.gypi b/build/common.gypi
+index 4d68880..bb40edb 100644
+--- a/build/common.gypi
++++ b/build/common.gypi
+@@ -1423,6 +1423,12 @@
+               'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-14/arch-x86',
+               'android_toolchain%': '<(android_ndk_root)/toolchains/x86-4.6/prebuilt/<(host_os)-<(android_host_arch)/bin',
+             }],
++            ['target_arch == "x64"', {
++              'android_app_abi%': 'x86_64',
++              'android_gdbserver%': '<(android_ndk_root)/prebuilt/android-x86_64/gdbserver/gdbserver',
++              'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-19/arch-x86_64',
++              'android_toolchain%': '<(android_ndk_root)/toolchains/x86_64-4.8/prebuilt/<(host_os)-<(android_host_arch)/bin',
++            }],
+             ['target_arch=="arm"', {
+               'conditions': [
+                 ['arm_version<7', {
+@@ -3241,6 +3247,90 @@
+               }],
+             ],
+           }],
++          ['target_arch=="x64"', {
++            'target_conditions': [
++              ['_toolset=="target"', {
++                'asflags': [
++                  # Needed so that libs with .s files (e.g. libicudata.a)
++                  # are compatible with the general 64-bit-ness.
++                  '-64',
++                ],
++                # All floating-point computations on x87 happens in 80-bit
++                # precision.  Because the C and C++ language standards allow
++                # the compiler to keep the floating-point values in higher
++                # precision than what's specified in the source and doing so
++                # is more efficient than constantly rounding up to 64-bit or
++                # 32-bit precision as specified in the source, the compiler,
++                # especially in the optimized mode, tries very hard to keep
++                # values in x87 floating-point stack (in 80-bit precision)
++                # as long as possible. This has important side effects, that
++                # the real value used in computation may change depending on
++                # how the compiler did the optimization - that is, the value
++                # kept in 80-bit is different than the value rounded down to
++                # 64-bit or 32-bit. There are possible compiler options to
++                # make this behavior consistent (e.g. -ffloat-store would keep
++                # all floating-values in the memory, thus force them to be
++                # rounded to its original precision) but they have significant
++                # runtime performance penalty.
++                #
++                # -mfpmath=sse -msse2 makes the compiler use SSE instructions
++                # which keep floating-point values in SSE registers in its
++                # native precision (32-bit for single precision, and 64-bit
++                # for double precision values). This means the floating-point
++                # value used during computation does not change depending on
++                # how the compiler optimized the code, since the value is
++                # always kept in its specified precision.
++                'conditions': [
++                  ['branding=="Chromium" and disable_sse2==0', {
++                    'cflags': [
++                      '-march=x86-64',
++                      '-msse2',
++                      '-mfpmath=sse',
++                    ],
++                  }],
++                  # ChromeOS targets Pinetrail, which is sse3, but most of the
++                  # benefit comes from sse2 so this setting allows ChromeOS
++                  # to build on other CPUs.  In the future -march=atom would
++                  # help but requires a newer compiler.
++                  ['chromeos==1 and disable_sse2==0', {
++                    'cflags': [
++                      '-msse2',
++                      '-mfpmath=sse',
++                    ],
++                  }],
++                  # Use gold linker for Android ia32 target.
++                  ['OS=="android"', {
++                    'cflags': [
++                      '-fuse-ld=gold',
++                    ],
++                    'ldflags': [
++                      '-fuse-ld=gold',
++                    ],
++                  }],
++                  # Install packages have started cropping up with
++                  # different headers between the 32-bit and 64-bit
++                  # versions, so we have to shadow those differences off
++                  # and make sure a 32-bit-on-64-bit build picks up the
++                  # right files.
++                  # For android build, use NDK headers instead of host headers
++                  ['host_arch!="ia32" and OS!="android"', {
++                    'include_dirs+': [
++                      '/usr/include32',
++                    ],
++                  }],
++                ],
++                # -mmmx allows mmintrin.h to be used for mmx intrinsics.
++                # video playback is mmx and sse2 optimized.
++                'cflags': [
++                  '-m64',
++                  '-mmmx',
++                ],
++                'ldflags': [
++                  '-m64',
++                ],
++              }],
++            ],
++          }],
+           ['target_arch=="arm"', {
+             'target_conditions': [
+               ['_toolset=="target"', {
+diff --git a/build/config/android/config.gni b/build/config/android/config.gni
+index 6a9080b..e892f53 100644
+--- a/build/config/android/config.gni
++++ b/build/config/android/config.gni
+@@ -41,6 +41,8 @@ if (is_android) {
+ 
+   if (cpu_arch == "x86") {
+     android_app_abi = "x86"
++  } else if (cpu_arch == "x64") {
++    android_app_abi = "x86_64"
+   } else if (cpu_arch == "arm") {
+     import("//build/config/arm.gni")
+     if (arm_version < 7) {
+diff --git a/build/config/sysroot.gni b/build/config/sysroot.gni
+index cecc1ea..5be7c56 100644
+--- a/build/config/sysroot.gni
++++ b/build/config/sysroot.gni
+@@ -10,6 +10,8 @@ if (is_android) {
+   if (!is_android_webview_build) {
+     if (cpu_arch == "x86") {
+       sysroot = "$android_ndk_root/platforms/android-14/arch-x86"
++    } else if (cpu_arch == "x64") {
++      sysroot = "$android_ndk_root/platforms/android-19/arch-x86_64"
+     } else if (cpu_arch == "arm") {
+       sysroot = "$android_ndk_root/platforms/android-14/arch-arm"
+     } else if (cpu_arch == "mipsel") {
+diff --git a/build/toolchain/android/BUILD.gn b/build/toolchain/android/BUILD.gn
+index 8f84f69..f0e1842 100644
+--- a/build/toolchain/android/BUILD.gn
++++ b/build/toolchain/android/BUILD.gn
+@@ -28,6 +28,8 @@ if (is_gyp) {
+     # Find the compiler for GYP for non-Clang Android.
+     if (cpu_arch == "x86") {
+       android_toolchain_arch = "x86-4.6"
++    } else if (cpu_arch == "x64") {
++      android_toolchain_arch = "x86_64-4.8"
+     } else if (cpu_arch == "arm") {
+       android_toolchain_arch = "arm-linux-androideabi-4.6"
+     } else if (cpu_arch == "mipsel") {
+@@ -85,6 +87,17 @@ gcc_toolchain("x86") {
+   toolchain_os = "android"
+ }
+ 
++gcc_toolchain("x64") {
++  prefix = "$android_ndk_root/toolchains/x86_64-4.8/prebuilt/$build_os-$android_host_arch/bin/x86_64-linux-android-"
++  cc  = prefix + "gcc"
++  cxx = prefix + "g++"
++  ar  = prefix + "ar"
++  ld  = cxx
++
++  toolchain_cpu_arch = "x64"
++  toolchain_os = "android"
++}
++
+ gcc_toolchain("arm") {
+   prefix = "$android_ndk_root/toolchains/arm-linux-androideabi-4.6/prebuilt/$build_os-$android_host_arch/bin/arm-linux-androideabi-"
+   cc  = prefix + "gcc"
+-- 
+1.8.3.2
+

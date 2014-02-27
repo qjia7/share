@@ -1,4 +1,4 @@
-From bd9307a796d8219d2a757730e67ab98f188700d2 Mon Sep 17 00:00:00 2001
+From 50e64949829aac2e5f0832cc773fa2ea5af543e5 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 21 Feb 2014 22:06:39 +0800
 Subject: [PATCH 04/11] jni fixes in content/ for Android x64

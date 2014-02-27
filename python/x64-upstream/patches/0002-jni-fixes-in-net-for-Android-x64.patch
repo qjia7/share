@@ -1,4 +1,4 @@
-From 0a635731f583e19121bb7c8c683a89a47668bf58 Mon Sep 17 00:00:00 2001
+From 40ce260de1b420ea540968996855244b3d4cc06a Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 21 Feb 2014 22:01:42 +0800
 Subject: [PATCH 02/11] jni fixes in net/ for Android x64

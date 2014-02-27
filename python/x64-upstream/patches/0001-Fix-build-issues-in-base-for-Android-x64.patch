@@ -1,7 +1,7 @@
-From 9ad0d1e809da0d10dd5edee46eb98cad0e89bdec Mon Sep 17 00:00:00 2001
+From ddead3c1b91bf0ab96d52a2bad41882102281854 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Tue, 25 Feb 2014 16:02:20 +0800
-Subject: [PATCH 11/11] Fix build issues in base/ for Android x64
+Subject: [PATCH 01/11] Fix build issues in base/ for Android x64
 
 This CL fixes several issues when building files under base/ for
 Android x64.

@@ -1,4 +1,4 @@
-From f9590a0a988ab6aa2c3a99af5c38a0eb00d1f4ef Mon Sep 17 00:00:00 2001
+From da1ccb21618d6b7dd886276fcdcb5c33d1961fb8 Mon Sep 17 00:00:00 2001
 From: "jie.chen" <jie.a.chen@intel.com>
 Date: Mon, 24 Feb 2014 06:42:33 +0800
 Subject: [PATCH 09/11] fix the missing of X11 lib in the android host

@@ -12,7 +12,7 @@ dir_script = sys.path[0]
 
 patches = {
     'src': [
-        '0001-Enable-x64-build.patch',
+        '0001-Fix-build-issues-in-base-for-Android-x64.patch',
         '0002-jni-fixes-in-net-for-Android-x64.patch',
         '0003-jni-fixes-in-android_webview-for-Android-x64.patch',
         '0004-jni-fixes-in-content-for-Android-x64.patch',
@@ -22,14 +22,11 @@ patches = {
         '0008-suppress-warning-error-in-ppapi.patch',
         '0009-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
         '0010-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
-        '0011-Fix-build-issues-in-base-for-Android-x64.patch',
-
+        '0011-Enable-x64-build.patch',
     ],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
     'src/third_party/mesa/src': ['0001-disable-log2.patch'],
-    'src/v8': [
-        '0001-v8-x64-support.patch',
-    ],
+    'src/v8': ['0001-v8-x64-support.patch'],
     'ndk': [
         '0001-ndk-Add-gyp-files.patch',
         '0002-ndk-fix-for-Android-x64.patch',

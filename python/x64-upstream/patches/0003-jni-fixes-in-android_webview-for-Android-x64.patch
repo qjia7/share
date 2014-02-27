@@ -1,4 +1,4 @@
-From 27f40bed157e04de93df1f0181da43699ee8bbab Mon Sep 17 00:00:00 2001
+From 5b59122550afd45bfe2dc2ece240f61dbc6ceb2f Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Tue, 25 Feb 2014 10:55:31 +0800
 Subject: [PATCH 03/11] jni fixes in android_webview/ for Android x64
