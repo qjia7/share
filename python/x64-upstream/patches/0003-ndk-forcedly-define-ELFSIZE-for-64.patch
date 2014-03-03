@@ -1,0 +1,25 @@
+From 9bc6d7c40c9abf7b46a3cd7a7cbd043814f91332 Mon Sep 17 00:00:00 2001
+From: "jie.chen" <jie.a.chen@intel.com>
+Date: Tue, 4 Mar 2014 05:25:00 +0800
+Subject: [PATCH] forcedly define ELFSIZE for 64
+
+---
+ platforms/android-19/arch-x86_64/usr/include/sys/exec_elf.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/platforms/android-19/arch-x86_64/usr/include/sys/exec_elf.h b/platforms/android-19/arch-x86_64/usr/include/sys/exec_elf.h
+index f72f81e..deb7c62 100644
+--- a/platforms/android-19/arch-x86_64/usr/include/sys/exec_elf.h
++++ b/platforms/android-19/arch-x86_64/usr/include/sys/exec_elf.h
+@@ -540,6 +540,8 @@ struct elf_args {
+ #define ELFDEFNNAME(x)	CONCAT(ELF,CONCAT(ELFSIZE,CONCAT(_,x)))
+ #endif
+ 
++#define ELFSIZE 64
++
+ #if defined(ELFSIZE) && (ELFSIZE == 32)
+ #define Elf_Ehdr	Elf32_Ehdr
+ #define Elf_Phdr	Elf32_Phdr
+-- 
+1.8.3.2
+

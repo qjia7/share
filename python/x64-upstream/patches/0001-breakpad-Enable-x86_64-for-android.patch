@@ -1,0 +1,317 @@
+From 7ee53f58b736f906b81a91f4ef744fdef672a3d7 Mon Sep 17 00:00:00 2001
+From: "jie.chen" <jie.a.chen@intel.com>
+Date: Fri, 28 Feb 2014 08:20:46 +0800
+Subject: [PATCH] Enable x86_64 for android
+
+---
+ common/android/breakpad_getcontext.S  | 51 +++++++++++++++++++
+ common/android/include/sys/ucontext.h | 96 +++++++++++++++++++++++++++++++++++
+ common/android/include/sys/user.h     | 77 ++++++++++++++++++++++++++++
+ common/android/ucontext_constants.h   | 34 +++++++++++++
+ 4 files changed, 258 insertions(+)
+
+diff --git a/common/android/breakpad_getcontext.S b/common/android/breakpad_getcontext.S
+index 13f242d..2c1eb64 100644
+--- a/common/android/breakpad_getcontext.S
++++ b/common/android/breakpad_getcontext.S
+@@ -140,6 +140,57 @@ breakpad_getcontext:
+ 
+   .size breakpad_getcontext, . - breakpad_getcontext
+ 
++#elif defined(__x86_64__)
++  .text
++  .global breakpad_getcontext
++  .hidden breakpad_getcontext
++  .align 8
++  .type breakpad_getcontext, @function
++
++breakpad_getcontext:
++        /* Save the preserved registers, the registers used for passing
++           args, and the return address.  */
++        movq    %rbx, MCONTEXT_RBX_OFFSET(%rdi)
++        movq    %rbp, MCONTEXT_RBP_OFFSET(%rdi)
++        movq    %r12, MCONTEXT_R12_OFFSET(%rdi)
++        movq    %r13, MCONTEXT_R13_OFFSET(%rdi)
++        movq    %r14, MCONTEXT_R14_OFFSET(%rdi)
++        movq    %r15, MCONTEXT_R15_OFFSET(%rdi)
++
++        movq    %rdi, MCONTEXT_RDI_OFFSET(%rdi)
++        movq    %rsi, MCONTEXT_RSI_OFFSET(%rdi)
++        movq    %rdx, MCONTEXT_RDX_OFFSET(%rdi)
++        movq    %rcx, MCONTEXT_RCX_OFFSET(%rdi)
++        movq    %r8, MCONTEXT_R8_OFFSET(%rdi)
++        movq    %r9, MCONTEXT_R9_OFFSET(%rdi)
++
++        movq    (%rsp), %rcx
++        movq    %rcx, MCONTEXT_RIP_OFFSET(%rdi)
++        leaq    8(%rsp), %rcx           /* Exclude the return address.  */
++        movq    %rcx, MCONTEXT_RSP_OFFSET(%rdi)
++
++        /* We have separate floating-point register content memory on the
++           stack.  We use the __fpregs_mem block in the context.  Set the
++           links up correctly.  */
++
++        leaq    UCONTEXT_FPREGS_MEM_OFFSET(%rdi), %rcx
++        movq    %rcx, MCONTEXT_FPREGS_OFFSET(%rdi)
++        /* Save the floating-point environment.  */
++        fnstenv (%rcx)
++        fldenv  (%rcx)
++        stmxcsr UCONTEXT_FPREGS_MXCSR_OFFSET(%rdi)
++
++        /* Save signal mask: sigprocmask(SIGBLOCK, NULL, &uc->uc_sigmask) */
++        leaq UCONTEXT_SIGMASK_OFFSET(%rdi), %rdx
++        xorq %rsi, %rsi
++        xorq %rdi, %rdi
++        call sigprocmask@PLT
++
++        xorl %eax, %eax
++        ret
++
++       .size breakpad_getcontext, . - breakpad_getcontext
++
+ #elif defined(__mips__)
+ 
+ #if _MIPS_SIM != _ABIO32
+diff --git a/common/android/include/sys/ucontext.h b/common/android/include/sys/ucontext.h
+index 85c69eb..7ee6755 100644
+--- a/common/android/include/sys/ucontext.h
++++ b/common/android/include/sys/ucontext.h
+@@ -126,6 +126,102 @@ typedef struct ucontext {
+   struct _libc_fpstate __fpregs_mem;
+ } ucontext_t;
+ 
++#elif defined(__x86_64__)
++/* Type for general register.  */
++__extension__ typedef long long int greg_t;
++
++/* Number of general registers.  */
++#define NGREG   23
++
++/* Container for all general registers.  */
++typedef greg_t gregset_t[NGREG];
++
++/* Number of each register in the `gregset_t' array.  */
++enum
++{
++  REG_R8 = 0,
++  REG_R9,
++  REG_R10,
++  REG_R11,
++  REG_R12,
++  REG_R13,
++  REG_R14,
++  REG_R15,
++  REG_RDI,
++  REG_RSI,
++  REG_RBP,
++  REG_RBX,
++  REG_RDX,
++  REG_RAX,
++  REG_RCX,
++  REG_RSP,
++  REG_RIP,
++  REG_EFL,
++  REG_CSGSFS,           /* Actually short cs, gs, fs, __pad0.  */
++  REG_ERR,
++  REG_TRAPNO,
++  REG_OLDMASK,
++  REG_CR2
++};
++
++struct _libc_fpxreg
++{
++  unsigned short int significand[4];
++  unsigned short int exponent;
++  unsigned short int padding[3];
++};
++
++struct _libc_xmmreg
++{
++  __uint32_t    element[4];
++};
++
++struct _libc_fpstate
++{
++  /* 64-bit FXSAVE format.  */
++  __uint16_t            cwd;
++  __uint16_t            swd;
++  __uint16_t            ftw;
++  __uint16_t            fop;
++  __uint64_t            rip;
++  __uint64_t            rdp;
++  __uint32_t            mxcsr;
++  __uint32_t            mxcr_mask;
++  struct _libc_fpxreg   _st[8];
++  struct _libc_xmmreg   _xmm[16];
++  __uint32_t            padding[24];
++};
++
++/* Structure to describe FPU registers.  */
++typedef struct _libc_fpstate *fpregset_t;
++
++/* Context to describe whole processor state.  */
++typedef struct
++  {
++    gregset_t gregs;
++    /* Note that fpregs is a pointer.  */
++    fpregset_t fpregs;
++    __extension__ unsigned long long __reserved1 [8];
++} mcontext_t;
++
++# define _SIGSET_NWORDS (1024 / (8 * sizeof (unsigned long int)))
++typedef struct
++  {
++    unsigned long int __val[_SIGSET_NWORDS];
++  } kernel_sigmask_t;
++
++
++/* Userlevel context.  */
++typedef struct ucontext
++  {
++    unsigned long int uc_flags;
++    struct ucontext *uc_link;
++    stack_t uc_stack;
++    mcontext_t uc_mcontext;
++    kernel_sigmask_t uc_sigmask;
++    struct _libc_fpstate __fpregs_mem;
++  } ucontext_t;
++
+ #elif defined(__mips__)
+ 
+ typedef struct {
+diff --git a/common/android/include/sys/user.h b/common/android/include/sys/user.h
+index bc275bb..18d6d30 100644
+--- a/common/android/include/sys/user.h
++++ b/common/android/include/sys/user.h
+@@ -118,6 +118,83 @@ struct user {
+ };
+ 
+ 
++#elif defined(__x86_64__)
++
++#define _X86_64_USER_H 1  // Prevent <asm/user.h> conflicts
++
++struct user_fpregs_struct
++{
++  unsigned short int    cwd;
++  unsigned short int    swd;
++  unsigned short int    ftw;
++  unsigned short int    fop;
++  __extension__ unsigned long long int rip;
++  __extension__ unsigned long long int rdp;
++  unsigned int          mxcsr;
++  unsigned int          mxcr_mask;
++  unsigned int          st_space[32];   /* 8*16 bytes for each FP-reg = 128 bytes */
++  unsigned int          xmm_space[64];  /* 16*16 bytes for each XMM-reg = 256 bytes */
++  unsigned int          padding[24];
++};
++
++struct user_regs_struct
++{
++  __extension__ unsigned long long int r15;
++  __extension__ unsigned long long int r14;
++  __extension__ unsigned long long int r13;
++  __extension__ unsigned long long int r12;
++  __extension__ unsigned long long int rbp;
++  __extension__ unsigned long long int rbx;
++  __extension__ unsigned long long int r11;
++  __extension__ unsigned long long int r10;
++  __extension__ unsigned long long int r9;
++  __extension__ unsigned long long int r8;
++  __extension__ unsigned long long int rax;
++  __extension__ unsigned long long int rcx;
++  __extension__ unsigned long long int rdx;
++  __extension__ unsigned long long int rsi;
++  __extension__ unsigned long long int rdi;
++  __extension__ unsigned long long int orig_rax;
++  __extension__ unsigned long long int rip;
++  __extension__ unsigned long long int cs;
++  __extension__ unsigned long long int eflags;
++  __extension__ unsigned long long int rsp;
++  __extension__ unsigned long long int ss;
++  __extension__ unsigned long long int fs_base;
++  __extension__ unsigned long long int gs_base;
++  __extension__ unsigned long long int ds;
++  __extension__ unsigned long long int es;
++  __extension__ unsigned long long int fs;
++  __extension__ unsigned long long int gs;
++};
++
++struct user
++{
++  struct user_regs_struct       regs;
++  int                           u_fpvalid;
++  struct user_fpregs_struct     i387;
++  __extension__ unsigned long long int  u_tsize;
++  __extension__ unsigned long long int  u_dsize;
++  __extension__ unsigned long long int  u_ssize;
++  __extension__ unsigned long long int  start_code;
++  __extension__ unsigned long long int  start_stack;
++  __extension__ long long int           signal;
++  int                           reserved;
++  __extension__ union
++    {
++      struct user_regs_struct*  u_ar0;
++      __extension__ unsigned long long int      __u_ar0_word;
++    };
++  __extension__ union
++    {
++      struct user_fpregs_struct*        u_fpstate;
++      __extension__ unsigned long long int      __u_fpstate_word;
++    };
++  __extension__ unsigned long long int  magic;
++  char                          u_comm [32];
++  __extension__ unsigned long long int  u_debugreg [8];
++};
++
+ #elif defined(__mips__)
+ 
+ #define _ASM_USER_H 1  // Prevent <asm/user.h> conflicts
+diff --git a/common/android/ucontext_constants.h b/common/android/ucontext_constants.h
+index c99c51f..e3b33d8 100644
+--- a/common/android/ucontext_constants.h
++++ b/common/android/ucontext_constants.h
+@@ -81,6 +81,40 @@
+ #define  MCONTEXT_FPC_CSR          556
+ #define  UCONTEXT_SIGMASK_OFFSET   616
+ 
++#elif defined(__x86_64__)
++
++
++#define  MCONTEXT_GREGS_OFFSET     36
++#define  MCONTEXT_R8_OFFSET        (MCONTEXT_GREGS_OFFSET + 0*8)
++#define  MCONTEXT_R9_OFFSET        (MCONTEXT_GREGS_OFFSET + 1*8)
++#define  MCONTEXT_R10_OFFSET       (MCONTEXT_GREGS_OFFSET + 2*8)
++#define  MCONTEXT_R11_OFFSET       (MCONTEXT_GREGS_OFFSET + 3*8)
++#define  MCONTEXT_R12_OFFSET       (MCONTEXT_GREGS_OFFSET + 4*8)
++#define  MCONTEXT_R13_OFFSET       (MCONTEXT_GREGS_OFFSET + 5*8)
++#define  MCONTEXT_R14_OFFSET       (MCONTEXT_GREGS_OFFSET + 6*8)
++#define  MCONTEXT_R15_OFFSET       (MCONTEXT_GREGS_OFFSET + 7*8)
++#define  MCONTEXT_RDI_OFFSET       (MCONTEXT_GREGS_OFFSET + 8*8)
++#define  MCONTEXT_RSI_OFFSET       (MCONTEXT_GREGS_OFFSET + 9*8)
++#define  MCONTEXT_RBP_OFFSET       (MCONTEXT_GREGS_OFFSET + 10*8)
++#define  MCONTEXT_RBX_OFFSET       (MCONTEXT_GREGS_OFFSET + 11*8)
++#define  MCONTEXT_RDX_OFFSET       (MCONTEXT_GREGS_OFFSET + 12*8)
++#define  MCONTEXT_RAX_OFFSET       (MCONTEXT_GREGS_OFFSET + 13*8)
++#define  MCONTEXT_RCX_OFFSET       (MCONTEXT_GREGS_OFFSET + 14*8)
++#define  MCONTEXT_RSP_OFFSET       (MCONTEXT_GREGS_OFFSET + 15*8)
++#define  MCONTEXT_RIP_OFFSET       (MCONTEXT_GREGS_OFFSET + 16*8)
++#define  MCONTEXT_EFL_OFFSET       (MCONTEXT_GREGS_OFFSET + 17*8)
++#define  MCONTEXT_CSGSFS_OFFSET    (MCONTEXT_GREGS_OFFSET + 18*8)
++#define  MCONTEXT_ERR_OFFSET       (MCONTEXT_GREGS_OFFSET + 19*8)
++#define  MCONTEXT_TRAPNO_OFFSET    (MCONTEXT_GREGS_OFFSET + 20*8)
++#define  MCONTEXT_OLDMASK_OFFSET   (MCONTEXT_GREGS_OFFSET + 21*8)
++#define  MCONTEXT_CR2_OFFSET       (MCONTEXT_GREGS_OFFSET + 22*8)
++
++#define  MCONTEXT_FPREGS_OFFSET    (MCONTEXT_GREGS_OFFSET + 23*8)
++
++#define  UCONTEXT_SIGMASK_OFFSET    (MCONTEXT_FPREGS_OFFSET + 8 + 16*8)
++#define  UCONTEXT_FPREGS_MEM_OFFSET (UCONTEXT_SIGMASK_OFFSET + 128)
++#define  UCONTEXT_FPREGS_MXCSR_OFFSET (UCONTEXT_FPREGS_MEM_OFFSET + 24)
++
+ #else
+ #error "This header has not been ported for your CPU"
+ #endif
+-- 
+1.8.3.2
+

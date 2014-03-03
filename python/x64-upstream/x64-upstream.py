@@ -22,13 +22,20 @@ patches = {
         '0010-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
         '0011-Enable-x64-build.patch',
         '0012-fix-build-error-in-base-and-content.patch',
+        '0013-fix-type-cast-bugs-in-chrome.patch'
     ],
+    'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
+    'src/third_party/lss': [
+        '0001-lss-fix-the-__unused-issue.patch',
+        '0002-lss-fix-__off64_t-issue.patch'
+    ],
     'src/third_party/mesa/src': ['0001-disable-log2.patch'],
     'src/v8': ['0001-v8-x64-support.patch'],
     'ndk': [
         '0001-ndk-Add-gyp-files.patch',
         '0002-ndk-fix-for-Android-x64.patch',
+        '0003-ndk-forcedly-define-ELFSIZE-for-64.patch'
     ],
 }
 
