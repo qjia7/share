@@ -1,15 +1,16 @@
-From e7b91d8d075e8d68fefee29d9a79b016b8e4dc2d Mon Sep 17 00:00:00 2001
+From bd0be330d8b088e3589f89feb5eff12fad6471b0 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Thu, 27 Feb 2014 13:47:33 +0800
-Subject: [PATCH 05/12] Fix build issues in chrome/ for Android x64
+Subject: [PATCH] Fix build issues in chrome/ for Android x64
 
 ---
  .../src/org/chromium/chrome/browser/DevToolsServer.java  | 10 +++++-----
  .../chrome/browser/SSLClientCertificateRequest.java      | 16 ++++++++--------
  chrome/browser/android/dev_tools_server.cc               | 10 +++++-----
  chrome/browser/android/omnibox/omnibox_prerender.cc      |  2 +-
+ chrome/browser/android/omnibox/omnibox_prerender.h       |  2 +-
  .../browser/ui/android/ssl_client_certificate_request.cc |  4 ++--
- 5 files changed, 21 insertions(+), 21 deletions(-)
+ 6 files changed, 22 insertions(+), 22 deletions(-)
 
 diff --git a/chrome/android/java/src/org/chromium/chrome/browser/DevToolsServer.java b/chrome/android/java/src/org/chromium/chrome/browser/DevToolsServer.java
 index bc47c10..7ed33f9 100644
@@ -150,6 +151,19 @@ index 8c7b952..8c6a08c 100644
                                        jobject j_profile_android,
                                        jobject j_tab) {
    AutocompleteResult* autocomplete_result =
+diff --git a/chrome/browser/android/omnibox/omnibox_prerender.h b/chrome/browser/android/omnibox/omnibox_prerender.h
+index 4ae4401..adfe301 100644
+--- a/chrome/browser/android/omnibox/omnibox_prerender.h
++++ b/chrome/browser/android/omnibox/omnibox_prerender.h
+@@ -50,7 +50,7 @@ class OmniboxPrerender {
+                       jobject obj,
+                       jstring j_url,
+                       jstring j_current_url,
+-                      jint jsource_match,
++                      jlong jsource_match,
+                       jobject j_profile_android,
+                       jobject j_tab);
+ 
 diff --git a/chrome/browser/ui/android/ssl_client_certificate_request.cc b/chrome/browser/ui/android/ssl_client_certificate_request.cc
 index e86eb27..a6f3359 100644
 --- a/chrome/browser/ui/android/ssl_client_certificate_request.cc
