@@ -1,28 +1,13 @@
-From da1ccb21618d6b7dd886276fcdcb5c33d1961fb8 Mon Sep 17 00:00:00 2001
+From 913481585d8d0fd258c48bba4677719f6f6547dd Mon Sep 17 00:00:00 2001
 From: "jie.chen" <jie.a.chen@intel.com>
 Date: Mon, 24 Feb 2014 06:42:33 +0800
-Subject: [PATCH 09/11] fix the missing of X11 lib in the android host
- forwarder tools
+Subject: [PATCH] fix the missing of X11 lib in the android host forwarder
+ tools
 
 ---
- tools/android/forwarder/forwarder.gyp  | 3 +++
  tools/android/forwarder2/forwarder.gyp | 3 +++
- 2 files changed, 6 insertions(+)
+ 1 file changed, 3 insertions(+)
 
-diff --git a/tools/android/forwarder/forwarder.gyp b/tools/android/forwarder/forwarder.gyp
-index 1df518b..c7f75c7 100644
---- a/tools/android/forwarder/forwarder.gyp
-+++ b/tools/android/forwarder/forwarder.gyp
-@@ -37,6 +37,9 @@
-       'sources': [
-         'forwarder.cc',
-       ],
-+      'libraries': [
-+        '-lX11',
-+      ],
-     },
-   ],
- }
 diff --git a/tools/android/forwarder2/forwarder.gyp b/tools/android/forwarder2/forwarder.gyp
 index a3f2898..7051dea 100644
 --- a/tools/android/forwarder2/forwarder.gyp
