@@ -11,8 +11,8 @@ chromium_target_arch = ''
 patches = [
     # Below patches is for chromium upstream webview work, no plan to integrate
     # ABT, will try to work on AOSP upstream first.
-    #'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/81/166881/1 && git checkout FETCH_HEAD',
-    #'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/82/166882/1 && git checkout FETCH_HEAD',
+    'git fetch https://android.intel.com/a/aosp/platform/bionic refs/changes/90/170590/1 && git checkout FETCH_HEAD',
+    'git fetch https://android.intel.com/a/aosp/platform/bionic refs/changes/91/170591/1 && git checkout FETCH_HEAD',
 ]
 
 patches_merged = [
@@ -45,7 +45,7 @@ patches_merged = [
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/95/164395/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/96/164396/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/97/164397/1 && git checkout FETCH_HEAD',
-    'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/98/164398/1 && git checkout FETCH_HEAD',
+    'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/98/164398/2 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/99/164399/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/00/164400/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/01/164401/1 && git checkout FETCH_HEAD',
