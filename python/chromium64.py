@@ -9,6 +9,23 @@ android_target_arch = ''
 chromium_target_arch = ''
 
 patches = [
+    # Below patches is for chromium upstream webview work, no plan to integrate
+    # ABT, will try to work on AOSP upstream first.
+    #'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/81/166881/1 && git checkout FETCH_HEAD',
+    #'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/82/166882/1 && git checkout FETCH_HEAD',
+]
+
+patches_merged = [
+    # stage 1
+    'git fetch https://android.intel.com/a/aosp/platform/bionic refs/changes/00/163200/1 && git checkout FETCH_HEAD',  # upstream change
+    'git fetch https://android.intel.com/a/aosp/platform/frameworks/base refs/changes/06/163206/1 && git checkout FETCH_HEAD',  # upstream change
+    'git fetch https://android.intel.com/a/aosp/platform/system/core refs/changes/09/163209/1 && git checkout FETCH_HEAD',  # revert our change, redefinition error
+    'git fetch https://android.intel.com/a/bsp/platform/bootable/iago refs/changes/12/163212/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
+    'git fetch https://android.intel.com/a/bsp/platform/bootable/userfastboot refs/changes/15/163215/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
+    'git fetch https://android.intel.com/a/aosp/platform/frameworks/av refs/changes/18/163218/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
+    'git fetch https://android.intel.com/a/aosp/platform/system/netd refs/changes/19/163219/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
+    'git fetch https://android.intel.com/a/aosp/platform/system/vold refs/changes/20/163220/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
+
     # stage2
     # chromium_org (24)
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/81/164381/1 && git checkout FETCH_HEAD',
@@ -35,35 +52,6 @@ patches = [
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/02/164402/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/03/164403/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/04/164404/2 && git checkout FETCH_HEAD',
-    # Below patches is for chromium upstream webview work, no plan to integrate
-    # ABT, will try to work on AOSP upstream first.
-    'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/81/166881/1 && git checkout FETCH_HEAD',
-    'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org refs/changes/82/166882/1 && git checkout FETCH_HEAD',
-
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/98/4798/1 && git checkout FETCH_HEAD',  # android_webview/ upstream r237788
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/60/4560/3 && git checkout FETCH_HEAD',  # android_webview/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/94/4794/1 && git checkout FETCH_HEAD',  # base/ upstream r234212
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/95/4795/1 && git checkout FETCH_HEAD',  # base/ upstream r235725
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/57/4557/2 && git checkout FETCH_HEAD',  # base/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/92/4792/1 && git checkout FETCH_HEAD',  # base/android/jni_generator/ upstream r226503
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/93/4793/1 && git checkout FETCH_HEAD',  # base/android/jni_generator/ upstream r232858
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/56/4556/2 && git checkout FETCH_HEAD',  # base/android/jni_generator/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/95/2395/2 && git checkout FETCH_HEAD',  # build/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/94/3194/5 && git checkout FETCH_HEAD',  # build/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/01/4801/2 && git checkout FETCH_HEAD',  # chrome/ upstream r236536
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/62/4562/2 && git checkout FETCH_HEAD',  # chrome/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/63/4563/1 && git checkout FETCH_HEAD',  # components/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/02/4802/4 && git checkout FETCH_HEAD',  # content/ upstream r235815 # start here
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/97/4797/2 && git checkout FETCH_HEAD',  # ui/ upstream r234312. It actually modifies content/, so put it before content/ change.
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/61/4561/6 && git checkout FETCH_HEAD',  # content/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/77/4577/1 && git checkout FETCH_HEAD',  # media/ upstream r234278
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/57/3357/3 && git checkout FETCH_HEAD',  # media/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/96/4796/1 && git checkout FETCH_HEAD',  # net/ upstream r234285
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/58/4558/2 && git checkout FETCH_HEAD',  # net/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/66/4566/1 && git checkout FETCH_HEAD',  # sandbox/
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/99/4799/1 && git checkout FETCH_HEAD',  # sync/ upstream r234804
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/00/4800/1 && git checkout FETCH_HEAD',  # testing/android/native_test/ upstream r234513
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org refs/changes/29/3929/2 && git checkout FETCH_HEAD',  # import x86_64.mk files
 
     # v8 (4)
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org/v8 refs/changes/17/164417/1 && git checkout FETCH_HEAD',
@@ -71,14 +59,9 @@ patches = [
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org/v8 refs/changes/19/164419/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org/v8 refs/changes/20/164420/1 && git checkout FETCH_HEAD',
 
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/29/3029/4 && git checkout FETCH_HEAD',
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/27/4227/1 && git checkout FETCH_HEAD',
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org/v8 refs/changes/78/4578/1 && git checkout FETCH_HEAD',
-
     # third_party/icu (2)
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org/third_party/icu refs/changes/21/164421/1 && git checkout FETCH_HEAD',
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org/third_party/icu refs/changes/22/164422/1 && git checkout FETCH_HEAD',
-    #'git fetch https://aia-review.intel.com/platform/external/chromium_org/third_party/icu refs/changes/27/3027/1 && git checkout FETCH_HEAD',
 
     # third_party/WebKit (1)
     'git fetch https://android.intel.com/a/aosp/platform/external/chromium_org/third_party/WebKit refs/changes/23/164423/1 && git checkout FETCH_HEAD',
@@ -94,33 +77,13 @@ patches = [
 
     # bridge code (1)
     'git fetch https://android.intel.com/a/aosp/platform/frameworks/webview refs/changes/30/164430/1 && git checkout FETCH_HEAD',
-    #'git fetch https://aia-review.intel.com/platform/frameworks/webview refs/changes/23/3523/3 && git checkout FETCH_HEAD',
 
     # build (1)
     'git fetch https://android.intel.com/a/aosp/platform/build refs/changes/32/164432/1 && git checkout FETCH_HEAD',
-    #'git fetch https://aia-review.intel.com/platform/build refs/changes/21/3921/1 && git checkout FETCH_HEAD',  # force to build v8 host tools with m64
-
 
     # stage 3
     # build (1)
     'git fetch https://android.intel.com/a/aosp/platform/build refs/changes/33/164433/1 && git checkout FETCH_HEAD',
-    #'git fetch https://aia-review.intel.com/platform/build refs/changes/81/4181/1 && git checkout FETCH_HEAD',  # Enable build for Chromium WebView
-
-    # Seems it's not needed
-    #'git fetch https://aia-review.intel.com/platform/build refs/changes/93/4393/1 && git checkout FETCH_HEAD',  # Set the code range size as the correct value on Android, 64bit: gold has default alignment as 2M for PT_LOAD segment for 64bit
-]
-
-patches_merged = [
-    # stage 1
-    'git fetch https://android.intel.com/a/aosp/platform/bionic refs/changes/00/163200/1 && git checkout FETCH_HEAD',  # upstream change
-    'git fetch https://android.intel.com/a/aosp/platform/frameworks/base refs/changes/06/163206/1 && git checkout FETCH_HEAD',  # upstream change
-    'git fetch https://android.intel.com/a/aosp/platform/system/core refs/changes/09/163209/1 && git checkout FETCH_HEAD',  # revert our change, redefinition error
-    'git fetch https://android.intel.com/a/bsp/platform/bootable/iago refs/changes/12/163212/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
-    'git fetch https://android.intel.com/a/bsp/platform/bootable/userfastboot refs/changes/15/163215/1 && git checkout FETCH_HEAD',  # no upstream code, necessary change
-    'git fetch https://android.intel.com/a/aosp/platform/frameworks/av refs/changes/18/163218/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
-    'git fetch https://android.intel.com/a/aosp/platform/system/netd refs/changes/19/163219/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
-    'git fetch https://android.intel.com/a/aosp/platform/system/vold refs/changes/20/163220/1 && git checkout FETCH_HEAD',  # upstream has no change, but necessary
-
 ]
 
 dirty_repos = [
