@@ -1,20 +1,19 @@
-From ba1171e839abaaa5843a134ea98c1c8e64f845d6 Mon Sep 17 00:00:00 2001
+From 4eba95e946da6c08900c3a5baac022244513df5b Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Tue, 11 Feb 2014 16:26:37 +0800
-Subject: [PATCH 1/2] v8: x64 support
+Date: Mon, 10 Mar 2014 21:49:05 +0800
+Subject: [PATCH] v8: x64 support
 
 ---
- build/android.gypi   | 18 +++++++++++++++---
- build/toolchain.gypi |  2 +-
- src/sampler.cc       | 17 +++++++++++++++++
- 3 files changed, 33 insertions(+), 4 deletions(-)
+ build/android.gypi | 18 +++++++++++++++---
+ src/sampler.cc     | 17 +++++++++++++++++
+ 2 files changed, 32 insertions(+), 3 deletions(-)
 
 diff --git a/build/android.gypi b/build/android.gypi
-index 0ea899d..1e1fa99 100644
+index 2f32be0..3606663 100644
 --- a/build/android.gypi
 +++ b/build/android.gypi
-@@ -184,9 +184,14 @@
-                   '-L<(android_stlport_libs)/x86',
+@@ -189,9 +189,14 @@
+                   '-L<(android_stlport_libs)/arm64',
                  ],
                }],
 +              ['target_arch=="x64"', {
@@ -29,7 +28,7 @@ index 0ea899d..1e1fa99 100644
              # The x86 toolchain currently has problems with stack-protector.
              'cflags!': [
                '-fstack-protector',
-@@ -238,8 +243,15 @@
+@@ -252,8 +257,15 @@
        }],  # _toolset=="target"
        # Settings for building host targets using the system toolchain.
        ['_toolset=="host"', {
@@ -47,24 +46,11 @@ index 0ea899d..1e1fa99 100644
          'ldflags!': [
            '-Wl,-z,noexecstack',
            '-Wl,--gc-sections',
-diff --git a/build/toolchain.gypi b/build/toolchain.gypi
-index badac26..03251f1 100644
---- a/build/toolchain.gypi
-+++ b/build/toolchain.gypi
-@@ -407,7 +407,7 @@
-           }],
-         ],
-       }],
--      ['(OS=="linux") and (v8_target_arch=="x64")', {
-+      ['(OS=="linux" or OS=="android") and (v8_target_arch=="x64")', {
-         # Check whether the host compiler and target compiler support the
-         # '-m64' option and set it if so.
-         'target_conditions': [
 diff --git a/src/sampler.cc b/src/sampler.cc
-index cb98b6f..7e6d579 100644
+index 33f46c7..f108667 100644
 --- a/src/sampler.cc
 +++ b/src/sampler.cc
-@@ -146,6 +146,23 @@ typedef struct ucontext {
+@@ -159,6 +159,23 @@ typedef struct ucontext {
    // Other fields are not used by V8, don't define them here.
  } ucontext_t;
  enum { REG_EBP = 6, REG_ESP = 7, REG_EIP = 14 };

@@ -1,7 +1,7 @@
-From 4d7ce22de0fba6665df9c1e0d2a02baceae5ec7b Mon Sep 17 00:00:00 2001
+From 87cf9a0e27e79ad8e23ef6f9d255401deed2d48d Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Wed, 26 Feb 2014 17:18:26 +0800
-Subject: [PATCH 06/11] Add x86_64 ucontext structure for Android x64
+Date: Mon, 10 Mar 2014 20:46:22 +0800
+Subject: [PATCH 3/8] Add x86_64 ucontext structure for Android x64
 
 ---
  sandbox/linux/services/android_ucontext.h        |   2 +

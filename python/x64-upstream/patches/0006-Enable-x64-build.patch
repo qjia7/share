@@ -1,20 +1,20 @@
-From 270abf7103e9d5fa4e7eb06f45417d1f98461641 Mon Sep 17 00:00:00 2001
+From e38f5d0e922fbcb8dca5369de9d29653539d6380 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Thu, 20 Feb 2014 13:16:56 +0800
-Subject: [PATCH 11/11] Enable x64 build
+Subject: [PATCH 6/8] Enable x64 build
 
 ---
- build/common.gypi                |   38 ++++++++++++++++++++++++++++++++++++--
- build/config/android/config.gni  |    2 ++
- build/config/sysroot.gni         |    2 ++
- build/toolchain/android/BUILD.gn |   13 +++++++++++++
+ build/common.gypi                | 38 ++++++++++++++++++++++++++++++++++++--
+ build/config/android/config.gni  |  2 ++
+ build/config/sysroot.gni         |  2 ++
+ build/toolchain/android/BUILD.gn | 13 +++++++++++++
  4 files changed, 53 insertions(+), 2 deletions(-)
 
 diff --git a/build/common.gypi b/build/common.gypi
-index f0201a8..d93fa10 100644
+index fca190c..131af14 100644
 --- a/build/common.gypi
 +++ b/build/common.gypi
-@@ -1420,6 +1420,12 @@
+@@ -1434,6 +1434,12 @@
                'android_ndk_sysroot%': '<(android_ndk_root)/platforms/android-14/arch-x86',
                'android_toolchain%': '<(android_ndk_root)/toolchains/x86-4.6/prebuilt/<(host_os)-<(android_host_arch)/bin',
              }],
@@ -27,7 +27,7 @@ index f0201a8..d93fa10 100644
              ['target_arch=="arm"', {
                'conditions': [
                  ['arm_version<7', {
-@@ -3253,6 +3259,35 @@
+@@ -3269,6 +3275,35 @@
                }],
              ],
            }],
@@ -63,7 +63,7 @@ index f0201a8..d93fa10 100644
            ['target_arch=="arm"', {
              'target_conditions': [
                ['_toolset=="target"', {
-@@ -3979,7 +4014,7 @@
+@@ -4001,7 +4036,7 @@
                    '-L<(android_stlport_libs_dir)',
                  ],
                }],
@@ -72,7 +72,7 @@ index f0201a8..d93fa10 100644
                  # The x86 toolchain currently has problems with stack-protector.
                  'cflags!': [
                    '-fstack-protector',
-@@ -3993,7 +4028,6 @@
+@@ -4015,7 +4050,6 @@
                ['_type=="executable"', {
                  'ldflags': [
                    '-Bdynamic',
@@ -138,5 +138,5 @@ index 8f84f69..f0e1842 100644
    prefix = "$android_ndk_root/toolchains/arm-linux-androideabi-4.6/prebuilt/$build_os-$android_host_arch/bin/arm-linux-androideabi-"
    cc  = prefix + "gcc"
 -- 
-1.7.10.4
+1.8.3.2
 

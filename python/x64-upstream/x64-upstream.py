@@ -13,16 +13,13 @@ dir_script = sys.path[0]
 patches = {
     'src': [
         '0001-Fix-build-issues-in-base-for-Android-x64.patch',
-        '0002-Fix-build-issues-in-net-for-Android-x64.patch',
-        '0003-Fix-build-issues-in-android_webview-for-Android-x64.patch',
-        '0004-Fix-build-issues-in-content-for-Android-x64.patch',
-        '0005-Fix-build-issues-in-chrome-for-Android-x64.patch',
-        '0006-Add-x86_64-ucontext-structure-for-Android-x64.patch',
-        '0009-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
-        '0010-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
-        '0011-Enable-x64-build.patch',
-        '0012-fix-build-error-in-base-and-content.patch',
-        '0013-fix-type-cast-bugs-in-chrome.patch'
+        '0002-Fix-build-issues-in-android_webview-for-Android-x64.patch',
+        '0003-Add-x86_64-ucontext-structure-for-Android-x64.patch',
+        '0004-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
+        '0005-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
+        '0006-Enable-x64-build.patch',
+        '0007-fix-build-error-in-base-and-content.patch',
+        '0008-fix-type-cast-bugs-in-chrome.patch'
     ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
@@ -111,7 +108,7 @@ def sync(force=False):
 
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
-        rev = 'e330a51eb70194ef1c817c3f56ccb520654aaea7'
+        rev = '6a90ea4268d962874120448b4f39da69e7b7d20c'
         cmd += ' --revision src@' + rev
     result = execute(cmd, show_progress=True)
     if result[0]:

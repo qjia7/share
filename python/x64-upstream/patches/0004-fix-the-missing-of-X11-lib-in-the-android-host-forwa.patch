@@ -1,7 +1,7 @@
-From 913481585d8d0fd258c48bba4677719f6f6547dd Mon Sep 17 00:00:00 2001
+From 202e5c0af88378f84a1f7e7803a551668ca469df Mon Sep 17 00:00:00 2001
 From: "jie.chen" <jie.a.chen@intel.com>
 Date: Mon, 24 Feb 2014 06:42:33 +0800
-Subject: [PATCH] fix the missing of X11 lib in the android host forwarder
+Subject: [PATCH 4/8] fix the missing of X11 lib in the android host forwarder
  tools
 
 ---

@@ -1,7 +1,7 @@
-From 02a3f7d65ccb782b75293e3292c099351804c725 Mon Sep 17 00:00:00 2001
+From bcc286f4d4aec253aa17d4b240c3be191202643a Mon Sep 17 00:00:00 2001
 From: "jie.chen" <jie.a.chen@intel.com>
 Date: Wed, 26 Feb 2014 08:01:57 +0800
-Subject: [PATCH] fix build error in base and content
+Subject: [PATCH 7/8] fix build error in base and content
 
 ---
  base/strings/string_piece_unittest.cc                     |  6 ++++--

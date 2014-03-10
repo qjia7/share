@@ -1,61 +1,14 @@
-From 46b493f161067489e1f637eb76588f01206ae08b Mon Sep 17 00:00:00 2001
+From 4b0be66c84f48ccf2cd476cace5041065da6a3aa Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Thu, 27 Feb 2014 13:35:15 +0800
-Subject: [PATCH 01/12] Fix build issues in base/ for Android x64
+Date: Mon, 10 Mar 2014 20:25:26 +0800
+Subject: [PATCH 1/8] Fix build issues in base/ for Android x64
 
-This CL fixes several issues when building files under base/ for
-Android x64.
 ---
- base/android/java_handler_thread.cc |    3 ++-
- base/android/java_handler_thread.h  |    2 +-
- base/base.gyp                       |    2 +-
- base/debug/proc_maps_linux.cc       |    4 ++++
- base/debug/stack_trace_android.cc   |    9 +++++++--
- base/i18n/rtl.cc                    |   15 ++++++++++-----
- base/json/json_writer.cc            |    4 ++--
- base/os_compat_android.cc           |    4 ++--
- 8 files changed, 29 insertions(+), 14 deletions(-)
+ base/debug/proc_maps_linux.cc     | 4 ++++
+ base/debug/stack_trace_android.cc | 9 +++++++--
+ base/os_compat_android.cc         | 4 ++--
+ 3 files changed, 13 insertions(+), 4 deletions(-)
 
-diff --git a/base/android/java_handler_thread.cc b/base/android/java_handler_thread.cc
-index ce5d0fe..18e1440 100644
---- a/base/android/java_handler_thread.cc
-+++ b/base/android/java_handler_thread.cc
-@@ -46,7 +46,8 @@ void JavaHandlerThread::Start() {
- void JavaHandlerThread::Stop() {
- }
- 
--void JavaHandlerThread::InitializeThread(JNIEnv* env, jobject obj, jint event) {
-+void JavaHandlerThread::InitializeThread(JNIEnv* env, jobject obj,
-+                                         jlong event) {
-   // TYPE_JAVA to get the Android java style message loop.
-   message_loop_.reset(new base::MessageLoop(base::MessageLoop::TYPE_JAVA));
-   static_cast<MessageLoopForUI*>(message_loop_.get())->Start();
-diff --git a/base/android/java_handler_thread.h b/base/android/java_handler_thread.h
-index 9f66d66..5670f7d 100644
---- a/base/android/java_handler_thread.h
-+++ b/base/android/java_handler_thread.h
-@@ -33,7 +33,7 @@ class BASE_EXPORT JavaHandlerThread {
- 
-   // Called from java on the newly created thread.
-   // Start() will not return before this methods has finished.
--  void InitializeThread(JNIEnv* env, jobject obj, jint event);
-+  void InitializeThread(JNIEnv* env, jobject obj, jlong event);
- 
-   static bool RegisterBindings(JNIEnv* env);
- 
-diff --git a/base/base.gyp b/base/base.gyp
-index dc29040..d4b40f5 100644
---- a/base/base.gyp
-+++ b/base/base.gyp
-@@ -128,7 +128,7 @@
-         }],
-         ['OS == "android" and _toolset == "target"', {
-           'conditions': [
--            ['target_arch == "ia32"', {
-+            ['target_arch == "ia32" or target_arch == "x64"', {
-               'sources/': [
-                 ['include', '^atomicops_internals_x86_gcc\\.cc$'],
-               ],
 diff --git a/base/debug/proc_maps_linux.cc b/base/debug/proc_maps_linux.cc
 index b7a5862..ad4c466 100644
 --- a/base/debug/proc_maps_linux.cc
@@ -74,7 +27,7 @@ index b7a5862..ad4c466 100644
  namespace base {
  namespace debug {
 diff --git a/base/debug/stack_trace_android.cc b/base/debug/stack_trace_android.cc
-index 257e823..7ed5795 100644
+index 257e823..705c549 100644
 --- a/base/debug/stack_trace_android.cc
 +++ b/base/debug/stack_trace_android.cc
 @@ -104,12 +104,17 @@ void StackTrace::OutputToStream(std::ostream* os) const {
@@ -97,69 +50,6 @@ index 257e823..7ed5795 100644
      } else {
        *os << "<unknown>";
      }
-diff --git a/base/i18n/rtl.cc b/base/i18n/rtl.cc
-index 851b036..84dc51f 100644
---- a/base/i18n/rtl.cc
-+++ b/base/i18n/rtl.cc
-@@ -263,15 +263,18 @@ bool AdjustStringForLocaleDirection(string16* text) {
-   bool has_rtl_chars = StringContainsStrongRTLChars(*text);
-   if (!ui_direction_is_rtl && has_rtl_chars) {
-     WrapStringWithRTLFormatting(text);
--    text->insert(0U, 1U, kLeftToRightMark);
-+    text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
-+                 kLeftToRightMark);
-     text->push_back(kLeftToRightMark);
-   } else if (ui_direction_is_rtl && has_rtl_chars) {
-     WrapStringWithRTLFormatting(text);
--    text->insert(0U, 1U, kRightToLeftMark);
-+    text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
-+                 kRightToLeftMark);
-     text->push_back(kRightToLeftMark);
-   } else if (ui_direction_is_rtl) {
-     WrapStringWithLTRFormatting(text);
--    text->insert(0U, 1U, kRightToLeftMark);
-+    text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
-+                 kRightToLeftMark);
-     text->push_back(kRightToLeftMark);
-   } else {
-     return false;
-@@ -332,7 +335,8 @@ void WrapStringWithLTRFormatting(string16* text) {
-     return;
- 
-   // Inserting an LRE (Left-To-Right Embedding) mark as the first character.
--  text->insert(0U, 1U, kLeftToRightEmbeddingMark);
-+  text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
-+               kLeftToRightEmbeddingMark);
- 
-   // Inserting a PDF (Pop Directional Formatting) mark as the last character.
-   text->push_back(kPopDirectionalFormatting);
-@@ -343,7 +347,8 @@ void WrapStringWithRTLFormatting(string16* text) {
-     return;
- 
-   // Inserting an RLE (Right-To-Left Embedding) mark as the first character.
--  text->insert(0U, 1U, kRightToLeftEmbeddingMark);
-+  text->insert(static_cast<size_t>(0), static_cast<size_t>(1),
-+               kRightToLeftEmbeddingMark);
- 
-   // Inserting a PDF (Pop Directional Formatting) mark as the last character.
-   text->push_back(kPopDirectionalFormatting);
-diff --git a/base/json/json_writer.cc b/base/json/json_writer.cc
-index efe57ec..d14c92c 100644
---- a/base/json/json_writer.cc
-+++ b/base/json/json_writer.cc
-@@ -96,10 +96,10 @@ bool JSONWriter::BuildJSONString(const Value* const node, size_t depth) {
-       // The JSON spec requires that non-integer values in the range (-1,1)
-       // have a zero before the decimal point - ".52" is not valid, "0.52" is.
-       if (real[0] == '.') {
--        real.insert(0U, 1U, '0');
-+        real.insert(static_cast<size_t>(0), static_cast<size_t>(1), '0');
-       } else if (real.length() > 1 && real[0] == '-' && real[1] == '.') {
-         // "-.1" bad "-0.1" good
--        real.insert(1U, 1U, '0');
-+        real.insert(static_cast<size_t>(1), static_cast<size_t>(1), '0');
-       }
-       json_string_->append(real);
-       return result;
 diff --git a/base/os_compat_android.cc b/base/os_compat_android.cc
 index ec221e4..dc7922a 100644
 --- a/base/os_compat_android.cc
@@ -176,5 +66,5 @@ index ec221e4..dc7922a 100644
    if (result < kTimeMin || result > kTimeMax)
      return -1;
 -- 
-1.7.10.4
+1.8.3.2
 

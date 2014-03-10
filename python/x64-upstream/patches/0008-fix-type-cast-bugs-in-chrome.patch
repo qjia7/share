@@ -1,7 +1,7 @@
-From 9a017871d8d4d14a8215bbfa8ce4de209194e2db Mon Sep 17 00:00:00 2001
+From 6dfc6fcdc65f6c0477ea38ca6f421580175c5ffe Mon Sep 17 00:00:00 2001
 From: "jie.chen" <jie.a.chen@intel.com>
 Date: Tue, 4 Mar 2014 05:33:51 +0800
-Subject: [PATCH] fix type cast bugs in chrome
+Subject: [PATCH 8/8] fix type cast bugs in chrome
 
 ---
  chrome/browser/memory_details_android.cc          | 4 ++--
