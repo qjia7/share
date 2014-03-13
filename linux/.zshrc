@@ -684,7 +684,6 @@ symbolic_link $PYTHON_DIR chromium64.py $PROJECT_DIR/android-ia
 
 # Skia
 symbolic_link $PYTHON_DIR skia.py $PROJECT_DIR/skia
-#export ANDROID_SDK_ROOT=/workspace/topic/skia/adt-bundle-linux-x86_64/sdk
 
 # sublime
 export PATH=$PATH:/workspace/software/sublime
@@ -722,7 +721,7 @@ export PATH=$PATH:$JAVA_HOME/bin
 hostname=$(hostname)
 
 if [ $hostname == "ubuntu-ygu5-01" -o $hostname == "ubuntu-ygu5-02" ] ; then
-    cd /workspace/project/abt-x64 && source /workspace/project/abt-x64/build/envsetup.sh >/dev/null && lunch hsb_64-eng >/dev/null
+    cd /workspace/project/acr64
 elif [ $hostname == "ubuntu-y560d" ] ; then
     cd /workspace/project/gyagp/share
 else
