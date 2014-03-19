@@ -405,7 +405,9 @@ for i in gedit meld komodo sublime_text gigolo; do
     alias "$i=z $i"
 done
 
-source /workspace/project/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+if [ -d /workspace/project/zsh/zsh-syntax-highlighting ]; then
+    source /workspace/project/zsh/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+fi
 
 [[ -s "$HOME/.pythonbrew/etc/bashrc" ]] && source "$HOME/.pythonbrew/etc/bashrc"
 
