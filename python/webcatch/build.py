@@ -63,6 +63,8 @@ expectfail_list = [
     241661, 241848,
 ]
 
+run_chromium_script = 'python ../chromium.py'
+
 ################################################################################
 
 
@@ -365,7 +367,7 @@ def patch_before_build(os, arch, module, rev):
 
 def move_to_server(file, os, arch, module):
     dir_comb_server = dir_out_server + '/' + get_comb_name(os, arch, module)
-    execute('scp ' + file + ' ' + server + ':' + dir_comb_server)
+    execute('scp ' + file + ' gyagp@' + server + ':' + dir_comb_server)
     execute('rm -f ' + file)
 
 
@@ -389,7 +391,7 @@ def build_one(build_next):
     commit = rev_commit[rev]
     dir_repo = dir_project + '/chromium-' + os
 
-    cmd_sync = 'python chromium.py -u "sync -f -n -j16 --revision src@' + commit + '"' + ' -d ' + dir_repo
+    cmd_sync = run_chromium_script + ' -u "sync -f -n -j16 --revision src@' + commit + '"' + ' -d ' + dir_repo
     result = execute(cmd_sync, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         execute(remotify_cmd('rm -f ' + file_lock))
@@ -397,7 +399,7 @@ def build_one(build_next):
 
     patch_after_sync(os, arch, module, rev)
 
-    cmd_gen_mk = 'python chromium.py --gen-mk --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
+    cmd_gen_mk = run_chromium_script + ' --gen-mk --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_gen_mk, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         # Run hook to retry. E.g., for revision >=252065, we have to run with hook to update gn tool.
@@ -410,7 +412,7 @@ def build_one(build_next):
 
     patch_before_build(os, arch, module, rev)
 
-    cmd_build = 'python chromium.py -b --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
+    cmd_build = run_chromium_script + ' -b --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_build, dryrun=DRYRUN, show_progress=True)
 
     # Retry here
@@ -502,7 +504,7 @@ def rev_is_built(os, arch, module, rev):
     else:
         cmd = remotify_cmd('ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*')
 
-    result = execute(cmd, show_command=False)
+    result = execute(cmd, show_command=True)
     if result[0] == 0:
         return True
 
@@ -629,14 +631,14 @@ def update_git_info(fetch=True):
     for os in os_info:
         if fetch:
             dir_repo = dir_project + '/chromium-' + os
-            execute('python chromium.py -u "fetch" --root-dir ' + dir_repo, dryrun=DRYRUN)
+            execute(run_chromium_script + ' -u "fetch" --root-dir ' + dir_repo, dryrun=DRYRUN)
             os_info[os][OS_INFO_INDEX_TIME] = get_time()
         update_git_info_one(os)
 
 
 # Patch command if it needs to run on build server
 def remotify_cmd(cmd):
-    return 'ssh ' + server + ' ' + cmd
+    return 'ssh gyagp@' + server + ' ' + cmd
 
 
 def clean_lock():
