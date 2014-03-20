@@ -12,6 +12,7 @@
 # sudo /workspace/project/chromium/git_upstream/src/build/install-build-deps.sh. This file would help to install many development tools.
 # Set keyboard shortcut: "nautilus /workspace" -> ctrl+alt+E
 # Set input method: gnome-session-properties
+# install jdk 1.6.0.45: copy /usr/lib/jvm/jdk1.6.0_45/
 
 from util import *
 import os as OS
