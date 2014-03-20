@@ -95,6 +95,7 @@ examples:
     parser.add_argument('--layout-test', dest='layout_test', help='cases to run against')
     parser.add_argument('-i', '--install', dest='install', help='install chrome for android', choices=['release', 'debug'])
     parser.add_argument('--log-file', dest='log_file', help='log file to record log', default='')
+    parser.add_argument('--rev', dest='rev', help='revision')
 
     args = parser.parse_args()
 
@@ -204,7 +205,14 @@ def gen_makefile():
     backup_dir(src_dir)
     if target_os == 'android':
         # We can't omit this step as android_gyp is a built-in command, instead of environmental variable.
-        cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror= -Duse_goma=0')
+        if target_module == 'webview':
+            if target_arch == 'x86':
+                target_arch_temp = 'ia32'
+            else:
+                target_arch_temp = target_arch
+            cmd = bashify('. build/android/envsetup.sh && android_gyp -Dwerror= -Duse_goma=0 -Dtarget_arch=' + target_arch_temp)
+        else:
+            cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror= -Duse_goma=0')
     else:
         cmd = 'build/gyp_chromium -Dwerror='
 

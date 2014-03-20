@@ -15,6 +15,8 @@
 
 # Chromium revision can be checked at https://src.chromium.org/viewvc/chrome?view=revision&revision=xxxxxx
 
+import sys
+sys.path.append(sys.path[0] + '/..')
 from util import *
 from common import *
 
@@ -162,9 +164,16 @@ def setup():
         for build in os_info[os][OS_INFO_INDEX_BUILD]:
             arch = build[OS_INFO_INDEX_BUILD_ARCH]
             module = build[OS_INFO_INDEX_BUILD_MODULE]
-            dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
-            if not OS.path.exists(dir_comb):
-                OS.mkdir(dir_comb)
+            dir_comb_slave = dir_out + '/' + get_comb_name(os, arch, module)
+            dir_comb_server = dir_out_server + '/' + get_comb_name(os, arch, module)
+            # Make dir_comb for slave
+            if not OS.path.exists(dir_comb_slave):
+                OS.mkdir(dir_comb_slave)
+            # Make dir_comb for server
+
+            result = execute(remotify_cmd('ls ' + dir_comb_server))
+            if result[0]:
+                execute(remotify_cmd('mkdir -p ' + dir_comb_server))
 
     if args.build_every:
         build_every = int(args.build_every)
@@ -315,7 +324,7 @@ def patch_src_sampling():
 
 
 # Patch the code to solve some build error problem in upstream
-def patch(os, arch, module, rev):
+def patch_after_sync(os, arch, module, rev):
     dir_repo = dir_project + '/chromium-' + os
     backup_dir(dir_repo)
 
@@ -346,6 +355,14 @@ def patch(os, arch, module, rev):
     restore_dir()
 
 
+def patch_before_build(os, arch, module, rev):
+    dir_repo = dir_project + '/chromium-' + os
+
+    # For 7c849b3d759fa9fedd7d4aea73577d643465918d (rev 253545)
+    # http://comments.gmane.org/gmane.comp.web.chromium.devel/50482
+    execute('rm -f ' + dir_repo + '/src/out/Release/gen/templates/org/chromium/base/ActivityState.java')
+
+
 def move_to_server(file, os, arch, module):
     dir_comb_server = dir_out_server + '/' + get_comb_name(os, arch, module)
     execute('scp ' + file + ' ' + server + ':' + dir_comb_server)
@@ -372,15 +389,15 @@ def build_one(build_next):
     commit = rev_commit[rev]
     dir_repo = dir_project + '/chromium-' + os
 
-    cmd_sync = 'python chromium.py -u "sync -f -n --revision src@' + commit + '"' + ' -d ' + dir_repo
+    cmd_sync = 'python chromium.py -u "sync -f -n -j16 --revision src@' + commit + '"' + ' -d ' + dir_repo
     result = execute(cmd_sync, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         execute(remotify_cmd('rm -f ' + file_lock))
         error('Sync failed', error_code=result[0])
 
-    patch(os, arch, module, rev)
+    patch_after_sync(os, arch, module, rev)
 
-    cmd_gen_mk = 'python chromium.py --gen-mk --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo
+    cmd_gen_mk = 'python chromium.py --gen-mk --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_gen_mk, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         # Run hook to retry. E.g., for revision >=252065, we have to run with hook to update gn tool.
@@ -391,7 +408,9 @@ def build_one(build_next):
             execute(remotify_cmd('rm -f ' + file_lock))
             error('Failed to generate makefile')
 
-    cmd_build = 'python chromium.py -b --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --log-file ' + file_log
+    patch_before_build(os, arch, module, rev)
+
+    cmd_build = 'python chromium.py -b --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_build, dryrun=DRYRUN, show_progress=True)
 
     # Retry here
@@ -411,6 +430,14 @@ def build_one(build_next):
         else:
             file_final = dir_comb + '/' + str(rev) + '.apk'
             execute('cp ' + dir_repo + '/src/out/Release/apks/ContentShell.apk ' + file_final, dryrun=DRYRUN)
+            execute('rm -f ' + file_log)
+    elif os == 'android' and module == 'webview':
+        if result[0]:
+            file_final = dir_comb + '/' + str(rev) + '.FAIL'
+            execute('touch ' + file_final)
+        else:
+            file_final = dir_comb + '/' + str(rev) + '.apk'
+            execute('cp ' + dir_repo + '/src/out/Release/apks/AndroidWebView.apk ' + file_final, dryrun=DRYRUN)
             execute('rm -f ' + file_log)
     elif os == 'linux' and module == 'chrome':
         dest_dir = dir_comb + '/' + str(rev)
