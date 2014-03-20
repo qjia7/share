@@ -1,11 +1,11 @@
-From 87cf9a0e27e79ad8e23ef6f9d255401deed2d48d Mon Sep 17 00:00:00 2001
-From: Yang Gu <yang.gu@intel.com>
-Date: Mon, 10 Mar 2014 20:46:22 +0800
-Subject: [PATCH 3/8] Add x86_64 ucontext structure for Android x64
+From ad060055f42a0d8c088410f80ef602778dddab0c Mon Sep 17 00:00:00 2001
+From: Zhenyu Liang <zhenyu.liang@intel.com>
+Date: Thu, 20 Mar 2014 20:19:08 +0800
+Subject: [PATCH 3/4] Add x86_64 ucontext structure for Android x64
 
 ---
- sandbox/linux/services/android_ucontext.h        |   2 +
- sandbox/linux/services/android_x86_64_ucontext.h | 153 +++++++++++++++++++++++
+ sandbox/linux/services/android_ucontext.h        |    2 +
+ sandbox/linux/services/android_x86_64_ucontext.h |  153 ++++++++++++++++++++++
  2 files changed, 155 insertions(+)
  create mode 100644 sandbox/linux/services/android_x86_64_ucontext.h
 
@@ -182,5 +182,5 @@ index 0000000..f423811
 +
 +#endif /* sys/ucontext.h */
 -- 
-1.8.3.2
+1.7.10.4
 

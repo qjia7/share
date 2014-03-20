@@ -12,14 +12,10 @@ dir_script = sys.path[0]
 
 patches = {
     'src': [
-        '0001-Fix-build-issues-in-base-for-Android-x64.patch',
+        '0001-Enable-GN-build-for-Android-x64.patch',
         '0002-Fix-build-issues-in-android_webview-for-Android-x64.patch',
         '0003-Add-x86_64-ucontext-structure-for-Android-x64.patch',
-        '0004-fix-the-missing-of-X11-lib-in-the-android-host-forwa.patch',
-        '0005-Use-pthread_cond_timedwait_relative_np-in-Android.patch',
-        '0006-Enable-x64-build.patch',
-        '0007-fix-build-error-in-base-and-content.patch',
-        '0008-fix-type-cast-bugs-in-chrome.patch'
+        '0004-Fix-type-conversion-issues-for-Android-x64.patch'
     ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
@@ -32,7 +28,6 @@ patches = {
     'ndk': [
         '0001-ndk-Add-gyp-files.patch',
         '0002-ndk-fix-for-Android-x64.patch',
-        '0003-ndk-forcedly-define-ELFSIZE-for-64.patch'
     ],
 }
 
@@ -108,7 +103,7 @@ def sync(force=False):
 
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
-        rev = '6a90ea4268d962874120448b4f39da69e7b7d20c'
+        rev = '63a3e1a08f173831624289e36a4697b729a590c4'
         cmd += ' --revision src@' + rev
     result = execute(cmd, show_progress=True)
     if result[0]:
@@ -175,6 +170,9 @@ def set_ndk(force=False):
 
     if not OS.path.exists('ndk'):
         error('Please put ndk under ' + get_symbolic_link_dir())
+
+    if not OS.path.exists('ndk/platforms/android-19/arch-x86_64'):
+        execute('ln -s ../android-20/arch-x86_64 ndk/platforms/android-19/arch-x86_64')
 
     if not OS.path.islink('src/third_party/android_tools/ndk'):
         # Create symbolic link to real ndk

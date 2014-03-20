@@ -1,19 +1,19 @@
-From 61865f014d1e334dc801e28b2128441f7e39222f Mon Sep 17 00:00:00 2001
-From: Yang Gu <yang.gu@intel.com>
-Date: Mon, 10 Mar 2014 20:31:58 +0800
-Subject: [PATCH 2/8] Fix build issues in android_webview/ for Android x64
+From 295a0a7f76922b71ccd3df782d3725b17d15e9aa Mon Sep 17 00:00:00 2001
+From: Zhenyu Liang <zhenyu.liang@intel.com>
+Date: Thu, 20 Mar 2014 20:17:37 +0800
+Subject: [PATCH 2/4] Fix build issues in android_webview/ for Android x64
 
 ---
- .../browser/gpu_memory_buffer_factory_impl.cc      |  4 ++--
- .../org/chromium/android_webview/AwContents.java   | 28 +++++++++++-----------
- .../chromium/android_webview/AwDevToolsServer.java |  8 +++----
- .../chromium/android_webview/AwPdfExporter.java    |  2 +-
- .../org/chromium/android_webview/AwSettings.java   |  2 +-
- android_webview/native/aw_contents.cc              | 24 ++++++++++---------
- android_webview/native/aw_contents.h               |  6 ++---
- android_webview/native/aw_dev_tools_server.cc      |  8 +++----
- android_webview/native/aw_pdf_exporter.cc          |  2 +-
- android_webview/public/browser/draw_gl.h           | 14 +++++------
+ .../browser/gpu_memory_buffer_factory_impl.cc      |    4 +--
+ .../org/chromium/android_webview/AwContents.java   |   28 ++++++++++----------
+ .../chromium/android_webview/AwDevToolsServer.java |    8 +++---
+ .../chromium/android_webview/AwPdfExporter.java    |    2 +-
+ .../org/chromium/android_webview/AwSettings.java   |    2 +-
+ android_webview/native/aw_contents.cc              |   24 +++++++++--------
+ android_webview/native/aw_contents.h               |    6 ++---
+ android_webview/native/aw_dev_tools_server.cc      |    8 +++---
+ android_webview/native/aw_pdf_exporter.cc          |    2 +-
+ android_webview/public/browser/draw_gl.h           |   14 +++++-----
  10 files changed, 50 insertions(+), 48 deletions(-)
 
 diff --git a/android_webview/browser/gpu_memory_buffer_factory_impl.cc b/android_webview/browser/gpu_memory_buffer_factory_impl.cc
@@ -39,10 +39,10 @@ index c4a6cac..7b8b9d0 100644
      return NULL;
  
 diff --git a/android_webview/java/src/org/chromium/android_webview/AwContents.java b/android_webview/java/src/org/chromium/android_webview/AwContents.java
-index 73fa49a..bbeca45 100644
+index 02453f4..23e1a05 100644
 --- a/android_webview/java/src/org/chromium/android_webview/AwContents.java
 +++ b/android_webview/java/src/org/chromium/android_webview/AwContents.java
-@@ -527,7 +527,7 @@ public class AwContents {
+@@ -543,7 +543,7 @@ public class AwContents {
      }
  
      private static ContentViewCore createAndInitializeContentViewCore(ViewGroup containerView,
@@ -51,7 +51,7 @@ index 73fa49a..bbeca45 100644
              GestureStateListener gestureStateListener,
              ContentViewClient contentViewClient,
              ContentViewCore.ZoomControlsDelegate zoomControlsDelegate) {
-@@ -567,7 +567,7 @@ public class AwContents {
+@@ -583,7 +583,7 @@ public class AwContents {
          // bind all the native->java relationships.
          mCleanupReference = new CleanupReference(this, new DestroyRunnable(mNativeAwContents));
  
@@ -60,7 +60,7 @@ index 73fa49a..bbeca45 100644
          mContentViewCore = createAndInitializeContentViewCore(
                  mContainerView, mInternalAccessAdapter, nativeWebContents,
                  new AwGestureStateListener(), mContentViewClient, mZoomControls);
-@@ -586,7 +586,7 @@ public class AwContents {
+@@ -602,7 +602,7 @@ public class AwContents {
       * provide the AwContents to host the pop up content.
       */
      public void supplyContentsForPopup(AwContents newContents) {
@@ -69,7 +69,7 @@ index 73fa49a..bbeca45 100644
          if (popupNativeAwContents == 0) {
              Log.w(TAG, "Popup WebView bind failed: no pending content.");
              if (newContents != null) newContents.destroy();
-@@ -602,7 +602,7 @@ public class AwContents {
+@@ -618,7 +618,7 @@ public class AwContents {
  
      // Recap: supplyContentsForPopup() is called on the parent window's content, this method is
      // called on the popup window's content.
@@ -78,7 +78,7 @@ index 73fa49a..bbeca45 100644
          mDeferredShouldOverrideUrlLoadingIsPendingForPopup = true;
          // Save existing view state.
          final boolean wasAttached = mIsAttachedToWindow;
-@@ -689,15 +689,15 @@ public class AwContents {
+@@ -705,15 +705,15 @@ public class AwContents {
          return mAwPdfExporter;
      }
  
@@ -97,7 +97,7 @@ index 73fa49a..bbeca45 100644
          return nativeGetAwDrawGLFunction();
      }
  
-@@ -724,7 +724,7 @@ public class AwContents {
+@@ -740,7 +740,7 @@ public class AwContents {
          return nativeGetNativeInstanceCount();
      }
  
@@ -106,7 +106,7 @@ index 73fa49a..bbeca45 100644
          // Only called during early construction, so client should not have had a chance to
          // call destroy yet.
          assert mNativeAwContents != 0;
-@@ -2037,9 +2037,9 @@ public class AwContents {
+@@ -2067,9 +2067,9 @@ public class AwContents {
  
      private static native long nativeInit(AwBrowserContext browserContext);
      private static native void nativeDestroy(long nativeAwContents);
@@ -119,7 +119,7 @@ index 73fa49a..bbeca45 100644
      private static native int nativeGetNativeInstanceCount();
      private static native void nativeSetShouldDownloadFavicons();
      private native void nativeSetJavaPeers(long nativeAwContents, AwContents awContents,
-@@ -2047,7 +2047,7 @@ public class AwContents {
+@@ -2077,7 +2077,7 @@ public class AwContents {
              AwContentsClientBridge contentsClientBridge,
              AwContentsIoThreadClient ioThreadClient,
              InterceptNavigationDelegate navigationInterceptionDelegate);
@@ -128,7 +128,7 @@ index 73fa49a..bbeca45 100644
  
      private native void nativeDocumentHasImages(long nativeAwContents, Message message);
      private native void nativeGenerateMHTML(
-@@ -2086,11 +2086,11 @@ public class AwContents {
+@@ -2116,11 +2116,11 @@ public class AwContents {
      // Returns false if restore state fails.
      private native boolean nativeRestoreFromOpaqueState(long nativeAwContents, byte[] state);
  
@@ -193,7 +193,7 @@ index 9c8f3b4..a00235b 100644
              if (mNativeAwSettings != 0) {
                  nativeDestroy(mNativeAwSettings);
 diff --git a/android_webview/native/aw_contents.cc b/android_webview/native/aw_contents.cc
-index 7e8d684..62f31f4 100644
+index 7eceea1..3b3ee8d 100644
 --- a/android_webview/native/aw_contents.cc
 +++ b/android_webview/native/aw_contents.cc
 @@ -82,7 +82,7 @@ using content::WebContents;
@@ -299,10 +299,10 @@ index 93c2f2f..acae893 100644
    void ScrollTo(JNIEnv* env, jobject obj, jint x, jint y);
    void SetDipScale(JNIEnv* env, jobject obj, jfloat dip_scale);
 diff --git a/android_webview/native/aw_dev_tools_server.cc b/android_webview/native/aw_dev_tools_server.cc
-index 8d4584d..4e1bdad 100644
+index 6129a35..fe3bffe 100644
 --- a/android_webview/native/aw_dev_tools_server.cc
 +++ b/android_webview/native/aw_dev_tools_server.cc
-@@ -200,19 +200,19 @@ bool RegisterAwDevToolsServer(JNIEnv* env) {
+@@ -199,19 +199,19 @@ bool RegisterAwDevToolsServer(JNIEnv* env) {
    return RegisterNativesImpl(env);
  }
  
@@ -377,5 +377,5 @@ index f898025..56e3064 100644
  // Set of functions used in rendering in hardware mode
  struct AwDrawGLFunctionTable {
 -- 
-1.8.3.2
+1.7.10.4
 
