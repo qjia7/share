@@ -10,56 +10,87 @@
 # sudo apt-get update && sudo apt-get dist-upgrade -y
 # Install display card driver, slickedit.
 # sudo /workspace/project/chromium/git_upstream/src/build/install-build-deps.sh. This file would help to install many development tools.
-# Run vncserver
 # Set keyboard shortcut: "nautilus /workspace" -> ctrl+alt+E
 # Set input method: gnome-session-properties
 
-import os
+from util import *
+import os as OS
 import commands
-from optparse import OptionParser
+import getpass
 
-srcDir = "/workspace/project/gyagp/share/linux"
-homeDir = os.getenv("HOME")
-user = os.getenv("USER")
+dir_repo = '/workspace/project/gyagp/share'
+dir_linux = dir_repo + '/linux'
+dir_python = dir_repo + '/python'
+dir_home = OS.getenv("HOME")
+user = OS.getenv("USER")
 profile = ''
+username = ''
 
 
-def info(msg):
-    print "[INFO] " + msg + "."
+def handle_option():
+    global args
+    parser = argparse.ArgumentParser(description='Script to install system',
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     epilog='''
+Examples:
+  python %(prog)s
+  python %(prog)s --need-update # First time running this script
+''')
+    parser.add_argument('-p', '--profile', dest='profile', help='designate profile', choices=['direct', 'proxy'], default='proxy')
+    parser.add_argument('--need-update', dest='need_update', help='need update', action='store_true')
+    args = parser.parse_args()
+
+    #if len(sys.argv) <= 1:
+    #    parser.print_help()
 
 
-def error(msg):
-    print "[ERROR] " + msg + "!"
+def setup():
+    global username, profile
+
+    username = getpass.getuser()
+
+    if args.profile == "direct":
+        profile = "direct"
+    elif args.profile == "proxy":
+        profile = "proxy"
+
+    backup_dir(dir_python)
 
 
-def patchSudo():
-    sudoFile = "10_gyagp_sudo"
-    (status, output) = commands.getstatusoutput("timeout 1s sudo cat /etc/sudoers.d/" + sudoFile)
-    if status != 0:
-        status = copyFile(sudoFile, "/etc/sudoers.d", 1)
-        if status == 0:
+def patch_sudo():
+    file_name = '10_' + username + '_sudo'
+    sudo_file = '/etc/sudoers.d/' + file_name
+
+    if OS.path.exists(sudo_file):
+        info("You were able to sudo without password")
+    else:
+        execute('sudo echo "' + username + ' ALL=NOPASSWD:ALL" >' + file_name)
+        execute('chmod 0440 ' + file_name)
+        execute('sudo chown root:root ' + file_name)
+        result = execute('sudo mv ' + file_name + ' ' + sudo_file)
+        if result[0] == 0:
             info("Now you can sudo without password")
             # No need to run following command to take effect
-            #commands.getstatusoutput("/etc/init.d/sudo restart")
-    else:
-        info("You were able to sudo without password")
+            #execute("/etc/init.d/sudo restart")
+        else:
+            warning('Failed to enable sudo')
 
 
-def copyFile(srcFile, destDir, sudo, srcSubDir=""):
+def copy_file(srcFile, destDir, sudo=False, srcSubDir=''):
     if cmp(srcSubDir, "") == 1:
-        srcPath = srcDir + "/" + srcSubDir + "/" + srcFile
+        srcPath = dir_linux + "/" + srcSubDir + "/" + srcFile
     else:
-        srcPath = srcDir + "/" + srcFile
+        srcPath = dir_linux + "/" + srcFile
 
-    if not os.path.exists(srcPath):
+    if not OS.path.exists(srcPath):
         error(srcPath + " doesn't exist")
         return -1
 
-    if os.path.exists(destDir + "/" + srcFile):
+    if OS.path.exists(destDir + "/" + srcFile):
         info(destDir + "/" + srcFile + " already exists")
         return 0
 
-    if not os.path.exists(destDir):
+    if not OS.path.exists(destDir):
         commands.getstatusoutput("mkdir -p " + destDir)
         info(srcFile + destDir + " doesn't exist, so just create it")
 
@@ -67,16 +98,16 @@ def copyFile(srcFile, destDir, sudo, srcSubDir=""):
     if sudo:
         command = "sudo " + command
 
-    (status, output) = commands.getstatusoutput(command)
-    return status
+    result = execute(command)
+    return result[0]
 
 
-def overwriteFile(srcFile, destDir, sudo, srcSubDir=""):
-    if not os.path.exists(destDir + "/" + srcFile):
+def overwrite_file(srcFile, destDir, sudo, srcSubDir=""):
+    if not OS.path.exists(destDir + "/" + srcFile):
         error(destDir + "/" + srcFile + " doesn't exist")
         return -1
 
-    if os.path.exists(destDir + "/" + srcFile + ".bk"):
+    if OS.path.exists(destDir + "/" + srcFile + ".bk"):
         info(destDir + "/" + srcFile + " was already overwritten")
         return 0
 
@@ -86,7 +117,7 @@ def overwriteFile(srcFile, destDir, sudo, srcSubDir=""):
 
     (status, output) = commands.getstatusoutput(command)
 
-    status = copyFile(srcFile, destDir, sudo, srcSubDir)
+    status = copy_file(srcFile, destDir, sudo, srcSubDir)
     if status == 0:
         info(srcFile + " has replaced the original file successfully")
     else:
@@ -95,155 +126,108 @@ def overwriteFile(srcFile, destDir, sudo, srcSubDir=""):
     return status
 
 
-def installPackage(pkg):
-    (status, output) = commands.getstatusoutput("dpkg -s " + pkg)
-    if status != 0:
-        info("Package " + pkg + " is installing...")
-        (status, output) = commands.getstatusoutput("sudo apt-get install -y " + pkg)
-        if status != 0:
-            error("Package " + pkg + "'s installation failed")
-            return -1
+def package_installed(pkg):
+    result = execute('dpkg -s ' + pkg, show_command=False)
+    if result[0]:
+        return False
+    else:
+        return True
+
+
+def install_package(pkg_list):
+    for pkg in pkg_list:
+        if package_installed(pkg):
+            info("Package " + pkg + " was already installed")
         else:
-            return 0
-
-    else:
-        info("Package " + pkg + " was already installed")
-        return -1
-
-
-def parseOption():
-    global profile
-
-    parser = OptionParser()
-    parser.add_option("-p", "--profile", dest="profile", help="designate profile", metavar="DIRECT|PROXY", default="PROXY")
-    (options, args) = parser.parse_args()
-
-    if options.profile.upper() == "DIRECT":
-        profile = "DIRECT"
-    elif options.profile.upper() == "PROXY":
-        profile = "PROXY"
-    else:
-        error("The profile is not correct")
-        exit(-1)
+            info("Package " + pkg + " is installing...")
+            result = execute("sudo apt-get install -y " + pkg, show_progress=True)
+            if result[0]:
+                warning("Package " + pkg + "'s installation failed")
 
 
-if __name__ == "__main__":
-    global profile
+def install_chromium():
+    if package_installed('google-chrome-unstable'):
+        return
 
-    parseOption()
-
-    # This should be done first
-    patchSudo()
-
-    # Update repo info
-    #copyFile("apt.conf", "/etc/apt", 1);
-    #copyFile("gyagp.list", "/etc/apt/sources.list.d", 1);
-    #(status, output) = commands.getstatusoutput("cat /etc/apt/sources.list |grep 'ubuntu.com'");
-    #if status == 0:
-    #    (status, output) = commands.getstatusoutput("awk '{print $2}' /etc/issue");
-    #    output = output[:-1];
-    #    status = overwriteFile("sources.list", "/etc/apt", 1, "apt/" + output);
-    #    if status == 0:
-    #        os.system("sudo apt-get update");
-    #else:
-    #    info("/etc/apt/sources.list was already updated");
-
-    status = installPackage("apt-file")
-    if status == 0:
-        commands.getstatusoutput("sudo apt-file update")
-
-    if profile == "PROXY":
-    # Install tsocks
-        installPackage("tsocks")
-        overwriteFile("tsocks.conf", "/etc", 1)
-    # Install privoxy
-        installPackage('privoxy')
-        copyFile('privoxy_config', '/etc/privoxy', 1)
-        os.system('sudo mv -f /etc/privoxy/privoxy_config /etc/privoxy/config')
+    execute('python upgrade.py -t chrome', show_progress=True)
+    install_package(['google-chrome-unstable'])
 
     # Install Chrome, which needs to use tsocks
-    (status, output) = commands.getstatusoutput("sudo apt-key list | grep 7FAC5991")
-
-    if status:
+    result = execute("sudo apt-key list | grep 7FAC5991")
+    if result[0]:
         info("Get the key for Chrome...")
 
         # Not sure if the key would change, so get the online one in this profile
-        if profile == "PROXY":
+        if profile == "proxy":
             command = "tsocks wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo apt-key add -"
-        elif profile == "DIRECT":
-            command = "cat " + srcDir + "/chrome_key_pub.txt | sudo apt-key add -"
+        elif profile == "direct":
+            command = "cat " + dir_linux + "/chrome_key_pub.txt | sudo apt-key add -"
 
-        (status, output) = commands.getstatusoutput(command)
-        if status != 0:
+        result = execute(command)
+        if result[0]:
             error("Key for Chrome hasn't been added correctly")
     else:
         info("Key for Chrome has been added")
 
-    installPackage("google-chrome-unstable")
+if __name__ == "__main__":
+    handle_option()
+    setup()
+
+    # This should be done first
+    patch_sudo()
+
+    if args.need_update:
+        execute('python upgrade.py')
+
+    install_package([
+        'tsocks', 'privoxy',
+        'apt-file',
+        'zsh',
+        'git', 'git-svn',
+        'gparted',
+        'gnome-shell',
+        'vim',
+        'ssh',
+        'most',
+        'binutils',
+        'vnc4server',
+        'cmake',
+        'hibernate',
+        'python-boto',
+        'ccache',
+        'alacarte',
+        # required by Chromium build
+        'libspeechd-dev', 'libgdk-pixbuf2.0-dev', 'libgtk2.0-dev', 'libdrm-dev', 'libgnome-keyring-dev', 'libgconf2-dev', 'libudev-dev',
+        'libpci-dev', 'linux-tools', 'binutils-dev', 'libelf-dev', 'gperf', 'gcc-4.7-multilib', 'g++-4.7-multilib', 'bison', 'python-pip',
+        'module-assistant', 'autoconf', 'automake', 'libnss3-dev', 'ant', 'libcups2-dev', 'libasound2-dev', 'libxss-dev',
+    ])
+
+    install_chromium()
 
     # zsh related
-    status = installPackage("zsh")
-    if status == 0:
-        copyFile(".zshrc", homeDir, 0)
-        # use sudo to bypass password input
-        commands.getstatusoutput("sudo chsh -s /bin/zsh " + user)
+    execute('rm -f ~/.zshrc')
+    execute('ln -s /workspace/project/gyagp/share/linux/.zshrc ~/')
+    execute("sudo chsh -s /bin/zsh " + user)
 
-    # git related
-    installPackage("git")
-    installPackage("git-svn")
-    copyFile("connect", "/usr/bin", 1)
-    copyFile("socks-gw", "/usr/bin", 1)
-    copyFile("git.sh", "/etc/profile.d", 1)
-    copyFile(".gitconfig", homeDir, 0)
-    if profile == "PROXY":
-        copyFile("servers", homeDir + "/subversion", 1)
+    copy_file(".gitconfig", dir_home, 0)
+    copy_file("servers", dir_home + "/subversion", 1)
+    copy_file('.boto', dir_home, 1)
+    copy_file(".bashrc", dir_home, 0)
+    copy_file(".gdbinit", dir_home, 0)
+    copy_file(".vimrc", dir_home, 0)
 
-    installPackage("gparted")
-    installPackage("gnome-shell")
-    installPackage("vim")
-    installPackage("ssh")
-    installPackage("most")
-    installPackage("binutils-gold")
-    installPackage("vnc4server")
-    installPackage("cmake")
-    installPackage("hibernate")
-    # required by Chromium build
-    installPackage("libspeechd-dev")
-    installPackage('libgdk-pixbuf2.0-dev')
-    installPackage('libgtk2.0-dev')
-    installPackage('libdrm-dev')
-    installPackage('libgnome-keyring-dev')
-    installPackage('libgconf2-dev')
-    installPackage('libudev-dev')
-    installPackage('libpci-dev')
-    installPackage('linux-tools')
-    installPackage('binutils-dev')
-    installPackage('libelf-dev')
-    installPackage('gperf')
-    installPackage('gcc-4.7-multilib')
-    installPackage('g++-4.7-multilib')
-    installPackage('bison')
-    installPackage('python-pip')
-    installPackage('module-assistant')
-    installPackage('autoconf')
-    installPackage('automake')
-    #installPackage('')
+    copy_file('privoxy_config', '/etc/privoxy', 1)
+    OS.system('sudo mv -f /etc/privoxy/privoxy_config /etc/privoxy/config')
 
-    installPackage('python-boto')
-    copyFile('.boto', '~/', 1)
+    overwrite_file("tsocks.conf", "/etc", 1)
 
-    copyFile(".bashrc", homeDir, 0)
-    copyFile(".gdbinit", homeDir, 0)
-    copyFile(".vimrc", homeDir, 0)
+    # This takes quite a long time
+    #execute('sudo apt-file update' , show_progress=True)
 
-    # ccache related
-    installPackage("ccache")
-    commands.getstatusoutput("ccache -M 10G")
+    execute("ccache -M 10G")
 
-    # specific steps for profile == "DIRECT"
-    if profile == "DIRECT":
-        installPackage("openconnect")
-        installPackage("python-zsi")
+    if profile == "direct":
+        install_package(['openconnect', 'python-zsi'])
 
     # Chromium build
     #sudo ln -s /usr/include/x86_64-linux-gnu/asm /usr/include/asm
