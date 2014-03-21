@@ -391,7 +391,7 @@ def build_one(build_next):
     commit = rev_commit[rev]
     dir_repo = dir_project + '/chromium-' + os
 
-    cmd_sync = run_chromium_script + ' -u "sync -f -n -j16 --revision src@' + commit + '"' + ' -d ' + dir_repo
+    cmd_sync = run_chromium_script + ' -u "sync -f -n -j16 --revision src@' + commit + '"' + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_sync, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         execute(remotify_cmd('rm -f ' + file_lock))
