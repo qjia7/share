@@ -224,7 +224,7 @@ bindkey "\e\e" sudo-command-line
 alias -g cp='cp -i'
 
 
-alias -g mv='mv -i'
+#alias -g mv='mv -i'
 #alias -g rm='rm -i'
 alias -g ls='ls -F --color=auto'
 alias -g ll='ls -l'
@@ -641,7 +641,7 @@ alias glp="_git_log_prettily"
 compdef _git glp=git-log
 
 setopt prompt_subst
-PROMPT='%F{blue}%M%F{green}%/$(git_prompt_string)
+PROMPT='%F{blue}%M%F{green}%/
 %F{cyan}%n %F{yellow}>>>$FINISH'
 
 ########## End of git support ##########
