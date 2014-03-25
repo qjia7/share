@@ -1,13 +1,13 @@
-From 33a886585238325d53250d390760cf9f114b0371 Mon Sep 17 00:00:00 2001
+From 59c4b36ac3d356a4bc0854bc88da039c7cd79651 Mon Sep 17 00:00:00 2001
 From: Zhenyu Liang <zhenyu.liang@intel.com>
 Date: Thu, 20 Mar 2014 20:24:29 +0800
-Subject: [PATCH 4/4] Fix type conversion issues for Android x64
+Subject: [PATCH 2/2] Fix type conversion issues for Android x64
 
 ---
- chrome/browser/memory_details_android.cc                |    4 ++--
- chrome/browser/renderer_host/web_cache_manager.cc       |    3 ++-
- .../indexed_db/indexed_db_leveldb_coding_unittest.cc    |   15 ++++++++++-----
- tools/android/file_poller/file_poller.cc                |    2 +-
+ chrome/browser/memory_details_android.cc                  |  4 ++--
+ chrome/browser/renderer_host/web_cache_manager.cc         |  3 ++-
+ .../indexed_db/indexed_db_leveldb_coding_unittest.cc      | 15 ++++++++++-----
+ tools/android/file_poller/file_poller.cc                  |  2 +-
  4 files changed, 15 insertions(+), 9 deletions(-)
 
 diff --git a/chrome/browser/memory_details_android.cc b/chrome/browser/memory_details_android.cc
@@ -117,5 +117,5 @@ index fc354f5..c73db8b 100644
    printf("%d\n", ntohs(socket_info.sin_port));
    // Using a pipe to ensure child is diconnected from the terminal before
 -- 
-1.7.10.4
+1.8.3.2
 

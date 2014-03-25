@@ -12,10 +12,8 @@ dir_script = sys.path[0]
 
 patches = {
     'src': [
-        '0001-Enable-GN-build-for-Android-x64.patch',
-        '0002-Fix-build-issues-in-android_webview-for-Android-x64.patch',
-        '0003-Add-x86_64-ucontext-structure-for-Android-x64.patch',
-        '0004-Fix-type-conversion-issues-for-Android-x64.patch'
+        '0001-Add-x86_64-ucontext-structure-for-Android-x64.patch',
+        '0002-Fix-type-conversion-issues-for-Android-x64.patch'
     ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
@@ -28,6 +26,7 @@ patches = {
     'ndk': [
         '0001-ndk-Add-gyp-files.patch',
         '0002-ndk-fix-for-Android-x64.patch',
+        '0003-Rename-gdbserver-to-gdbserver64.patch',
     ],
 }
 
@@ -103,7 +102,7 @@ def sync(force=False):
 
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
-        rev = '63a3e1a08f173831624289e36a4697b729a590c4'
+        rev = '5decf6a2c659b3a6a1db3b5a9c685b8afef32fe7'
         cmd += ' --revision src@' + rev
     result = execute(cmd, show_progress=True)
     if result[0]:
