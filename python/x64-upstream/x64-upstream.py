@@ -14,7 +14,8 @@ patches = {
     # Need upstream
     'src': [
         '0001-Add-x86_64-ucontext-structure-for-Android-x64.patch',
-        '0002-Fix-type-conversion-issues-for-Android-x64.patch'
+        '0002-Fix-type-conversion-issues-for-Android-x64.patch',
+        '0003-enable-webaudio-for-android-x64.patch'
     ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
     'src/third_party/lss': [
