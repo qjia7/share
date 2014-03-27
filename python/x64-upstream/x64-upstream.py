@@ -27,7 +27,6 @@ patches = {
     'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
 
     # Landed, but wait for upstream to sync repos
-    'src/v8': ['0001-v8-x64-support.patch'],
 
     # Can not upstream
     'ndk': [
@@ -49,6 +48,7 @@ examples:
   python %(prog)s --clean -s --patch -b
   python %(prog)s --test-build
   python %(prog)s --test-build --sync-upstream
+  python %(prog)s --clean -s --sync-upstream --patch
 ''')
 
     parser.add_argument('--clean', dest='clean', help='clean patches and local changes', action='store_true')
@@ -82,6 +82,8 @@ def setup():
     dir_src = dir_root + '/src'
     os.chdir(dir_root)
 
+    os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 enable_svg=0')
+
 
 def clean(force=False):
     if not args.clean and not force:
@@ -109,7 +111,7 @@ def sync(force=False):
 
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
-        rev = '5decf6a2c659b3a6a1db3b5a9c685b8afef32fe7'
+        rev = '1a5b73c8a1868b6c5e3976f285a85d99ad9f8d1b'
         cmd += ' --revision src@' + rev
     result = execute(cmd, show_progress=True)
     if result[0]:
