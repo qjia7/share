@@ -11,18 +11,25 @@ dir_src = ''
 dir_script = sys.path[0]
 
 patches = {
+    # Need upstream
     'src': [
         '0001-Add-x86_64-ucontext-structure-for-Android-x64.patch',
         '0002-Fix-type-conversion-issues-for-Android-x64.patch'
     ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
-    'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
     'src/third_party/lss': [
         '0001-lss-fix-the-__unused-issue.patch',
         '0002-lss-fix-__off64_t-issue.patch'
     ],
     'src/third_party/mesa/src': ['0001-disable-log2.patch'],
+
+    # Under review
+    'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
+
+    # Landed, but wait for upstream to sync repos
     'src/v8': ['0001-v8-x64-support.patch'],
+
+    # Can not upstream
     'ndk': [
         '0001-ndk-Add-gyp-files.patch',
         '0002-ndk-fix-for-Android-x64.patch',
