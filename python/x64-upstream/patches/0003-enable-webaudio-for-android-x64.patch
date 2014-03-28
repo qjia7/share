@@ -1,0 +1,81 @@
+From f26193b18e689a3e4ea6a702af3a5462bbb37d35 Mon Sep 17 00:00:00 2001
+From: "jie.chen" <jie.a.chen@intel.com>
+Date: Fri, 28 Mar 2014 01:32:50 +0800
+Subject: [PATCH] enable webaudio for android x64
+
+---
+ chrome/browser/about_flags.cc                             | 2 +-
+ content/browser/renderer_host/render_process_host_impl.cc | 2 +-
+ content/browser/renderer_host/render_view_host_impl.cc    | 2 +-
+ content/public/common/content_switches.cc                 | 2 +-
+ content/public/common/content_switches.h                  | 2 +-
+ 5 files changed, 5 insertions(+), 5 deletions(-)
+
+diff --git a/chrome/browser/about_flags.cc b/chrome/browser/about_flags.cc
+index bf453eb..ebb2c61 100644
+--- a/chrome/browser/about_flags.cc
++++ b/chrome/browser/about_flags.cc
+@@ -563,7 +563,7 @@ const Experiment kExperiments[] = {
+   },
+ #endif
+ #if defined(OS_ANDROID)
+-#if defined(ARCH_CPU_X86)
++#if defined(ARCH_CPU_X86) || defined(ARCH_CPU_X86_64)
+   {
+       "enable-webaudio",
+       IDS_FLAGS_ENABLE_WEBAUDIO_NAME,
+diff --git a/content/browser/renderer_host/render_process_host_impl.cc b/content/browser/renderer_host/render_process_host_impl.cc
+index 0fdf90c..51f94d5 100644
+--- a/content/browser/renderer_host/render_process_host_impl.cc
++++ b/content/browser/renderer_host/render_process_host_impl.cc
+@@ -1208,7 +1208,7 @@ void RenderProcessHostImpl::PropagateBrowserCommandLineToRenderer(
+     switches::kMediaDrmEnableNonCompositing,
+     switches::kNetworkCountryIso,
+ #endif
+-#if defined(OS_ANDROID) && defined(ARCH_CPU_X86)
++#if defined(OS_ANDROID) && (defined(ARCH_CPU_X86) || defined(ARCH_CPU_X86_64))
+     switches::kEnableWebAudio,
+ #else
+     // Need to be able to disable webaudio on other platforms where it
+diff --git a/content/browser/renderer_host/render_view_host_impl.cc b/content/browser/renderer_host/render_view_host_impl.cc
+index 8fd6769..6257681 100644
+--- a/content/browser/renderer_host/render_view_host_impl.cc
++++ b/content/browser/renderer_host/render_view_host_impl.cc
+@@ -368,7 +368,7 @@ WebPreferences RenderViewHostImpl::GetWebkitPrefs(const GURL& url) {
+       !command_line.HasSwitch(switches::kDisableLocalStorage);
+   prefs.databases_enabled =
+       !command_line.HasSwitch(switches::kDisableDatabases);
+-#if defined(OS_ANDROID) && defined(ARCH_CPU_X86)
++#if defined(OS_ANDROID) && (defined(ARCH_CPU_X86) || defined(ARCH_CPU_X86_64))
+   prefs.webaudio_enabled =
+       command_line.HasSwitch(switches::kEnableWebAudio);
+ #else
+diff --git a/content/public/common/content_switches.cc b/content/public/common/content_switches.cc
+index f9b6746..eef94a4 100644
+--- a/content/public/common/content_switches.cc
++++ b/content/public/common/content_switches.cc
+@@ -1030,7 +1030,7 @@ const char kNetworkCountryIso[] = "network-country-iso";
+ const char kRemoteDebuggingSocketName[]     = "remote-debugging-socket-name";
+ #endif
+ 
+-#if defined(OS_ANDROID) && defined(ARCH_CPU_X86)
++#if defined(OS_ANDROID) && (defined(ARCH_CPU_X86) || defined(ARCH_CPU_X86_64))
+ const char kEnableWebAudio[]                = "enable-webaudio";
+ #else
+ // Disable web audio API.
+diff --git a/content/public/common/content_switches.h b/content/public/common/content_switches.h
+index 0c9e58c..74cc25d 100644
+--- a/content/public/common/content_switches.h
++++ b/content/public/common/content_switches.h
+@@ -298,7 +298,7 @@ extern const char kNetworkCountryIso[];
+ CONTENT_EXPORT extern const char kRemoteDebuggingSocketName[];
+ #endif
+ 
+-#if defined(OS_ANDROID) && defined(ARCH_CPU_X86)
++#if defined(OS_ANDROID) && (defined(ARCH_CPU_X86) || defined(ARCH_CPU_X86_64))
+ CONTENT_EXPORT extern const char kEnableWebAudio[];
+ #else
+ CONTENT_EXPORT extern const char kDisableWebAudio[];
+-- 
+1.8.3.2
+
