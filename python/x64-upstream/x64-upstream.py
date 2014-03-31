@@ -20,9 +20,6 @@ dir_out = 'src/out/'
 patches = {
     # Need upstream
     'src': [
-        '0001-Add-x86_64-ucontext-structure-for-Android-x64.patch',
-        '0002-Fix-type-conversion-issues-for-Android-x64.patch',
-        '0003-enable-webaudio-for-android-x64.patch'
     ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
     'src/third_party/lss': [
@@ -68,7 +65,7 @@ unit_tests = [
 ]
 
 # Environment
-chromium_version = '1a5b73c8a1868b6c5e3976f285a85d99ad9f8d1b'
+chromium_version = 'ffe217eec25605f299ef6d5d9eb95ccf8c8d464d'
 host_os = platform.platform()
 android_ndk_version = 'android64-ndk-' + open('ndk/RELEASE.TXT', 'r').read()
 target_device = 'T-100'
