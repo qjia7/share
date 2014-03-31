@@ -63,7 +63,7 @@ expectfail_list = [
     241661, 241848,
 ]
 
-run_chromium_script = 'python ../chromium.py'
+run_chromium_script = 'python ' + dir_python + '/chromium.py'
 
 ################################################################################
 
@@ -392,7 +392,7 @@ def build_one(build_next):
     dir_repo = dir_project + '/chromium-' + os
 
     cmd_sync = run_chromium_script + ' -u "sync -f -n -j16 --revision src@' + commit + '"' + ' -d ' + dir_repo + ' --rev ' + str(rev)
-    result = execute(cmd_sync, dryrun=DRYRUN, show_progress=True)
+    result = execute(cmd_sync, dryrun=DRYRUN, interactive=True)
     if result[0]:
         execute(remotify_cmd('rm -f ' + file_lock))
         error('Sync failed', error_code=result[0])

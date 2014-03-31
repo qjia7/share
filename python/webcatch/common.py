@@ -1,4 +1,5 @@
 dir_root = '/workspace/project/gyagp/webcatch'
+dir_python = '/workspace/project/gyagp/share/python'
 dir_out = dir_root + '/out'
 dir_project = dir_root + '/project'
 dir_log = dir_root + '/log'
