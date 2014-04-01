@@ -182,7 +182,6 @@ if __name__ == "__main__":
 
     install_package([
         'tsocks', 'privoxy',
-        'libpulse-dev',
         'apt-file',
         'zsh',
         'git', 'git-svn',
@@ -202,7 +201,8 @@ if __name__ == "__main__":
         # required by Chromium build
         'libspeechd-dev', 'libgdk-pixbuf2.0-dev', 'libgtk2.0-dev', 'libdrm-dev', 'libgnome-keyring-dev', 'libgconf2-dev', 'libudev-dev',
         'libpci-dev', 'linux-tools', 'binutils-dev', 'libelf-dev', 'gperf', 'gcc-4.7-multilib', 'g++-4.7-multilib', 'bison', 'python-pip',
-        'module-assistant', 'autoconf', 'automake', 'libnss3-dev', 'ant', 'libcups2-dev', 'libasound2-dev', 'libxss-dev',
+        'module-assistant', 'autoconf', 'automake', 'libnss3-dev', 'ant', 'libcups2-dev', 'libasound2-dev', 'libxss-dev', 'libxtst-dev',
+        'libpulse-dev',
     ])
 
     install_chromium()
