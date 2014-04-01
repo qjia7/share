@@ -182,6 +182,7 @@ if __name__ == "__main__":
 
     install_package([
         'tsocks', 'privoxy',
+        'libpulse-dev',
         'apt-file',
         'zsh',
         'git', 'git-svn',
