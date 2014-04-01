@@ -21,13 +21,13 @@ Examples:
 def upgrade():
     if args.type == 'basic':
         setup_http()
-        execute('sudo apt-get update && sudo apt-get -y dist-upgrade')
+        execute('sudo apt-get update && sudo apt-get -y dist-upgrade', interactive=True)
     elif args.type == 'chrome':
         setup_socks()
-        execute('sudo tsocks apt-get update && sudo tsocks apt-get -y dist-upgrade')
+        execute('sudo tsocks apt-get update && sudo tsocks apt-get -y dist-upgrade', interactive=True)
     elif args.type == 'system':
         setup_http()
-        execute('sudo update-manager -d')
+        execute('sudo update-manager -d', interactive=True)
 
 
 def remove(path):
