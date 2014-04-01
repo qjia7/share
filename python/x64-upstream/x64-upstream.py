@@ -39,7 +39,7 @@ type = ''
 dir_out_type = ''
 time = get_datetime()
 cpu_count = str(multiprocessing.cpu_count() * 2)
-android_ndk_version = 'android64-ndk-' + open('ndk/RELEASE.TXT', 'r').read()
+android_ndk_version = ''
 dir_log = 'log-' + time + '/'
 
 unit_tests = [
@@ -110,7 +110,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, type, dir_out_type
+    global dir_root, dir_src, type, dir_out_type, android_ndk_version
 
     if not args.dir_root:
         dir_root = get_symbolic_link_dir()
@@ -121,8 +121,9 @@ def setup():
     type = args.type
     dir_out_type = dir_src + '/out/' + type.capitalize()
 
-    OS.putenv('GYP_DEFINES', 'werror= disable_nacl=1 enable_svg=0')
+    OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
+    android_ndk_version = 'android64-ndk-' + open('ndk/RELEASE.TXT', 'r').read()
 
 
 def clean(force=False):
@@ -358,6 +359,7 @@ def _unittest_gen_report():
 </html>
 '''
 
+    html = html_start
     for unit_test in unit_tests:
         # build status
         if OS.path.exists(dir_log + 'build_success_' + unit_test + '.log'):
@@ -425,7 +427,7 @@ def _unittest_gen_report():
                      <td>''' + ut_timeout + '''</td>
                      <td>''' + ut_unknow + '''</td></tr>'''
 
-        html = html_start + ut_row
+        html += ut_row
     html += html_end
 
     file_report = dir_log + 'ChromeForAndroidx64 Unit Tests Report of ' + time + '.html'
