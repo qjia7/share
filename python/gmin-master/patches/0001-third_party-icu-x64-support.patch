@@ -1,0 +1,55 @@
+From c95172badc508116592662b9e839029dada31c55 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Tue, 11 Feb 2014 13:24:47 +0800
+Subject: [PATCH] third_party/icu: x64 support
+
+---
+ icu.gyp | 18 ++++++++++++++++--
+ 1 file changed, 16 insertions(+), 2 deletions(-)
+
+diff --git a/icu.gyp b/icu.gyp
+index 4900ab2..4f583ae 100644
+--- a/icu.gyp
++++ b/icu.gyp
+@@ -43,6 +43,20 @@
+           }],
+         ],
+       }],
++      ['(OS=="linux" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" \
++         or OS=="netbsd" or OS=="mac" or OS=="android") and \
++        target_arch=="x64"', {
++        'target_conditions': [
++          ['_toolset=="host"', {
++            'cflags': [ '-m64' ],
++            'ldflags': [ '-m64' ],
++            'asflags': [ '-64' ],
++            'xcode_settings': {
++              'ARCHS': [ 'x86_64' ],
++            },
++          }],
++        ],
++      }],
+     ],
+     'include_dirs': [
+       'source/common',
+@@ -94,7 +108,7 @@
+               'sources/': [['exclude', 'icudt46l_dat']],
+               # Compile in the stub data symbol.
+               'sources': ['source/stubdata/stubdata.c'],
+-             
++
+               # Make sure any binary depending on this gets the data file.
+               'conditions': [
+                 ['OS != "ios"', {
+@@ -112,7 +126,7 @@
+                   },
+                 }], # OS!=ios
+               ], # conditions
+-            }], # icu_use_data_file_flag 
++            }], # icu_use_data_file_flag
+           ], # conditions
+           'target_conditions': [
+             [ 'OS == "win" or OS == "mac" or OS == "ios" or '
+-- 
+1.8.3.2
+

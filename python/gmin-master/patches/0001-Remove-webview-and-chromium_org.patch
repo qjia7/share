@@ -1,0 +1,56 @@
+From 0de4dc1491c6dd6d1b1dc134d92cbe814a7bd031 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 28 Mar 2014 11:23:10 +0800
+Subject: [PATCH] Remove webview and chromium_org
+
+Change-Id: I08301f2282d8a45ffc022364ed296e5d7cbcc8f6
+---
+ aosp.xml | 25 -------------------------
+ 1 file changed, 25 deletions(-)
+
+diff --git a/aosp.xml b/aosp.xml
+index bb3b24a..c5935d6 100644
+--- a/aosp.xml
++++ b/aosp.xml
+@@ -60,30 +60,6 @@
+   <project path="external/chromium" name="a/aosp/platform/external/chromium" />
+   <project path="external/chromium-libpac" name="a/aosp/platform/external/chromium-libpac" />
+   <project path="external/chromium-trace" name="a/aosp/platform/external/chromium-trace" groups="pdk" />
+-  <project path="external/chromium_org" name="a/aosp/platform/external/chromium_org" />
+-  <project path="external/chromium_org/sdch/open-vcdiff" name="a/aosp/platform/external/chromium_org/sdch/open-vcdiff" />
+-  <project path="external/chromium_org/testing/gtest" name="a/aosp/platform/external/chromium_org/testing/gtest" />
+-  <project path="external/chromium_org/third_party/WebKit" name="a/aosp/platform/external/chromium_org/third_party/WebKit" />
+-  <project path="external/chromium_org/third_party/angle_dx11" name="a/aosp/platform/external/chromium_org/third_party/angle_dx11" />
+-  <project path="external/chromium_org/third_party/eyesfree/src/android/java/src/com/googlecode/eyesfree/braille" name="a/aosp/platform/external/chromium_org/third_party/eyesfree/src/android/java/src/com/googlecode/eyesfree/braille" />
+-  <project path="external/chromium_org/third_party/freetype" name="a/aosp/platform/external/chromium_org/third_party/freetype" />
+-  <project path="external/chromium_org/third_party/icu" name="a/aosp/platform/external/chromium_org/third_party/icu" />
+-  <project path="external/chromium_org/third_party/leveldatabase/src" name="a/aosp/platform/external/chromium_org/third_party/leveldatabase/src" />
+-  <project path="external/chromium_org/third_party/libjingle/source/talk" name="a/aosp/platform/external/chromium_org/third_party/libjingle/source/talk" />
+-  <project path="external/chromium_org/third_party/libphonenumber/src/phonenumbers" name="a/aosp/platform/external/chromium_org/third_party/libphonenumber/src/phonenumbers" />
+-  <project path="external/chromium_org/third_party/libphonenumber/src/resources" name="a/aosp/platform/external/chromium_org/third_party/libphonenumber/src/resources" />
+-  <project path="external/chromium_org/third_party/mesa/src" name="a/aosp/platform/external/chromium_org/third_party/mesa/src" />
+-  <project path="external/chromium_org/third_party/openssl" name="a/aosp/platform/external/chromium_org/third_party/openssl" />
+-  <project path="external/chromium_org/third_party/opus/src" name="a/aosp/platform/external/chromium_org/third_party/opus/src" />
+-  <project path="external/chromium_org/third_party/ots" name="a/aosp/platform/external/chromium_org/third_party/ots" />
+-  <project path="external/chromium_org/third_party/skia/gyp" name="a/aosp/platform/external/chromium_org/third_party/skia/gyp" />
+-  <project path="external/chromium_org/third_party/skia/include" name="a/aosp/platform/external/chromium_org/third_party/skia/include" />
+-  <project path="external/chromium_org/third_party/skia/src" name="a/aosp/platform/external/chromium_org/third_party/skia/src" />
+-  <project path="external/chromium_org/third_party/smhasher/src" name="a/aosp/platform/external/chromium_org/third_party/smhasher/src" />
+-  <project path="external/chromium_org/third_party/yasm/source/patched-yasm" name="a/aosp/platform/external/chromium_org/third_party/yasm/source/patched-yasm" />
+-  <project path="external/chromium_org/tools/grit" name="a/aosp/platform/external/chromium_org/tools/grit" />
+-  <project path="external/chromium_org/tools/gyp" name="a/aosp/platform/external/chromium_org/tools/gyp" />
+-  <project path="external/chromium_org/v8" name="a/aosp/platform/external/chromium_org/v8" />
+   <project path="external/clang" name="a/aosp/platform/external/clang" groups="pdk" />
+   <project path="external/compiler-rt" name="a/aosp/platform/external/compiler-rt" groups="pdk" />
+   <project path="external/conscrypt" name="a/aosp/platform/external/conscrypt" />
+@@ -269,7 +245,6 @@
+   <project path="frameworks/testing" name="a/aosp/platform/frameworks/testing" />
+   <project path="frameworks/uiautomator" name="a/aosp/platform/frameworks/uiautomator" />
+   <project path="frameworks/volley" name="a/aosp/platform/frameworks/volley" />
+-  <project path="frameworks/webview" name="a/aosp/platform/frameworks/webview" />
+   <project path="frameworks/wilhelm" name="a/aosp/platform/frameworks/wilhelm" />
+   <project path="hardware/akm" name="a/aosp/platform/hardware/akm" />
+   <project path="hardware/broadcom/libbt" name="a/aosp/platform/hardware/broadcom/libbt" groups="pdk" />
+-- 
+1.8.3.2
+

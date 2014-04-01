@@ -1,0 +1,30 @@
+From 59a7cf46476cf6e848809c6ab718f6e20b7ddf8d Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 28 Mar 2014 13:24:26 +0800
+Subject: [PATCH] baytrail_64: Disable 2nd arch
+
+Change-Id: If874b65af5e223cdaddd68af554753aed5b0410c
+---
+ BoardConfig.mk | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/BoardConfig.mk b/BoardConfig.mk
+index 7ed88ae..30894ae 100644
+--- a/BoardConfig.mk
++++ b/BoardConfig.mk
+@@ -25,9 +25,9 @@ TARGET_ARCH := x86_64
+ TARGET_CPU_ABI := x86_64
+ TARGET_ARCH_VARIANT := x86_64
+ 
+-TARGET_2ND_CPU_ABI := x86
+-TARGET_2ND_ARCH := x86
+-TARGET_2ND_ARCH_VARIANT := silvermont
++#TARGET_2ND_CPU_ABI := x86
++#TARGET_2ND_ARCH := x86
++#TARGET_2ND_ARCH_VARIANT := silvermont
+ 
+ TARGET_USES_64_BIT_BINDER := true
+ 
+-- 
+1.8.3.2
+
