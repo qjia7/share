@@ -12,6 +12,9 @@ target_module = ''
 # From rev 252166, envsetup.sh --target-arch would report an error.
 envsetup_rev = 252034
 
+# Form this rev, envsetup would no longer set OS=android, we need to define it using GYP_DEFINES='OS=android'
+gyp_defines_rev = 260548
+
 
 def has_build_dir():
     if not os.path.exists(build_dir):
@@ -149,7 +152,10 @@ def setup():
             if not os.getenv('ANDROID_SDK_ROOT'):
                 error('Environment is not well set')
 
-        os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 enable_svg=0')
+        if args.rev < gyp_defines_rev:
+            os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 enable_svg=0')
+        else:
+            os.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
 
     if not args.target_module:
         if target_os == 'linux':
