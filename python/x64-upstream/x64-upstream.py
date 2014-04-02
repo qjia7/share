@@ -6,6 +6,7 @@ from util import *
 
 import os as OS
 import multiprocessing
+from multiprocessing import Pool
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -35,36 +36,16 @@ patches = {
 dir_script = sys.path[0]
 dir_root = ''
 dir_src = ''
+dir_unittest = ''
+time = get_datetime()
 type = ''
 dir_out_type = ''
-time = get_datetime()
+dir_time = ''
+
 cpu_count = str(multiprocessing.cpu_count() * 2)
 android_ndk_version = ''
-dir_log = 'log-' + time + '/'
-
-unit_tests = [
-    'android_webview_test',
-    'android_webview_unittests',
-    'base_unittests',
-    'breakpad_unittests',
-    'cc_unittests',
-    'components_unittests',
-    'content_browsertests',
-    'content_unittests',
-    'gl_tests',
-    'gpu_unittests',
-    'ipc_tests',
-    'media_unittests',
-    'net_unittests',
-    'sandbox_linux_unittests',
-    'sql_unittests',
-    'sync_unit_tests',
-    'ui_unittests',
-    'unit_tests',
-    'webkit_compositor_bindings_unittests',
-    'webkit_unit_tests',
-    'content_gl_tests',
-]
+devices = []
+unit_tests = []
 
 ################################################################################
 
@@ -81,6 +62,7 @@ examples:
   python %(prog)s --clean -s --sync-upstream --patch
   python %(prog)s --unittest-build --unittest-run
   python %(prog)s --test-unittest
+  python %(prog)s --unittest-recipient yang.gu@intel.com --unittest-case 'webkit_compositor_bindings_unittests' --unittest-run
 ''')
 
     parser.add_argument('--clean', dest='clean', help='clean patches and local changes', action='store_true')
@@ -93,10 +75,12 @@ examples:
     parser.add_argument('--set-ndk', dest='set_ndk', help='set up ndk', action='store_true')
     parser.add_argument('--type', dest='type', help='type', choices=['release', 'debug'], default='release')
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
+    parser.add_argument('--devices', dest='devices', help='device id list separated by ","', default='')
 
     group_unittest = parser.add_argument_group('unittest')
-    group_unittest.add_argument('--unittest-build', dest='unittest_build', help='build all unittests', action='store_true')
     group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
+    group_unittest.add_argument('--unittest-recipient', dest='unittest_recipient', help='unittest email recipient that would override the default for test sake')
+    group_unittest.add_argument('--unittest-case', dest='unittest_case', help='unittest case')
 
     group_test = parser.add_argument_group('test')
     group_test.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
@@ -110,20 +94,65 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, type, dir_out_type, android_ndk_version
+    global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices
 
-    if not args.dir_root:
-        dir_root = get_symbolic_link_dir()
-    else:
+    if args.dir_root:
         dir_root = args.dir_root
+    else:
+        dir_root = get_symbolic_link_dir()
 
     dir_src = dir_root + '/src'
     type = args.type
     dir_out_type = dir_src + '/out/' + type.capitalize()
+    dir_unittest = dir_root + '/unittest'
+    dir_time = dir_unittest + '/' + time
 
     OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
     android_ndk_version = 'android64-ndk-' + open('ndk/RELEASE.TXT', 'r').read()
+    if not OS.path.exists(dir_unittest):
+        OS.mkdir(dir_unittest)
+
+    if args.unittest_case:
+        unit_tests = args.unittest_case.split(',')
+    else:
+        unit_tests = [
+            'android_webview_test',
+            'android_webview_unittests',
+            'base_unittests',
+            'breakpad_unittests',
+            'cc_unittests',
+            'components_unittests',
+            'content_browsertests',
+            'content_unittests',
+            'gl_tests',
+            'gpu_unittests',
+            'ipc_tests',
+            'media_unittests',
+            'net_unittests',
+            'sandbox_linux_unittests',
+            'sql_unittests',
+            'sync_unit_tests',
+            'ui_unittests',
+            'unit_tests',
+            'webkit_compositor_bindings_unittests',
+            'webkit_unit_tests',
+            'content_gl_tests',
+        ]
+
+    if args.devices:
+        devices = args.devices.split(',')
+    else:
+        cmd = 'adb devices -l'
+        device_lines = commands.getoutput(cmd).split('\n')
+        for device_line in device_lines:
+            if re.match('List of devices attached', device_line):
+                continue
+            elif re.match('^\s*$', device_line):
+                continue
+            print device_line
+            device = device_line.split(' ')[0]
+            devices.append(device)
 
 
 def clean(force=False):
@@ -236,47 +265,20 @@ def set_ndk(force=False):
         restore_dir()
 
 
-def unittest_build(force=False):
-    if not args.unittest_build and not force:
-        return
-
-    if not OS.path.exists(dir_log):
-        OS.mkdir(dir_log)
-
-    for unit_test in unit_tests:
-        if unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
-            cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_stripped' + ' > ' + dir_log + unit_test + '_build.log'
-        else:
-            cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_apk' + ' > ' + dir_log + unit_test + '_build.log'
-        result = execute(cmd, interactive=True)
-        if result[0]:
-            OS.rename(dir_log + unit_test + '_build.log', dir_log + 'build_fail_' + unit_test + '.log')
-            error('Failed to build \'' + unit_test + '\'', error_code=result[0], abort=False)
-        else:
-            OS.rename(dir_log + unit_test + '_build.log', dir_log + 'build_success_' + unit_test + '.log')
-            info('Succeeded to build \'' + unit_test + '\'')
-
-
 def unittest_run(force=False):
     if not args.unittest_run and not force:
         return
 
-    if not OS.path.exists(dir_log):
-        OS.mkdir(dir_log)
+    if not OS.path.exists(dir_unittest):
+        print dir_unittest
+        OS.mkdir(dir_unittest)
 
-    for unit_test in unit_tests:
-        if OS.path.exists(dir_out_type + '/' + unit_test + '_apk/') or unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
-            cmd = 'src/build/android/test_runner.py gtest -s ' + unit_test + ' --' + type + ' > ' + dir_log + unit_test + '_run.log'
-            result = execute(cmd, show_progress=False)
-            if result[0]:
-                OS.rename(dir_log + unit_test + '_run.log', dir_log + 'run_fail_' + unit_test + '.log')
-                error('Failed to run \'' + unit_test + '\'', error_code=result[0], abort=False)
-            else:
-                OS.rename(dir_log + unit_test + '_run.log', dir_log + 'run_success_' + unit_test + '.log')
-                info('Succeeded to run \'' + unit_test + '\'')
-
-    _unittest_gen_report()
-    _unittest_send_report()
+    OS.mkdir(dir_unittest + '/' + time)
+    pool = Pool(processes=len(devices))
+    for device in devices:
+        pool.apply_async(_unittest_run_device, (device,))
+    pool.close()
+    pool.join()
 
 
 def test_build(force=False):
@@ -294,19 +296,85 @@ def test_unittest(force=False):
         return
 
     test_build(force=True)
-    unittest_build(force=True)
     unittest_run(force=True)
 
 
-def _unittest_gen_report():
+def _unittest_run_device(device):
+    dir_device = dir_time + '/' + device
+    OS.mkdir(dir_device)
+
+    result_tests = []
+    for unit_test in unit_tests:
+        result_test = []
+        # Build
+        if unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
+            cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_stripped'
+        else:
+            cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_apk'
+        result = execute(cmd, interactive=True)
+        if result[0]:
+            error('Failed to build \'' + unit_test + '\'', abort=False)
+            result_test = ['FAIL', 'FAIL']
+            result_tests.append(result_test)
+            continue
+        else:
+            info('Succeeded to build \'' + unit_test + '\'')
+            result_test = ['PASS']
+
+        # Run
+        cmd = 'src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' > ' + dir_device + '/' + unit_test + '.log'
+        result = execute(cmd, interactive=True)
+        if result[0]:
+            error('Failed to run \'' + unit_test + '\'', error_code=result[0], abort=False)
+            result_test.append('FAIL')
+        else:
+            info('Succeeded to run \'' + unit_test + '\'')
+            result_test.append('PASS')
+        result_tests.append(result_test)
+
+    _unittest_report(device, result_tests)
+
+
+def _unittest_report(device, result_tests):
+    addressor = 'x64-noreply@intel.com'
+    if args.unittest_recipient:
+        recipients = [args.unittest_recipient]
+        copyto = []
+    else:
+        recipients = [
+            'jie.a.chen@intel.com',
+            'yang.gu@intel.com',
+            'halton.huo@intel.com',
+            'zhenyu.liang@intel.com',
+            'ying.han@intel.com',
+            'zhiqiangx.yu@intel.com',
+        ]
+        copyto = [
+            'xiaodan.jiang@intel.com',
+        ]
+
+    msg_report = MIMEMultipart('related')
+    msg_report['Subject'] = 'Chromium x64 Unit Tests Report ' + time + ' ' + device
+    msg_report['From'] = addressor
+    msg_report['To'] = ','.join(recipients)
+    msg_report['Cc'] = ','.join(copyto)
+    msg_report.attach(MIMEText(_unittest_gen_report(device, result_tests), 'html'))
+
+    try:
+        # Unittests running host requires a mail-server installed, such as 'postfix'.
+        smtp = smtplib.SMTP('127.0.0.1')
+        smtp.sendmail(msg_report['From'], recipients + copyto, msg_report.as_string())
+    except Exception, e:
+        error('Failed to send unittest report of ' + time + ': ' + e)
+    finally:
+        smtp.quit()
+
+
+def _unittest_gen_report(device, result_tests):
     html_start = '''
-<!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
   <head>
     <meta http-equiv="content-type" content="text/html; charset=windows-1252">
-    <title>
-      ChromeForAndroidx64 Unit Tests Report
-    </title>
     <style type="text/css">
       table {
         border: 2px solid black;
@@ -324,12 +392,10 @@ def _unittest_gen_report():
     <div id="main">
       <div id="content">
         <div>
-          <h1 id="">ChromeForAndroidx64 Unit Tests Report of ''' + time + ''' </h1>
-
           <h2 id="Environment">Environment</h2>
           <ul>
             <li>Chromium hash: ''' + chromium_hash + '''</li>
-            <li>Host OS: ''' + host_os + '''</li>
+            <li>Target Device: ''' + device + '''</li>
             <li>Android NDK: ''' + android_ndk_version + '''</li>
           </ul>
 
@@ -360,24 +426,10 @@ def _unittest_gen_report():
 '''
 
     html = html_start
-    for unit_test in unit_tests:
-        # build status
-        if OS.path.exists(dir_log + 'build_success_' + unit_test + '.log'):
-            bs = 'Success'
-        elif OS.path.exists(dir_log + 'build_fail_' + unit_test + '.log'):
-            bs = 'Fail'
-        else:
-            bs = ''
-
-        # run status
-        if OS.path.exists(dir_log + 'run_success_' + unit_test + '.log'):
-            rs = 'Success'
-            log_prefix = 'run_success_'
-        elif OS.path.exists(dir_log + 'run_fail_' + unit_test + '.log'):
-            rs = 'Fail'
-            log_prefix = 'run_fail_'
-        else:
-            rs = ''
+    dir_device = dir_time + '/' + device
+    for index, unit_test in enumerate(unit_tests):
+        bs = result_tests[index][0]
+        rs = result_tests[index][1]
 
         # parse log
         ut_all = ''
@@ -388,7 +440,7 @@ def _unittest_gen_report():
         ut_unknow = ''
 
         if len(rs) > 0:
-            ut_result = open(dir_log + log_prefix + unit_test + '.log', 'r')
+            ut_result = open(dir_device + '/' + unit_test + '.log', 'r')
             lines = ut_result.readlines()
             for line in lines:
                 if 'Main  ALL (' in line:
@@ -409,13 +461,13 @@ def _unittest_gen_report():
         ut_rs_td_start = '''<td>'''
         ut_td_end = '''</td>'''
 
-        if bs == 'Success':
+        if bs == 'PASS':
             ut_bs_td_start = '''<td style='color:green'>'''
-            if rs == 'Success':
+            if rs == 'PASS':
                 ut_tr_start = '''<tr style='color:green'>'''
-            elif rs == 'Fail':
+            elif rs == 'FAIL':
                 ut_rs_td_start = '''<td style='color:red'>'''
-        elif bs == 'Fail':
+        elif bs == 'FAIL':
             ut_bs_td_start = '''<td style='color:red'>'''
 
         ut_row = ut_tr_start + '''
@@ -429,51 +481,7 @@ def _unittest_gen_report():
 
         html += ut_row
     html += html_end
-
-    file_report = dir_log + 'ChromeForAndroidx64 Unit Tests Report of ' + time + '.html'
-    file_html = open(file_report, 'w')
-    file_html.write(html)
-    file_html.close()
-    info(dir_log + 'ChromeForAndroidx64 Unit Tests Report of ' + time + '.html has been generated successfully')
-
-
-def _unittest_send_report():
-    if not OS.path.exists(dir_log + 'ChromeForAndroidx64 Unit Tests Report of ' + time + '.html'):
-        return
-
-    addressor = 'x64-noreply@intel.com'
-    recipients = [
-        #'jie.a.chen@intel.com',
-        'yang.gu@intel.com',
-        #'halton.huo@intel.com',
-        #'zhenyu.liang@intel.com',
-        #'ying.han@intel.com',
-        #'zhiqiangx.yu@intel.com',
-    ]
-    copyto = [
-        #'xiaodan.jiang@intel.com',
-    ]
-
-    msg_report = MIMEMultipart('related')
-    msg_report['Subject'] = 'ChromeForAndroidx64 Unit Tests Report of ' + time
-    msg_report['From'] = addressor
-    msg_report['To'] = ','.join(recipients)
-    msg_report['Cc'] = ','.join(copyto)
-
-    att_report = MIMEText(open(dir_log + 'ChromeForAndroidx64 Unit Tests Report of ' + time + '.html', 'rb').read(), 'base64', 'utf-8')
-    att_report['Content-Type'] = 'application/octet-stream'
-    att_report['content-Disposition'] = 'attachment; filename=' + 'ChromeForAndroidx64 Unit Tests Report of ' + time + '.html'
-    msg_report.attach(att_report)
-
-    try:
-        # Unittests running host requires a mail-server installed, such as 'postfix'.
-        smtp = smtplib.SMTP('127.0.0.1')
-        smtp.sendmail(msg_report['From'], recipients + copyto, msg_report.as_string())
-        info(dir_log + 'ChromeForAndroidx64 Unit Tests Report of ' + time + '.html has been sent out successfully')
-    except Exception, e:
-        error('Failed to send unittest report of ' + time + ': ' + e)
-    finally:
-        smtp.quit()
+    return html
 
 
 if __name__ == '__main__':
@@ -485,7 +493,6 @@ if __name__ == '__main__':
     patch()
     build()
 
-    unittest_build()
     unittest_run()
 
     test_build()
