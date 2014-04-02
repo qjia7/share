@@ -194,7 +194,7 @@ if __name__ == "__main__":
         'vnc4server',
         'cmake',
         'hibernate',
-        'python-boto',
+        'python-boto', 'python-dev', 'python-psutil',
         'ccache',
         'alacarte',
         'libicu-dev',
