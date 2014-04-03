@@ -241,7 +241,7 @@ def _get_combo(arch, device):
 
     if device == 'generic':
         combo = combo_prefix + arch + combo_suffix
-    elif device == 'baytail':
+    elif device == 'baytrail':
         if arch == 'x86_64':
             combo = combo_prefix + device + '_64' + combo_suffix
         elif arch == 'x86':
