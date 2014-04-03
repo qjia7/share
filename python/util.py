@@ -151,8 +151,12 @@ def shell_source(shell_cmd, use_bash=False):
         os.environ[key] = value
 
 
+# Get the dir of symbolic link, for example: /workspace/project/chromium-android instead of /workspace/project/gyagp/share/python
 def get_symbolic_link_dir():
-    script_path = os.getcwd() + '/' + sys.argv[0]
+    if sys.argv[0][0] == '/':  # Absolute path
+        script_path = sys.argv[0]
+    else:
+        script_path = os.getcwd() + '/' + sys.argv[0]
     return os.path.split(script_path)[0]
 
 
