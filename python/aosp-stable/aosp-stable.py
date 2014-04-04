@@ -148,11 +148,11 @@ def build():
 
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
         if chromium_version == 'cr36' and arch == 'x86_64' and device == 'baytrail' and module == 'system':
-            _ensure_nonexist('external/chromium-libpac/Android.xml')
-            _ensure_nonexist('external/v8/Android.xml')
+            _ensure_nonexist('external/chromium-libpac/Android.mk')
+            _ensure_nonexist('external/v8/Android.mk')
         else:
-            _ensure_exist('external/chromium-libpac/Android.xml')
-            _ensure_exist('external/v8/Android.xml')
+            _ensure_exist('external/chromium-libpac/Android.mk')
+            _ensure_exist('external/v8/Android.mk')
 
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
