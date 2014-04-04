@@ -1,15 +1,16 @@
-From 0de4dc1491c6dd6d1b1dc134d92cbe814a7bd031 Mon Sep 17 00:00:00 2001
+From 60ccaceed8575d096dd3575eff6217c776008b7b Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Fri, 28 Mar 2014 11:23:10 +0800
-Subject: [PATCH] Remove webview and chromium_org
+Date: Fri, 4 Apr 2014 16:15:11 +0800
+Subject: [PATCH] Replace webview and chromium_org
 
-Change-Id: I08301f2282d8a45ffc022364ed296e5d7cbcc8f6
+Change-Id: I17976413ff50727cf381ef181291556b72755be6
 ---
- aosp.xml | 25 -------------------------
- 1 file changed, 25 deletions(-)
+ aosp.xml    | 25 -------------------------
+ default.xml |  7 +++++++
+ 2 files changed, 7 insertions(+), 25 deletions(-)
 
 diff --git a/aosp.xml b/aosp.xml
-index bb3b24a..c5935d6 100644
+index 133d001..cf827c3 100644
 --- a/aosp.xml
 +++ b/aosp.xml
 @@ -60,30 +60,6 @@
@@ -43,7 +44,7 @@ index bb3b24a..c5935d6 100644
    <project path="external/clang" name="a/aosp/platform/external/clang" groups="pdk" />
    <project path="external/compiler-rt" name="a/aosp/platform/external/compiler-rt" groups="pdk" />
    <project path="external/conscrypt" name="a/aosp/platform/external/conscrypt" />
-@@ -269,7 +245,6 @@
+@@ -270,7 +246,6 @@
    <project path="frameworks/testing" name="a/aosp/platform/frameworks/testing" />
    <project path="frameworks/uiautomator" name="a/aosp/platform/frameworks/uiautomator" />
    <project path="frameworks/volley" name="a/aosp/platform/frameworks/volley" />
@@ -51,6 +52,22 @@ index bb3b24a..c5935d6 100644
    <project path="frameworks/wilhelm" name="a/aosp/platform/frameworks/wilhelm" />
    <project path="hardware/akm" name="a/aosp/platform/hardware/akm" />
    <project path="hardware/broadcom/libbt" name="a/aosp/platform/hardware/broadcom/libbt" groups="pdk" />
+diff --git a/default.xml b/default.xml
+index bcc6342..4a7c453 100644
+--- a/default.xml
++++ b/default.xml
+@@ -6,4 +6,11 @@
+ 
+   <include name="aosp.xml"/>
+   <include name="bsp.xml"/>
++
++  <remote  name="aosp"
++           fetch="https://android.googlesource.com/platform/../"
++           review="https://android-review.googlesource.com/" />
++
++  <project path="external/chromium_org" name="platform/external/chromium_org" remote="aosp" revision="chromium-dev" />
++  <project path="frameworks/webview" name="platform/frameworks/webview" remote="aosp" revision="chromium-dev" />
+ </manifest>
 -- 
 1.8.3.2
 

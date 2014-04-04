@@ -1,23 +1,26 @@
-From c95172badc508116592662b9e839029dada31c55 Mon Sep 17 00:00:00 2001
+From 0f578659d9e1f0fa384224bc997d648cecf5ffa1 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Tue, 11 Feb 2014 13:24:47 +0800
-Subject: [PATCH] third_party/icu: x64 support
+Date: Wed, 2 Apr 2014 10:07:25 +0800
+Subject: [PATCH] Enable 64-bit build of host toolset
 
+When building v8 mksnapshot host toolset as 64-bit, it requires icu to
+be 64-bit also.
 ---
- icu.gyp | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ icu.gyp | 19 +++++++++++++++++--
+ 1 file changed, 17 insertions(+), 2 deletions(-)
 
 diff --git a/icu.gyp b/icu.gyp
-index 4900ab2..4f583ae 100644
+index 5c175c3..9090607 100644
 --- a/icu.gyp
 +++ b/icu.gyp
-@@ -43,6 +43,20 @@
+@@ -43,6 +43,21 @@
            }],
          ],
        }],
 +      ['(OS=="linux" or OS=="freebsd" or OS=="openbsd" or OS=="solaris" \
-+         or OS=="netbsd" or OS=="mac" or OS=="android") and \
-+        target_arch=="x64"', {
++         or OS=="netbsd" or OS=="mac" or OS=="android" or OS=="qnx") and \
++        (target_arch=="arm64" or target_arch=="x64" or \
++         target_arch=="mipsel64")', {
 +        'target_conditions': [
 +          ['_toolset=="host"', {
 +            'cflags': [ '-m64' ],
@@ -32,7 +35,7 @@ index 4900ab2..4f583ae 100644
      ],
      'include_dirs': [
        'source/common',
-@@ -94,7 +108,7 @@
+@@ -94,7 +109,7 @@
                'sources/': [['exclude', 'icudt46l_dat']],
                # Compile in the stub data symbol.
                'sources': ['source/stubdata/stubdata.c'],
@@ -41,7 +44,7 @@ index 4900ab2..4f583ae 100644
                # Make sure any binary depending on this gets the data file.
                'conditions': [
                  ['OS != "ios"', {
-@@ -112,7 +126,7 @@
+@@ -120,7 +135,7 @@
                    },
                  }], # OS!=ios
                ], # conditions

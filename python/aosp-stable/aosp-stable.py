@@ -1,38 +1,30 @@
 #!/usr/bin/env python
 
-# Steps to use this script:
-# python gmin-master.py --init
-# python gmin-master.py --sync all --build
-
-
 import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
 import os as OS
 
 dir_root = ''
-dir_android = ''
 dir_chromium = ''
-dir_intel = ''
 dir_out = ''
 dir_script = sys.path[0]
-dir_backup = '/workspace/service/gmin-master/temp'
+dir_backup = '/workspace/service/aosp-stable/temp'
 target_archs = []
 target_devices = []
 target_modules = []
-time = ''
 
 patches_init = {
-    'intel/.repo/manifests': ['0001-Remove-webview-and-chromium_org.patch'],
+    '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
 }
 
 patches_build = {
-    'intel/device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
-    'intel/build': [
+    'device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
+    'build': [
         '0001-build-Make-v8-and-icu-host-tool-64-bit.patch',
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch'
     ],
-    'chromium/src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
+    'external/chromium_org/src/third_party/icu': ['0001-Enable-64-bit-build-of-host-toolset.patch'],
 }
 
 
@@ -47,7 +39,7 @@ examples:
 ''')
 
     parser.add_argument('--init', dest='init', help='init', action='store_true')
-    parser.add_argument('-s', '--sync', dest='sync', help='sync code for android, chromium and intel', choices=['all', 'android', 'chromium', 'intel'])
+    parser.add_argument('-s', '--sync', dest='sync', help='sync code for android, chromium and intel', choices=['all', 'aosp', 'chromium'])
     parser.add_argument('--patch', dest='patch', help='patch', action='store_true')
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('--build-showcommands', dest='build_showcommands', help='build with detailed command', action='store_true')
@@ -65,24 +57,11 @@ examples:
 
 
 def setup():
-    global dir_root, dir_android, dir_chromium, dir_intel, dir_out, target_archs, target_devices, target_modules, time
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules
 
     dir_root = os.path.abspath(os.getcwd())
-    dir_android = dir_root + '/android'
-    dir_chromium = dir_root + '/chromium'
-    dir_intel = dir_root + '/intel'
-    dir_out = dir_intel + '/out'
-
-    if not OS.path.exists(dir_android):
-        error('Please prepare for ' + dir_android)
-
-    if not OS.path.exists(dir_chromium):
-        error('Please prepare for ' + dir_chromium)
-
-    if not OS.path.exists(dir_intel):
-        error('Please prepare for ' + dir_intel)
-
-    os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 enable_svg=0')
+    dir_chromium = dir_root + '/external/chromium_org'
+    dir_out = dir_root + '/out'
 
     if args.target_arch == 'all':
         target_archs = ['x86_64', 'x86']
@@ -99,8 +78,6 @@ def setup():
     else:
         target_modules = args.target_module.split(',')
 
-    time = get_datetime()
-
     os.chdir(dir_root)
 
 
@@ -108,47 +85,29 @@ def init():
     if not args.init:
         return()
 
-    backup_dir(dir_android)
-    execute('./repo start x64 --all')
-    restore_dir()
-
-    backup_dir(dir_intel)
-    execute('./repo start x64 --all')
-    restore_dir()
-
+    execute('curl http://android.intel.com/repo >./repo')
+    execute('chmod +x ./repo')
+    execute('./repo init -u ssh://android.intel.com/a/aosp/platform/manifest -b abt/private/topic/aosp_stable/master')
     patch(patches_init, force=True)
+    execute('./repo sync -c -j16')
+    execute('./repo start x64 --all')
 
-    intel_webview = 'intel/frameworks/webview'
-    execute('rm -rf ' + intel_webview)
-    if not OS.path.islink(intel_webview):
-        execute('ln -s %s/frameworks/webview intel/frameworks' % dir_android)
-
-    intel_chromium_org = 'intel/external/chromium_org'
-    execute('rm -rf ' + intel_chromium_org)
-    if not OS.path.islink(intel_chromium_org):
-        execute('ln -s %s/external/chromium_org intel/external' % dir_android)
-
-    android_chromium_org = 'android/external/chromium_org/src'
-    execute('rm -rf ' + android_chromium_org)
-    if not OS.path.islink(android_chromium_org):
-        execute('ln -s %s/src android/external/chromium_org' % dir_chromium)
+    upstream_chromium = 'external/chromium_org/src'
+    if not OS.path.exists(upstream_chromium):
+        info('Please put upstream Chromium under ' + upstream_chromium)
 
 
 def sync():
     if not args.sync:
         return()
 
-    if args.sync == 'all' or args.sync == 'android':
-        info('Syncing ' + dir_android)
-        _sync_repo(dir_android, './repo sync -c -j16')
+    if args.sync == 'all' or args.sync == 'aosp':
+        info('Syncing aosp...')
+        _sync_repo(dir_root, './repo sync -c -j16')
 
     if args.sync == 'all' or args.sync == 'chromium':
-        info('Syncing ' + dir_chromium)
-        _sync_repo(dir_chromium, 'gclient sync -f -n -j16')
-
-    if args.sync == 'all' or args.sync == 'intel':
-        info('Syncing ' + dir_intel)
-        _sync_repo(dir_intel, './repo sync -c -j16')
+        info('Syncing chromium...')
+        _sync_repo(dir_chromium, 'GYP_DEFINES="werror= disable_nacl=1 enable_svg=0" gclient sync -f -n -j16')
 
 
 def patch(patches, force=False):
@@ -181,12 +140,10 @@ def build():
     if not args.build:
         return
 
-    backup_dir(dir_intel)
-
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
-            execute('. build/envsetup.sh && lunch ' + combo + ' && ' + dir_intel + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-' + arch, interactive=True)
+            execute('. build/envsetup.sh && lunch ' + combo + ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-' + arch, interactive=True)
 
         if module == 'system':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && make'
@@ -199,8 +156,6 @@ def build():
         result = execute(cmd, interactive=True)
         if result[0] == 0:
             _backup_one(arch, device, module)
-
-    restore_dir()
 
 
 def backup():
@@ -215,7 +170,7 @@ def burn_image():
     if not args.burn_image:
         return
 
-    img = dir_intel + '/out/target/product/' + product + '/live.img'
+    img = dir_out + '/target/product/' + product + '/live.img'
     if not os.path.exists(img):
         error('Could not find the live image to burn')
 
@@ -291,17 +246,25 @@ def _backup_one(arch, device, module):
                 'host/linux-x86/bin/emulator*'
             ]
 
-    dir_backup_one = dir_backup + '/' + time + '-' + arch + '-' + device + '-' + module
+    time = get_datetime()
+    if OS.path.exists(dir_chromium + '/src'):
+        chromium_version = 'cr36'
+    else:
+        chromium_version = 'cr30'
+    name = time + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
+    dir_backup_one = dir_backup + '/' + name
     if not OS.path.exists(dir_backup_one):
         OS.makedirs(dir_backup_one)
     backup_dir(dir_backup_one)
-
     for backup_file in backup_files:
         dir_backup_relative = os.path.split(backup_file)[0]
         if not OS.path.exists(dir_backup_relative):
             OS.makedirs(dir_backup_relative)
         execute('cp ' + dir_out + '/' + backup_file + ' ' + dir_backup_relative)
+    restore_dir()
 
+    backup_dir(dir_backup)
+    execute('tar zcf ' + name + '.tar.gz ' + name)
     restore_dir()
 
 
