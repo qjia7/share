@@ -13,6 +13,7 @@ dir_backup = '/workspace/service/aosp-stable/temp'
 target_archs = []
 target_devices = []
 target_modules = []
+chromium_version = ''
 
 patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
@@ -57,7 +58,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version
 
     dir_root = os.path.abspath(os.getcwd())
     dir_chromium = dir_root + '/external/chromium_org'
@@ -77,6 +78,11 @@ def setup():
         target_modules = ['system']
     else:
         target_modules = args.target_module.split(',')
+
+    if OS.path.exists(dir_chromium + '/src'):
+        chromium_version = 'cr36'
+    else:
+        chromium_version = 'cr30'
 
     os.chdir(dir_root)
 
@@ -141,6 +147,13 @@ def build():
         return
 
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
+        if chromium_version == 'cr36' and arch == 'x86_64' and device == 'baytrail' and module == 'system':
+            _ensure_nonexist('external/chromium-libpac/Android.xml')
+            _ensure_nonexist('external/v8/Android.xml')
+        else:
+            _ensure_exist('external/chromium-libpac/Android.xml')
+            _ensure_exist('external/v8/Android.xml')
+
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
             execute('. build/envsetup.sh && lunch ' + combo + ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-' + arch, interactive=True)
@@ -247,10 +260,6 @@ def _backup_one(arch, device, module):
             ]
 
     time = get_datetime()
-    if OS.path.exists(dir_chromium + '/src'):
-        chromium_version = 'cr36'
-    else:
-        chromium_version = 'cr30'
     name = time + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
     if not OS.path.exists(dir_backup_one):
@@ -266,6 +275,16 @@ def _backup_one(arch, device, module):
     backup_dir(dir_backup)
     execute('tar zcf ' + name + '.tar.gz ' + name)
     restore_dir()
+
+
+def _ensure_exist(file):
+    if not OS.path.exists(file):
+        execute('mv -f %s.bk %s' % (file, file))
+
+
+def _ensure_nonexist(file):
+    if OS.path.exists(file):
+        execute('mv -f %s %s.bk' % (file, file))
 
 
 if __name__ == "__main__":
