@@ -16,7 +16,7 @@ dir_chromium = ''
 dir_intel = ''
 dir_out = ''
 dir_script = sys.path[0]
-dir_backup = '/workspace/service/gmin-master'
+dir_backup = '/workspace/service/gmin-master/temp'
 target_archs = []
 target_devices = []
 target_modules = []
@@ -185,20 +185,20 @@ def build():
 
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
         combo = _get_combo(arch, device)
+        if not args.build_skip_mk:
+            execute('. build/envsetup.sh && lunch ' + combo + ' && ' + dir_intel + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-' + arch, interactive=True)
+
         if module == 'system':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && make'
         elif module == 'webview':
-            if not args.build_skip_mk:
-                execute('. build/envsetup.sh && lunch ' + combo + ' && ' + dir_intel + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-' + arch, interactive=True)
-
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && mmma frameworks/webview'
 
         if args.build_showcommands:
             cmd += ' showcommands'
         cmd += ' -j16 2>&1 |tee log.txt'
-        execute(cmd, interactive=True)
-
-        _backup_one(arch, device, module)
+        result = execute(cmd, interactive=True)
+        if result[0] == 0:
+            _backup_one(arch, device, module)
 
     restore_dir()
 
