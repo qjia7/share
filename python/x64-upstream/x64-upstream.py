@@ -23,7 +23,7 @@ patches = {
     'src/third_party/mesa/src': ['0001-disable-log2.patch'],
 
     # Under review
-    'src/third_party/icu': ['0001-third_party-icu-x64-support.patch'],
+    'src/third_party/icu': ['0001-Enable-64-bit-build-of-host-toolset.patch'],
 
     # Can not upstream
     'ndk': [
