@@ -1,0 +1,13 @@
+This tool will create a "workspace" directory under your script directory, and all the logs, images, etc. will reside there.
+
+How to use this tool:
+1. install pyudev (optional): 
+   $cd pyudev-0.11/
+   $sudo python setup.py install
+
+2. run the downloader:
+   $python downloader.py
+
+3. run the burner:
+   $python burner.py
+
