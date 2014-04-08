@@ -20,7 +20,7 @@ patches_init = {
 }
 
 patches_build = {
-    'device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
+    #'device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
     'build': [
         '0001-build-Make-v8-and-icu-host-tool-64-bit.patch',
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch'
@@ -113,7 +113,7 @@ def sync():
 
     if args.sync == 'all' or args.sync == 'chromium':
         info('Syncing chromium...')
-        _sync_repo(dir_chromium, 'GYP_DEFINES="werror= disable_nacl=1 enable_svg=0" gclient sync -f -n -j16')
+        _sync_repo(dir_chromium, 'GYP_DEFINES="OS=android werror= disable_nacl=1 enable_svg=0" gclient sync -f -n -j16')
 
 
 def patch(patches, force=False):
@@ -156,7 +156,10 @@ def build():
 
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
-            execute('. build/envsetup.sh && lunch ' + combo + ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-' + arch, interactive=True)
+            cmd = '. build/envsetup.sh && lunch ' + combo + ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-x86'
+            if arch == 'x86_64':
+                cmd += ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-x86_64'
+            execute(cmd, interactive=True)
 
         if module == 'system':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && make'
@@ -167,8 +170,8 @@ def build():
             cmd += ' showcommands'
         cmd += ' -j16 2>&1 |tee log.txt'
         result = execute(cmd, interactive=True)
-        if result[0] == 0:
-            _backup_one(arch, device, module)
+        if result[0]:
+            error('Failed to build %s %s %s' % (arch, device, module))
 
 
 def backup():
