@@ -15,6 +15,9 @@ chromium_hash = 'ffe217eec25605f299ef6d5d9eb95ccf8c8d464d'
 
 patches = {
     # Need upstream
+    'src': [
+        '0001-Fix-unit-test-failures-of-sandbox.patch'
+    ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
     'src/third_party/lss': [
         '0001-lss-fix-the-__unused-issue.patch',
