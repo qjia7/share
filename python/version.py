@@ -3,12 +3,13 @@ from util import *
 default_java_file = '/usr/lib/jvm/default-java'
 gcc_file = '/usr/bin/gcc'
 
+
 def handle_option():
     global args
 
-    parser = argparse.ArgumentParser(description = 'Set up the version of Java',
-                                     formatter_class = argparse.RawTextHelpFormatter,
-                                     epilog = '''
+    parser = argparse.ArgumentParser(description='Set up the version of Java',
+                                     formatter_class=argparse.RawTextHelpFormatter,
+                                     epilog='''
 examples:
 
   python %(prog)s -v 1.5
@@ -25,8 +26,10 @@ examples:
     if len(sys.argv) <= 1:
         parser.print_help()
 
+
 def setup():
     pass
+
 
 def get_version():
     if not args.get_version:
@@ -37,6 +40,7 @@ def get_version():
     elif args.target == 'gcc':
         get_version_gcc()
 
+
 def set_version():
     if not args.set_version:
         return
@@ -45,6 +49,7 @@ def set_version():
         set_version_java()
     elif args.target == 'gcc':
         set_version_gcc()
+
 
 def get_version_java():
     # Output is in stderr
@@ -84,6 +89,7 @@ def get_version_java():
     info('JAVA_HOME: ' + java_home)
     info('default-java: ' + default_java)
 
+
 def set_version_java():
     if args.set_version == '1.5':
         version = '1.5.0_22'
@@ -114,6 +120,7 @@ def set_version_java():
 
     get_version_java()
 
+
 def get_version_gcc():
     gcc_version_result = execute('ls -l ' + gcc_file, show_command=True, return_output=True)
     match = re.match('.+gcc-(.+)', gcc_version_result[1])
@@ -125,6 +132,7 @@ def get_version_gcc():
 
     info('gcc version: ' + gcc_version)
 
+
 def set_version_gcc():
     version = args.set_version
     execute('sudo rm -f /usr/bin/gcc', show_command=True)
@@ -135,6 +143,7 @@ def set_version_gcc():
     execute('sudo ln -s /usr/bin/gcc /usr/bin/cc', show_command=True)
 
     get_version_gcc()
+
 
 if __name__ == "__main__":
     handle_option()
