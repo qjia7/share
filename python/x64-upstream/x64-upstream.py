@@ -7,7 +7,6 @@ from util import *
 import os as OS
 import multiprocessing
 from multiprocessing import Pool
-import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
@@ -65,7 +64,7 @@ examples:
   python %(prog)s --clean -s --sync-upstream --patch
   python %(prog)s --unittest-build --unittest-run
   python %(prog)s --test-unittest
-  python %(prog)s --unittest-recipient yang.gu@intel.com --unittest-case 'webkit_compositor_bindings_unittests' --unittest-run
+  python %(prog)s --unittest-to yang.gu@intel.com --unittest-case 'webkit_compositor_bindings_unittests' --unittest-run
 ''')
 
     parser.add_argument('--clean', dest='clean', help='clean patches and local changes', action='store_true')
@@ -82,7 +81,7 @@ examples:
 
     group_unittest = parser.add_argument_group('unittest')
     group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
-    group_unittest.add_argument('--unittest-recipient', dest='unittest_recipient', help='unittest email recipient that would override the default for test sake')
+    group_unittest.add_argument('--unittest-to', dest='unittest_to', help='unittest email receivers that would override the default for test sake')
     group_unittest.add_argument('--unittest-case', dest='unittest_case', help='unittest case')
 
     group_test = parser.add_argument_group('test')
@@ -276,8 +275,12 @@ def unittest_run(force=False):
         print dir_unittest
         OS.mkdir(dir_unittest)
 
+    number_device = len(devices)
+    if number_device < 1:
+        error('Please ensure test device is connected')
+
     OS.mkdir(dir_unittest + '/' + time)
-    pool = Pool(processes=len(devices))
+    pool = Pool(processes=number_device)
     for device in devices:
         pool.apply_async(_unittest_run_device, (device,))
     pool.close()
@@ -339,38 +342,20 @@ def _unittest_run_device(device):
 
 
 def _unittest_report(device, result_tests):
-    addressor = 'x64-noreply@intel.com'
-    if args.unittest_recipient:
-        recipients = [args.unittest_recipient]
-        copyto = []
+    if args.unittest_to:
+        to = [args.unittest_to]
     else:
-        recipients = [
+        to = [
             'jie.a.chen@intel.com',
             'yang.gu@intel.com',
             'halton.huo@intel.com',
             'zhenyu.liang@intel.com',
             'ying.han@intel.com',
             'zhiqiangx.yu@intel.com',
-        ]
-        copyto = [
             'xiaodan.jiang@intel.com',
         ]
 
-    msg_report = MIMEMultipart('related')
-    msg_report['Subject'] = 'Chromium x64 Unit Tests Report ' + time + ' ' + device
-    msg_report['From'] = addressor
-    msg_report['To'] = ','.join(recipients)
-    msg_report['Cc'] = ','.join(copyto)
-    msg_report.attach(MIMEText(_unittest_gen_report(device, result_tests), 'html'))
-
-    try:
-        # Unittests running host requires a mail-server installed, such as 'postfix'.
-        smtp = smtplib.SMTP('127.0.0.1')
-        smtp.sendmail(msg_report['From'], recipients + copyto, msg_report.as_string())
-    except Exception, e:
-        error('Failed to send unittest report of ' + time + ': ' + e)
-    finally:
-        smtp.quit()
+    send_mail('x64-noreply@intel.com', to, 'Chromium x64 Unit Tests Report ' + time + ' ' + device, _unittest_gen_report(device, result_tests), type='html')
 
 
 def _unittest_gen_report(device, result_tests):
