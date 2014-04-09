@@ -7,10 +7,8 @@ from util import *
 import os as OS
 import multiprocessing
 from multiprocessing import Pool
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
 
-chromium_hash = 'ffe217eec25605f299ef6d5d9eb95ccf8c8d464d'
+chromium_hash = '24ffc77caa1099e7e7a0b8fdc4fdf079e71127c8'
 
 patches = {
     # Need upstream
@@ -22,7 +20,6 @@ patches = {
         '0001-lss-fix-the-__unused-issue.patch',
         '0002-lss-fix-__off64_t-issue.patch'
     ],
-    'src/third_party/mesa/src': ['0001-disable-log2.patch'],
 
     # Under review
     'src/third_party/icu': ['0001-Enable-64-bit-build-of-host-toolset.patch'],
@@ -38,11 +35,13 @@ patches = {
 dir_script = sys.path[0]
 dir_root = ''
 dir_src = ''
+dir_ndk = ''
 dir_unittest = ''
 time = get_datetime()
 type = ''
 dir_out_type = ''
 dir_time = ''
+target_arch = ''
 
 cpu_count = str(multiprocessing.cpu_count() * 2)
 android_ndk_version = ''
@@ -78,6 +77,7 @@ examples:
     parser.add_argument('--type', dest='type', help='type', choices=['release', 'debug'], default='release')
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
     parser.add_argument('--devices', dest='devices', help='device id list separated by ","', default='')
+    parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64'], default='x86_64')
 
     group_unittest = parser.add_argument_group('unittest')
     group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
@@ -96,7 +96,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices
+    global dir_root, dir_src, dir_ndk, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices, target_arch
 
     if args.dir_root:
         dir_root = args.dir_root
@@ -108,10 +108,13 @@ def setup():
     dir_out_type = dir_src + '/out/' + type.capitalize()
     dir_unittest = dir_root + '/unittest'
     dir_time = dir_unittest + '/' + time
+    dir_ndk = dir_src + '/third_party/android_tools/ndk'
+
+    target_arch = args.target_arch
 
     OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
-    android_ndk_version = 'android64-ndk-' + open('ndk/RELEASE.TXT', 'r').read()
+    android_ndk_version = 'android64-ndk-' + open(dir_ndk + '/RELEASE.TXT', 'r').read()
     if not OS.path.exists(dir_unittest):
         OS.mkdir(dir_unittest)
 
@@ -152,7 +155,6 @@ def setup():
                 continue
             elif re.match('^\s*$', device_line):
                 continue
-            print device_line
             device = device_line.split(' ')[0]
             devices.append(device)
 
@@ -228,7 +230,13 @@ def build(force=False):
 
     if not args.skip_mk:
         backup_dir(dir_src)
-        command = bashify('. build/android/envsetup.sh && android_gyp -Dtarget_arch=x64 -Dwerror=')
+
+        if target_arch == 'x86':
+            target_arch_temp = 'ia32'
+        else:
+            target_arch_temp = 'x64'
+
+        command = bashify('. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp)
         execute(command, show_progress=True)
         restore_dir()
 
@@ -249,12 +257,12 @@ def set_ndk(force=False):
     if not OS.path.exists('ndk/platforms/android-19/arch-x86_64'):
         execute('ln -s ../android-20/arch-x86_64 ndk/platforms/android-19/arch-x86_64')
 
-    if not OS.path.islink('src/third_party/android_tools/ndk'):
+    if not OS.path.islink(dir_ndk):
         # Create symbolic link to real ndk
-        if not OS.path.exists('src/third_party/android_tools/ndk_bk'):
-            cmd = 'mv src/third_party/android_tools/ndk src/third_party/android_tools/ndk_bk'
+        if not OS.path.exists(dir_ndk + '_bk'):
+            cmd = 'mv %s %s_bk' % (dir_ndk, dir_ndk)
         else:
-            cmd = 'rm -rf src/third_party/android_tools/ndk'
+            cmd = 'rm -rf ' + dir_ndk
         execute(cmd, show_command=True)
         backup_dir('src/third_party/android_tools')
         execute('ln -s ../../../ndk ./', show_command=False)
