@@ -229,7 +229,7 @@ def gen_makefile():
         # We can't omit this step as android_gyp is a built-in command, instead of environmental variable.
         if args.rev < rev_envsetup:
             cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror= -Duse_goma=0')
-        elif args.rev < rev_gyp_defines:
+        elif args.rev < rev_no_android_gyp:
             cmd = bashify('source build/android/envsetup.sh && android_gyp -Dwerror= -Duse_goma=0 -Dtarget_arch=' + target_arch_temp)
         else:
             cmd = bashify('source build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Duse_goma=0 -Dtarget_arch=' + target_arch_temp)
