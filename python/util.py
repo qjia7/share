@@ -10,12 +10,17 @@ import argparse
 import subprocess
 import logging
 import time
+import smtplib
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+import socket
 
 import re
 import commands
 
 formatter = logging.Formatter('[%(asctime)s - %(levelname)s] %(message)s', "%Y-%m-%d %H:%M:%S")
 host_os = platform.system()
+host_name = socket.gethostname()
 args = argparse.Namespace()
 dir_stack = []
 
@@ -169,6 +174,39 @@ def backup_dir(new_dir):
 def restore_dir():
     global dir_stack
     os.chdir(dir_stack.pop())
+
+
+def package_installed(pkg):
+    result = execute('dpkg -s ' + pkg, show_command=False)
+    if result[0]:
+        return False
+    else:
+        return True
+
+
+# To send email on Ubuntu, you may need to install smtp server, such as postfix.
+# type: type of content, can be plain or html
+def send_mail(sender, to, subject, content, type='plain'):
+    if not package_installed('postfix'):
+        return
+
+    # Ensure to is a list
+    if isinstance(to, str):
+        to = [to]
+
+    msg = MIMEMultipart('alternative')
+    msg['From'] = sender
+    msg['To'] = ','.join(to)
+    msg['Subject'] = subject
+    msg.attach(MIMEText(content, type))
+
+    try:
+        smtp = smtplib.SMTP('127.0.0.1')
+        smtp.sendmail(sender, to, msg.as_string())
+    except Exception:
+        error('Failed to send mail at ' + host_name, abort=False)
+    finally:
+        smtp.quit()
 ################################################################################
 
 
