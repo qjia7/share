@@ -10,10 +10,13 @@ target_arch = ''
 target_module = ''
 # From this rev, do not append --target-arch to envsetup.sh, instead, use android_gyp -Dtarget_arch.
 # From rev 252166, envsetup.sh --target-arch would report an error.
-envsetup_rev = 252034
+rev_envsetup = 252034
 
 # Form this rev, envsetup would no longer set OS=android, we need to define it using GYP_DEFINES='OS=android'
-gyp_defines_rev = 260548
+rev_gyp_defines = 260548
+
+# From this rev, android_gyp is no longer supported. Use gyp_chromium instead.
+rev_no_android_gyp = 262292
 
 
 def has_build_dir():
@@ -145,14 +148,14 @@ def setup():
         os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 component=shared_library enable_svg=0')
         os.putenv('CHROME_DEVEL_SANDBOX', '/usr/local/sbin/chrome-devel-sandbox')
     elif target_os == 'android':
-        if args.rev < envsetup_rev:
+        if args.rev < rev_envsetup:
             backup_dir(src_dir)
             shell_source('build/android/envsetup.sh --target-arch=' + target_arch, use_bash=True)
             restore_dir()
             if not os.getenv('ANDROID_SDK_ROOT'):
                 error('Environment is not well set')
 
-        if args.rev < gyp_defines_rev:
+        if args.rev < rev_gyp_defines:
             os.putenv('GYP_DEFINES', 'werror= disable_nacl=1 enable_svg=0')
         else:
             os.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
@@ -196,7 +199,7 @@ def update():
 
     cmd = 'gclient ' + args.update
     if target_os == 'android':
-        if args.rev < envsetup_rev:
+        if args.rev < rev_envsetup:
             cmd = 'source src/build/android/envsetup.sh --target-arch=' + target_arch + ' && ' + cmd
         else:
             cmd = 'source src/build/android/envsetup.sh && ' + cmd
@@ -224,14 +227,16 @@ def gen_makefile():
             target_arch_temp = target_arch
 
         # We can't omit this step as android_gyp is a built-in command, instead of environmental variable.
-        if args.rev < envsetup_rev:
+        if args.rev < rev_envsetup:
             cmd = bashify('source build/android/envsetup.sh --target-arch=' + target_arch + ' && android_gyp -Dwerror= -Duse_goma=0')
-        else:
+        elif args.rev < rev_gyp_defines:
             cmd = bashify('source build/android/envsetup.sh && android_gyp -Dwerror= -Duse_goma=0 -Dtarget_arch=' + target_arch_temp)
+        else:
+            cmd = bashify('source build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Duse_goma=0 -Dtarget_arch=' + target_arch_temp)
     else:
         cmd = 'build/gyp_chromium -Dwerror='
 
-    result = execute(cmd)
+    result = execute(cmd, interactive=True)
     if result[0]:
         error('Fail to execute command: ' + cmd, error_code=result[0])
 
