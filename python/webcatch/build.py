@@ -395,6 +395,7 @@ def build_one(build_next):
     result = execute(cmd_sync, dryrun=DRYRUN, interactive=True)
     if result[0]:
         execute(remotify_cmd('rm -f ' + file_lock))
+        send_mail('webcatch@intel.com', 'yang.gu@intel.com', '[webcatch] Failed to sync at ' + host_name, '')
         error('Sync failed', error_code=result[0])
 
     patch_after_sync(os, arch, module, rev)
@@ -408,6 +409,7 @@ def build_one(build_next):
         result = execute(cmd_gen_mk, dryrun=DRYRUN)
         if result[0]:
             execute(remotify_cmd('rm -f ' + file_lock))
+            send_mail('webcatch@intel.com', 'yang.gu@intel.com', '[webcatch] Failed to generate makefile at ' + host_name, '')
             error('Failed to generate makefile')
 
     patch_before_build(os, arch, module, rev)
