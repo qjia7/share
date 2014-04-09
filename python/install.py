@@ -127,14 +127,6 @@ def overwrite_file(srcFile, destDir, sudo, srcSubDir=""):
     return status
 
 
-def package_installed(pkg):
-    result = execute('dpkg -s ' + pkg, show_command=False)
-    if result[0]:
-        return False
-    else:
-        return True
-
-
 def install_package(pkg_list):
     for pkg in pkg_list:
         if package_installed(pkg):
