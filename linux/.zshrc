@@ -723,7 +723,7 @@ export PATH=$PATH:$JAVA_HOME/bin
 hostname=$(hostname)
 
 if [ $hostname == "ubuntu-ygu5-01" -o $hostname == "ubuntu-ygu5-02" ] ; then
-    cd /workspace/project/acr64
+    cd /workspace/project
 elif [ $hostname == "ubuntu-y560d" ] ; then
     cd /workspace/project/gyagp/share
 else
