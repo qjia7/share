@@ -8,28 +8,20 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = '24ffc77caa1099e7e7a0b8fdc4fdf079e71127c8'
+chromium_hash = '538cecae76a8b9227601c6c2c43a3b408446bd55'
 
 patches = {
     # Need upstream
-    'src': [
-        '0001-Fix-unit-test-failures-of-sandbox.patch'
-    ],
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
-    'src/third_party/lss': [
-        '0001-lss-fix-the-__unused-issue.patch',
-        '0002-lss-fix-__off64_t-issue.patch'
+    'src/third_party/android_tools': [
+        '0001-ndk-Add-gyp-files.patch',
     ],
 
     # Under review
-    'src/third_party/icu': ['0001-Enable-64-bit-build-of-host-toolset.patch'],
-
-    # Can not upstream
-    'ndk': [
-        '0001-ndk-Add-gyp-files.patch',
-        '0002-ndk-fix-for-Android-x64.patch',
-        '0003-Rename-gdbserver-to-gdbserver64.patch',
+    'src': [
+        '0001-Fix-unit-test-failures-of-sandbox.patch',
     ],
+    'src/third_party/icu': ['0001-Enable-64-bit-build-of-host-toolset.patch'],
 }
 
 dir_script = sys.path[0]
@@ -75,7 +67,6 @@ examples:
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('--build-fail', dest='build_fail', help='allow n build failures before it stops', default='0')
     parser.add_argument('--skip-mk', dest='skip_mk', help='skip the generation of makefile', action='store_true')
-    parser.add_argument('--set-ndk', dest='set_ndk', help='set up ndk', action='store_true')
     parser.add_argument('--type', dest='type', help='type', choices=['release', 'debug'], default='release')
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
     parser.add_argument('--devices', dest='devices', help='device id list separated by ","', default='')
@@ -115,6 +106,8 @@ def setup():
     dir_ndk = dir_src + '/third_party/android_tools/ndk'
 
     target_arch = args.target_arch
+    if target_arch == 'x86_64':
+        dir_ndk += '_experimental'
 
     OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
@@ -183,10 +176,6 @@ def clean(force=False):
 
     cmd = 'gclient revert -n -j16'
     execute(cmd, show_progress=True)
-
-    backup_dir('ndk')
-    cmd = bashify('git reset --hard $(git log --oneline|tail -1|awk \'{print $1}\') && rm -rf android_tools_ndk.gyp crazy_linker.gyp .git')
-    execute(cmd)
     restore_dir()
 
 
@@ -210,8 +199,6 @@ def sync(force=False):
 def patch(force=False):
     if not args.patch and not force:
         return
-
-    set_ndk(force=True)
 
     for repo in patches:
         backup_dir(repo)
@@ -263,34 +250,6 @@ def build(force=False):
     result = execute(ninja_cmd, show_progress=True)
     if result[0]:
         error('Failed to execute command: ' + ninja_cmd, error_code=result[0])
-
-
-def set_ndk(force=False):
-    if not args.set_ndk and not force:
-        return
-
-    if not OS.path.exists('ndk'):
-        error('Please put ndk under ' + get_symbolic_link_dir())
-
-    if not OS.path.exists('ndk/platforms/android-19/arch-x86_64'):
-        execute('ln -s ../android-20/arch-x86_64 ndk/platforms/android-19/arch-x86_64')
-
-    if not OS.path.islink(dir_ndk):
-        # Create symbolic link to real ndk
-        if not OS.path.exists(dir_ndk + '_bk'):
-            cmd = 'mv %s %s_bk' % (dir_ndk, dir_ndk)
-        else:
-            cmd = 'rm -rf ' + dir_ndk
-        execute(cmd, show_command=True)
-        backup_dir('src/third_party/android_tools')
-        execute('ln -s ../../../ndk ./', show_command=False)
-        restore_dir()
-
-    # Init a git repo
-    if not OS.path.exists('ndk/.git'):
-        backup_dir('ndk')
-        execute('git init && git add . && git commit -a -m "orig"')
-        restore_dir()
 
 
 def unittest_run(force=False):
@@ -509,7 +468,6 @@ if __name__ == '__main__':
     setup()
     clean()
     sync()
-    set_ndk()
     patch()
     build()
 

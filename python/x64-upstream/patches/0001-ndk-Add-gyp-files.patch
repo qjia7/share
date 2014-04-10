@@ -1,20 +1,20 @@
-From 4b3d5a1d8d83529c22269a933affe1167b0d22d5 Mon Sep 17 00:00:00 2001
-From: Yang Gu <yang.gu@intel.com>
-Date: Thu, 20 Feb 2014 16:25:33 +0800
-Subject: [PATCH 1/2] ndk: Add gyp files
+From a93674de8e24d467efaf139a92aff9ffe3fd3cec Mon Sep 17 00:00:00 2001
+From: Zhenyu Liang <zhenyu.liang@intel.com>
+Date: Thu, 10 Apr 2014 19:26:07 +0800
+Subject: [PATCH] ndk: Add gyp files
 
 ---
- android_tools_ndk.gyp | 20 ++++++++++++++++++
- crazy_linker.gyp      | 57 +++++++++++++++++++++++++++++++++++++++++++++++++++
+ ndk_experimental/android_tools_ndk.gyp |   20 +++++++++++
+ ndk_experimental/crazy_linker.gyp      |   57 ++++++++++++++++++++++++++++++++
  2 files changed, 77 insertions(+)
- create mode 100644 android_tools_ndk.gyp
- create mode 100644 crazy_linker.gyp
+ create mode 100644 ndk_experimental/android_tools_ndk.gyp
+ create mode 100644 ndk_experimental/crazy_linker.gyp
 
-diff --git a/android_tools_ndk.gyp b/android_tools_ndk.gyp
+diff --git a/ndk_experimental/android_tools_ndk.gyp b/ndk_experimental/android_tools_ndk.gyp
 new file mode 100644
 index 0000000..a73f685
 --- /dev/null
-+++ b/android_tools_ndk.gyp
++++ b/ndk_experimental/android_tools_ndk.gyp
 @@ -0,0 +1,20 @@
 +# Copyright (c) 2012 The Chromium Authors. All rights reserved.
 +# Use of this source code is governed by a BSD-style license that can be
@@ -36,11 +36,11 @@ index 0000000..a73f685
 +    },
 +  ],
 +}
-diff --git a/crazy_linker.gyp b/crazy_linker.gyp
+diff --git a/ndk_experimental/crazy_linker.gyp b/ndk_experimental/crazy_linker.gyp
 new file mode 100644
 index 0000000..834ffbb
 --- /dev/null
-+++ b/crazy_linker.gyp
++++ b/ndk_experimental/crazy_linker.gyp
 @@ -0,0 +1,57 @@
 +# Copyright (c) 2013 The Chromium Authors. All rights reserved.
 +# Use of this source code is governed by a BSD-style license that can be
@@ -100,5 +100,5 @@ index 0000000..834ffbb
 +  ],
 +}
 -- 
-1.8.3.2
+1.7.10.4
 
