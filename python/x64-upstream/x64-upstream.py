@@ -42,6 +42,7 @@ type = ''
 dir_out_type = ''
 dir_time = ''
 target_arch = ''
+target_module = ''
 
 cpu_count = str(multiprocessing.cpu_count() * 2)
 android_ndk_version = ''
@@ -77,7 +78,8 @@ examples:
     parser.add_argument('--type', dest='type', help='type', choices=['release', 'debug'], default='release')
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
     parser.add_argument('--devices', dest='devices', help='device id list separated by ","', default='')
-    parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64'], default='x86_64')
+    parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'arm'], default='x86_64')
+    parser.add_argument('--target-module', dest='target_module', help='target module to build', choices=['chrome', 'webview', 'content_shell'], default='webview')
 
     group_unittest = parser.add_argument_group('unittest')
     group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
@@ -96,7 +98,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, dir_ndk, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices, target_arch
+    global dir_root, dir_src, dir_ndk, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices, target_arch, target_module
 
     if args.dir_root:
         dir_root = args.dir_root
@@ -157,6 +159,8 @@ def setup():
                 continue
             device = device_line.split(' ')[0]
             devices.append(device)
+
+    target_module = args.target_module
 
 
 def clean(force=False):
@@ -240,7 +244,14 @@ def build(force=False):
         execute(command, show_progress=True)
         restore_dir()
 
-    ninja_cmd = 'ninja -k' + args.build_fail + ' -j' + cpu_count + ' -C ' + dir_out_type + ' android_webview_apk'
+    ninja_cmd = 'ninja -k' + args.build_fail + ' -j' + cpu_count + ' -C ' + dir_out_type
+    if target_module == 'webview':
+        ninja_cmd += ' android_webview_apk'
+    elif target_module == 'content_shell':
+        ninja_cmd += ' content_shell_apk'
+    else:
+        ninja_cmd += ' ' + target_module
+
     ninja_cmd += ' 2>&1 |tee ' + dir_root + '/build.log'
     result = execute(ninja_cmd, show_progress=True)
     if result[0]:
