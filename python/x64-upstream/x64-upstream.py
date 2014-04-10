@@ -158,7 +158,13 @@ def setup():
                 continue
             elif re.match('^\s*$', device_line):
                 continue
-            device = device_line.split(' ')[0]
+
+            pattern = re.compile('device:(.*)')
+            match = pattern.search(device_line)
+            if match:
+                device = match.group(1)
+            else:
+                device = device_line.split(' ')[0]
             devices.append(device)
 
     target_module = args.target_module
