@@ -188,6 +188,7 @@ def package_installed(pkg):
 # type: type of content, can be plain or html
 def send_mail(sender, to, subject, content, type='plain'):
     if not package_installed('postfix'):
+        warning('Email can not be sent as postfix is not installed')
         return
 
     # Ensure to is a list
