@@ -332,8 +332,9 @@ def test_unittest(force=False):
 
 def _unittest_run_device(index_device):
     device = devices[index_device]
-    dir_device = dir_time + '/' + device
-    OS.mkdir(dir_device)
+    device_name = devices_name[index_device]
+    dir_device_name = dir_time + '/' + device_name
+    OS.mkdir(dir_device_name)
 
     result_tests = []
     for unit_test in unit_tests:
@@ -342,18 +343,22 @@ def _unittest_run_device(index_device):
             cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_stripped'
         else:
             cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_apk'
+
+        if type == 'debug':
+            cmd += ' md5sum'
         result = execute(cmd, interactive=True)
         if result[0]:
             error('Failed to build \'' + unit_test + '\'', abort=False)
             result_tests.append('FAIL')
             continue
         else:
-            info('Succeeded to build \'' + unit_test + '\'')
+            info('Succeeded to build' + unit_test)
             result_tests.append('PASS')
 
         # Run
-        cmd = 'src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device + '/' + unit_test + '.log'
+        cmd = 'src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device_name + '/' + unit_test + '.log'
         result = execute(cmd, interactive=True)
+        print result
         if result[0]:
             error('Failed to run \'' + unit_test + '\'', error_code=result[0], abort=False)
         else:
@@ -382,7 +387,6 @@ def _unittest_report(index_device, result_tests):
 
 
 def _unittest_gen_report(index_device, result_tests):
-    device = devices[index_device]
     device_name = devices_name[index_device]
     html_start = '''
 <html>
@@ -439,7 +443,7 @@ def _unittest_gen_report(index_device, result_tests):
 '''
 
     html = html_start
-    dir_device = dir_time + '/' + device
+    dir_device_name = dir_time + '/' + device_name
     for index, unit_test in enumerate(unit_tests):
         bs = result_tests[index]
 
@@ -452,7 +456,7 @@ def _unittest_gen_report(index_device, result_tests):
         ut_unknow = ''
 
         if len(bs) > 0:
-            ut_result = open(dir_device + '/' + unit_test + '.log', 'r')
+            ut_result = open(dir_device_name + '/' + unit_test + '.log', 'r')
             lines = ut_result.readlines()
             for line in lines:
                 if 'Main  ALL (' in line:
