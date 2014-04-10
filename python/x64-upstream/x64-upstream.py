@@ -47,6 +47,7 @@ target_module = ''
 cpu_count = str(multiprocessing.cpu_count() * 2)
 android_ndk_version = ''
 devices = []
+devices_name = []
 unit_tests = []
 
 ################################################################################
@@ -99,7 +100,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, dir_ndk, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices, target_arch, target_module
+    global dir_root, dir_src, dir_ndk, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices, devices_name, target_arch, target_module
 
     if args.dir_root:
         dir_root = args.dir_root
@@ -161,11 +162,10 @@ def setup():
 
             pattern = re.compile('device:(.*)')
             match = pattern.search(device_line)
-            if match:
-                device = match.group(1)
-            else:
-                device = device_line.split(' ')[0]
+            device_name = match.group(1)
+            device = device_line.split(' ')[0]
             devices.append(device)
+            devices_name.append(device_name)
 
     target_module = args.target_module
 
@@ -298,7 +298,6 @@ def unittest_run(force=False):
         return
 
     if not OS.path.exists(dir_unittest):
-        print dir_unittest
         OS.mkdir(dir_unittest)
 
     number_device = len(devices)
@@ -307,8 +306,8 @@ def unittest_run(force=False):
 
     OS.mkdir(dir_unittest + '/' + time)
     pool = Pool(processes=number_device)
-    for device in devices:
-        pool.apply_async(_unittest_run_device, (device,))
+    for index, device in enumerate(devices):
+        pool.apply_async(_unittest_run_device, (index,))
     pool.close()
     pool.join()
 
@@ -331,13 +330,13 @@ def test_unittest(force=False):
     unittest_run(force=True)
 
 
-def _unittest_run_device(device):
+def _unittest_run_device(index_device):
+    device = devices[index_device]
     dir_device = dir_time + '/' + device
     OS.mkdir(dir_device)
 
     result_tests = []
     for unit_test in unit_tests:
-        result_test = []
         # Build
         if unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
             cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_stripped'
@@ -346,29 +345,26 @@ def _unittest_run_device(device):
         result = execute(cmd, interactive=True)
         if result[0]:
             error('Failed to build \'' + unit_test + '\'', abort=False)
-            result_test = ['FAIL', 'FAIL']
-            result_tests.append(result_test)
+            result_tests.append('FAIL')
             continue
         else:
             info('Succeeded to build \'' + unit_test + '\'')
-            result_test = ['PASS']
+            result_tests.append('PASS')
 
         # Run
         cmd = 'src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device + '/' + unit_test + '.log'
         result = execute(cmd, interactive=True)
         if result[0]:
             error('Failed to run \'' + unit_test + '\'', error_code=result[0], abort=False)
-            result_test.append('FAIL')
         else:
             info('Succeeded to run \'' + unit_test + '\'')
-            result_test.append('PASS')
-        result_tests.append(result_test)
 
     if args.unittest_sendmail:
-        _unittest_report(device, result_tests)
+        _unittest_report(index_device, result_tests)
 
 
-def _unittest_report(device, result_tests):
+def _unittest_report(index_device, result_tests):
+    device = devices[index_device]
     if args.unittest_to:
         to = [args.unittest_to]
     else:
@@ -382,10 +378,12 @@ def _unittest_report(device, result_tests):
             'xiaodan.jiang@intel.com',
         ]
 
-    send_mail('x64-noreply@intel.com', to, 'Chromium x64 Unit Tests Report ' + time + ' ' + device, _unittest_gen_report(device, result_tests), type='html')
+    send_mail('x64-noreply@intel.com', to, 'Chromium x64 Unit Tests Report ' + time + ' ' + device, _unittest_gen_report(index_device, result_tests), type='html')
 
 
-def _unittest_gen_report(device, result_tests):
+def _unittest_gen_report(index_device, result_tests):
+    device = devices[index_device]
+    device_name = devices_name[index_device]
     html_start = '''
 <html>
   <head>
@@ -410,7 +408,7 @@ def _unittest_gen_report(device, result_tests):
           <h2 id="Environment">Environment</h2>
           <ul>
             <li>Chromium hash: ''' + chromium_hash + '''</li>
-            <li>Target Device: ''' + device + '''</li>
+            <li>Target Device: ''' + device_name + '''</li>
             <li>Android NDK: ''' + android_ndk_version + '''</li>
           </ul>
 
@@ -443,8 +441,7 @@ def _unittest_gen_report(device, result_tests):
     html = html_start
     dir_device = dir_time + '/' + device
     for index, unit_test in enumerate(unit_tests):
-        bs = result_tests[index][0]
-        rs = result_tests[index][1]
+        bs = result_tests[index]
 
         # parse log
         ut_all = ''
@@ -454,7 +451,7 @@ def _unittest_gen_report(device, result_tests):
         ut_timeout = ''
         ut_unknow = ''
 
-        if len(rs) > 0:
+        if len(bs) > 0:
             ut_result = open(dir_device + '/' + unit_test + '.log', 'r')
             lines = ut_result.readlines()
             for line in lines:
@@ -475,6 +472,11 @@ def _unittest_gen_report(device, result_tests):
         ut_bs_td_start = '''<td>'''
         ut_rs_td_start = '''<td>'''
         ut_td_end = '''</td>'''
+
+        if int(ut_all) == int(ut_pass):
+            rs = 'PASS'
+        else:
+            rs = 'FAIL'
 
         if bs == 'PASS':
             ut_bs_td_start = '''<td style='color:green'>'''
