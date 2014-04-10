@@ -364,7 +364,7 @@ def _unittest_run_device(index_device):
 
 
 def _unittest_report(index_device, result_tests):
-    device = devices[index_device]
+    device_name = devices_name[index_device]
     if args.unittest_to:
         to = [args.unittest_to]
     else:
