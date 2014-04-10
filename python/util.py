@@ -204,6 +204,7 @@ def send_mail(sender, to, subject, content, type='plain'):
     try:
         smtp = smtplib.SMTP('127.0.0.1')
         smtp.sendmail(sender, to, msg.as_string())
+        info('Email was sent successfully')
     except Exception:
         error('Failed to send mail at ' + host_name, abort=False)
     finally:
