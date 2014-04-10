@@ -358,7 +358,6 @@ def _unittest_run_device(index_device):
         # Run
         cmd = 'src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device_name + '/' + unit_test + '.log'
         result = execute(cmd, interactive=True)
-        print result
         if result[0]:
             error('Failed to run \'' + unit_test + '\'', error_code=result[0], abort=False)
         else:
