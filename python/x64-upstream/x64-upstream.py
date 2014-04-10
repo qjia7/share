@@ -85,6 +85,7 @@ examples:
     group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
     group_unittest.add_argument('--unittest-to', dest='unittest_to', help='unittest email receivers that would override the default for test sake')
     group_unittest.add_argument('--unittest-case', dest='unittest_case', help='unittest case')
+    group_unittest.add_argument('--unittest-sendmail', dest='unittest_sendmail', help='send mail about result', action='store_true')
 
     group_test = parser.add_argument_group('test')
     group_test.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
@@ -357,7 +358,8 @@ def _unittest_run_device(device):
             result_test.append('PASS')
         result_tests.append(result_test)
 
-    _unittest_report(device, result_tests)
+    if args.unittest_sendmail:
+        _unittest_report(device, result_tests)
 
 
 def _unittest_report(device, result_tests):
