@@ -378,7 +378,7 @@ def _unittest_report(index_device, result_tests):
             'xiaodan.jiang@intel.com',
         ]
 
-    send_mail('x64-noreply@intel.com', to, 'Chromium x64 Unit Tests Report ' + time + ' ' + device, _unittest_gen_report(index_device, result_tests), type='html')
+    send_mail('x64-noreply@intel.com', to, 'Chromium x64 Unit Tests Report ' + time + ' ' + device_name, _unittest_gen_report(index_device, result_tests), type='html')
 
 
 def _unittest_gen_report(index_device, result_tests):
