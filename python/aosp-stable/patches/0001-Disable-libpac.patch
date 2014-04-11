@@ -1,0 +1,82 @@
+From 571a4f14cda93b26c8cb98517bb1651936826fb9 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 11 Apr 2014 16:13:26 +0800
+Subject: [PATCH] Disable libpac
+
+Change-Id: I12abfd0e3f5d956752287255367d8cb8ea8ed5df
+---
+ Android.mk    | 27 ---------------------------
+ Android.mk.bk | 27 +++++++++++++++++++++++++++
+ 2 files changed, 27 insertions(+), 27 deletions(-)
+ delete mode 100644 Android.mk
+ create mode 100644 Android.mk.bk
+
+diff --git a/Android.mk b/Android.mk
+deleted file mode 100644
+index 675f480..0000000
+--- a/Android.mk
++++ /dev/null
+@@ -1,27 +0,0 @@
+-LOCAL_PATH := $(call my-dir)
+-include $(CLEAR_VARS)
+-
+-LOCAL_CPP_EXTENSION := .cc
+-
+-# Set up the target identity
+-LOCAL_MODULE := libpac
+-LOCAL_MODULE_CLASS := SHARED_LIBRARIES
+-
+-LOCAL_SRC_FILES := \
+-  src/proxy_resolver_v8.cc \
+-  src/proxy_resolver_js_bindings.cc \
+-  src/net_util.cc
+-
+-LOCAL_CFLAGS += \
+-  -Wno-endif-labels \
+-  -Wno-import \
+-  -Wno-format \
+-
+-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src external/v8
+-
+-LOCAL_STATIC_LIBRARIES := libv8
+-LOCAL_SHARED_LIBRARIES := libutils libstlport liblog
+-
+-include external/stlport/libstlport.mk
+-
+-include $(BUILD_SHARED_LIBRARY)
+diff --git a/Android.mk.bk b/Android.mk.bk
+new file mode 100644
+index 0000000..675f480
+--- /dev/null
++++ b/Android.mk.bk
+@@ -0,0 +1,27 @@
++LOCAL_PATH := $(call my-dir)
++include $(CLEAR_VARS)
++
++LOCAL_CPP_EXTENSION := .cc
++
++# Set up the target identity
++LOCAL_MODULE := libpac
++LOCAL_MODULE_CLASS := SHARED_LIBRARIES
++
++LOCAL_SRC_FILES := \
++  src/proxy_resolver_v8.cc \
++  src/proxy_resolver_js_bindings.cc \
++  src/net_util.cc
++
++LOCAL_CFLAGS += \
++  -Wno-endif-labels \
++  -Wno-import \
++  -Wno-format \
++
++LOCAL_C_INCLUDES += $(LOCAL_PATH)/src external/v8
++
++LOCAL_STATIC_LIBRARIES := libv8
++LOCAL_SHARED_LIBRARIES := libutils libstlport liblog
++
++include external/stlport/libstlport.mk
++
++include $(BUILD_SHARED_LIBRARY)
+-- 
+1.8.3.2
+

@@ -9,7 +9,7 @@ dir_root = ''
 dir_chromium = ''
 dir_out = ''
 dir_script = sys.path[0]
-dir_backup = '/workspace/service/aosp-stable/temp'
+dir_backup = '/workspace/service/www/aosp-stable/temp'
 target_archs = []
 target_devices = []
 target_modules = []
@@ -19,13 +19,20 @@ patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
 }
 
+patches_disable_2nd_arch = {
+    'device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
+}
+
+patches_disable_libpac = {
+    'external/chromium-libpac': ['0001-Disable-libpac.patch'],
+}
+
 patches_build = {
-    #'device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
     'build': [
         '0001-build-Make-v8-and-icu-host-tool-64-bit.patch',
-        '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch'
+        '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
     ],
-    'external/chromium_org/src/third_party/icu': ['0001-Enable-64-bit-build-of-host-toolset.patch'],
+    'external/chromium_org/src/': ['0001-Fix-sandbox.patch'],
 }
 
 
@@ -37,6 +44,7 @@ def handle_option():
                                      epilog='''
 examples:
   python %(prog)s -s all -b
+  python %(prog)s -b --build-skip-mk --disable-2nd-arch
 ''')
 
     parser.add_argument('--init', dest='init', help='init', action='store_true')
@@ -44,12 +52,13 @@ examples:
     parser.add_argument('--patch', dest='patch', help='patch', action='store_true')
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('--build-showcommands', dest='build_showcommands', help='build with detailed command', action='store_true')
-    parser.add_argument('--build_skip_mk', dest='build_skip_mk', help='skip the generation of makefile', action='store_true')
+    parser.add_argument('--build-skip-mk', dest='build_skip_mk', help='skip the generation of makefile', action='store_true')
+    parser.add_argument('--disable-2nd-arch', dest='disable_2nd_arch', help='disable 2nd arch, only effective for baytrail', action='store_true')
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--backup', dest='backup', help='backup output', action='store_true')
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
-    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['webview', 'system', 'all'], default='webview')
+    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['webview', 'system', 'all'], default='system')
 
     args = parser.parse_args()
 
@@ -84,7 +93,7 @@ def setup():
     else:
         chromium_version = 'cr30'
 
-    os.chdir(dir_root)
+    OS.chdir(dir_root)
 
 
 def init():
@@ -120,39 +129,35 @@ def patch(patches, force=False):
     if not args.patch and not force:
         return
 
-    for repo in patches:
-        backup_dir(repo)
-        for patch in patches[repo]:
-            patch_path = dir_script + '/patches/' + patch
-            file = open(patch_path)
-            lines = file.readlines()
-            file.close()
-
-            pattern = re.compile('Subject: \[PATCH.*\] (.*)')
-            match = pattern.search(lines[3])
-            title = match.group(1)
-            result = execute('git show -s --pretty="format:%s" --max-count=30 |grep "' + title + '"', show_command=False)
-            if result[0]:
-                cmd = 'git am ' + patch_path
+    for dir_repo in patches:
+        for patch in patches[dir_repo]:
+            path_patch = dir_script + '/patches/' + patch
+            if _patch_applied(dir_repo, path_patch):
+                info('Patch ' + patch + ' was applied before, so is just skipped here')
+            else:
+                cmd = 'git am ' + path_patch
+                backup_dir(dir_repo)
                 result = execute(cmd, show_progress=True)
+                restore_dir()
                 if result[0]:
                     error('Fail to apply patch ' + patch, error_code=result[0])
-            else:
-                info('Patch ' + patch + ' was applied before, so is just skipped here')
-        restore_dir()
 
 
 def build():
     if not args.build:
         return
 
+    _patch_cond(args.disable_2nd_arch, patches_disable_2nd_arch)
+
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
-        if chromium_version == 'cr36' and arch == 'x86_64' and device == 'baytrail' and module == 'system':
-            _ensure_nonexist('external/chromium-libpac/Android.mk')
-            _ensure_nonexist('external/v8/Android.mk')
-        else:
-            _ensure_exist('external/chromium-libpac/Android.mk')
-            _ensure_exist('external/v8/Android.mk')
+        #if chromium_version == 'cr36' and arch == 'x86_64' and device == 'baytrail' and module == 'system':
+        #    _ensure_nonexist('external/chromium-libpac/Android.mk')
+        #    _ensure_nonexist('external/v8/Android.mk')
+        #else:
+        #    _ensure_exist('external/chromium-libpac/Android.mk')
+        #    _ensure_exist('external/v8/Android.mk')
+
+        _patch_cond(arch == 'x86_64' and device == 'baytrail', patches_disable_libpac)
 
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
@@ -186,7 +191,15 @@ def burn_image():
     if not args.burn_image:
         return
 
-    img = dir_out + '/target/product/' + product + '/live.img'
+    if len(target_archs) > 1:
+        error('You need to specify the target arch')
+
+    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+        error('Only baytrail can burn the image')
+
+    arch = target_archs[0]
+    device = target_devices[0]
+    img = dir_out + '/target/product/' + _get_product(arch, device) + '/live.img'
     if not os.path.exists(img):
         error('Could not find the live image to burn')
 
@@ -235,21 +248,23 @@ def _get_product(arch, device):
 
 def _backup_one(arch, device, module):
     if arch == 'x86_64':
-        dir_lib = 'lib64'
+        libs = ['lib64', 'lib']
     elif arch == 'x86':
-        dir_lib = 'lib'
+        libs = ['lib']
 
     product = _get_product(arch, device)
 
     backup_files = [
         'target/product/' + product + '/system/framework/webviewchromium.jar',
         'target/product/' + product + '/system/framework/webview/paks/*.pak',
-        'target/product/' + product + '/system/' + dir_lib + '/libwebviewchromium_plat_support.so',
-        'target/product/' + product + '/system/' + dir_lib + '/libwebviewchromium.so',
-        # binary with symbol is just too big, disable them temporarily.
-        #'target/product/' + product + '/symbols/system/' + dir_lib + '/libwebviewchromium_plat_support.so',
-        #'target/product/' + product + '/symbols/system/' + dir_lib + '/libwebviewchromium.so',
     ]
+
+    for lib in libs:
+        backup_files.append('target/product/' + product + '/system/' + lib + '/libwebviewchromium_plat_support.so')
+        backup_files.append('target/product/' + product + '/system/' + lib + '/libwebviewchromium.so')
+        # binary with symbol is just too big, disable them temporarily.
+        #backup_files.append('target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium_plat_support.so')
+        #backup_files.append('target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium.so')
 
     if module == 'system':
         if device == 'baytrail':
@@ -288,6 +303,48 @@ def _ensure_exist(file):
 def _ensure_nonexist(file):
     if OS.path.exists(file):
         execute('mv -f %s %s.bk' % (file, file))
+
+
+# repo: repo path
+# path_patch: Full path of patch
+# count: Recent commit count to check
+def _patch_applied(dir_repo, path_patch, count=30):
+    file = open(path_patch)
+    lines = file.readlines()
+    file.close()
+
+    pattern = re.compile('Subject: \[PATCH.*\] (.*)')
+    match = pattern.search(lines[3])
+    title = match.group(1)
+    backup_dir(dir_repo)
+    result = execute('git show -s --pretty="format:%s" --max-count=' + str(count) + ' |grep "%s"' % title, show_command=False)
+    restore_dir()
+    if result[0]:
+        return False
+    else:
+        return True
+
+
+def _patch_cond(cond_true, patches):
+    if cond_true:
+        patch(patches, force=True)
+    else:
+        _patch_remove(patches)
+
+
+def _patch_remove(patches):
+    dir_repo = patches.keys()[0]
+    path_patch = dir_script + '/patches/' + patches.values()[0][0]
+
+    if not _patch_applied(dir_repo, path_patch):
+        return
+
+    if not _patch_applied(dir_repo, path_patch, count=1):
+        error('Can not revert the patch to enable 2nd arch')
+
+    backup_dir(dir_repo)
+    execute('git reset --hard HEAD^')
+    restore_dir()
 
 
 if __name__ == "__main__":
