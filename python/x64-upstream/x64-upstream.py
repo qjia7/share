@@ -8,26 +8,22 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = '538cecae76a8b9227601c6c2c43a3b408446bd55'
+chromium_hash = 'af6e087d5233b365fcf30438b86e40ba998a5549'
 
 patches = {
     # Need upstream
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
-    'src/third_party/android_tools': [
-        '0001-ndk-Add-gyp-files.patch',
+    'src': [
+        '0001-Mute-__NR_ugetrlimit.patch',
     ],
+    'src/third_party/android_tools': ['0001-Fix-experimental-ndk.patch']
 
     # Under review
-    'src': [
-        '0001-Fix-unit-test-failures-of-sandbox.patch',
-    ],
-    'src/third_party/icu': ['0001-Enable-64-bit-build-of-host-toolset.patch'],
 }
 
 dir_script = sys.path[0]
 dir_root = ''
 dir_src = ''
-dir_ndk = ''
 dir_unittest = ''
 time = get_datetime()
 type = ''
@@ -37,7 +33,6 @@ target_arch = ''
 target_module = ''
 
 cpu_count = str(multiprocessing.cpu_count() * 2)
-android_ndk_version = ''
 devices = []
 devices_name = []
 unit_tests = []
@@ -91,7 +86,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, dir_ndk, type, dir_out_type, dir_unittest, dir_time, android_ndk_version, unit_tests, devices, devices_name, target_arch, target_module
+    global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, unit_tests, devices, devices_name, target_arch, target_module
 
     if args.dir_root:
         dir_root = args.dir_root
@@ -103,15 +98,11 @@ def setup():
     dir_out_type = dir_src + '/out/' + type.capitalize()
     dir_unittest = dir_root + '/unittest'
     dir_time = dir_unittest + '/' + time
-    dir_ndk = dir_src + '/third_party/android_tools/ndk'
 
     target_arch = args.target_arch
-    if target_arch == 'x86_64':
-        dir_ndk += '_experimental'
 
     OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
-    android_ndk_version = 'android64-ndk-' + open(dir_ndk + '/RELEASE.TXT', 'r').read()
     if not OS.path.exists(dir_unittest):
         OS.mkdir(dir_unittest)
 
@@ -122,10 +113,8 @@ def setup():
             'android_webview_test',
             'android_webview_unittests',
             'base_unittests',
-            'breakpad_unittests',
             'cc_unittests',
             'components_unittests',
-            'content_browsertests',
             'content_unittests',
             'gl_tests',
             'gpu_unittests',
@@ -136,10 +125,12 @@ def setup():
             'sql_unittests',
             'sync_unit_tests',
             'ui_unittests',
-            'unit_tests',
             'webkit_compositor_bindings_unittests',
             'webkit_unit_tests',
             'content_gl_tests',
+            'breakpad_unittests',  # Need breakpad
+            'content_browsertests',  # Need breakpad
+            'unit_tests',  # Need breakpad
         ]
 
     if args.devices:
@@ -371,7 +362,6 @@ def _unittest_gen_report(index_device, result_tests):
           <ul>
             <li>Chromium hash: ''' + chromium_hash + '''</li>
             <li>Target Device: ''' + device_name + '''</li>
-            <li>Android NDK: ''' + android_ndk_version + '''</li>
           </ul>
 
           <h2 id="Details">Details</h2>
