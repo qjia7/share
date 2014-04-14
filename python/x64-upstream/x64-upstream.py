@@ -8,14 +8,12 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = 'af6e087d5233b365fcf30438b86e40ba998a5549'
+chromium_hash = 'c3141922ff29fa5e531e85954e59e4492b926ef8'
 
 patches = {
     # Need upstream
     'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
-    'src': [
-        '0001-Mute-__NR_ugetrlimit.patch',
-    ],
+    'src': ['0001-Mute-__NR_ugetrlimit.patch'],
     'src/third_party/android_tools': ['0001-Fix-experimental-ndk.patch']
 
     # Under review
@@ -69,6 +67,7 @@ examples:
     parser.add_argument('--target-module', dest='target_module', help='target module to build', choices=['chrome', 'webview', 'content_shell'], default='webview')
 
     group_unittest = parser.add_argument_group('unittest')
+    group_unittest.add_argument('--unittest-build', dest='unittest_build', help='build unit tests', action='store_true')
     group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
     group_unittest.add_argument('--unittest-to', dest='unittest_to', help='unittest email receivers that would override the default for test sake')
     group_unittest.add_argument('--unittest-case', dest='unittest_case', help='unittest case')
@@ -243,6 +242,18 @@ def build(force=False):
         error('Failed to execute command: ' + ninja_cmd, error_code=result[0])
 
 
+def unittest_build():
+    if not args.unittest_build:
+        return
+
+    for unit_test in unit_tests:
+        result = _unittest_build_one(unit_test)
+        if result:
+            info('Succeeded to build ' + unit_test)
+        else:
+            error('Failed to build ' + unit_test, abort=False)
+
+
 def unittest_run(force=False):
     if not args.unittest_run and not force:
         return
@@ -280,6 +291,21 @@ def test_unittest(force=False):
     unittest_run(force=True)
 
 
+def _unittest_build_one(unit_test):
+    if unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
+        cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_stripped'
+    else:
+        cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_apk'
+
+    if type == 'debug':
+        cmd += ' md5sum'
+    result = execute(cmd, interactive=True)
+    if result[0]:
+        return False
+    else:
+        return True
+
+
 def _unittest_run_device(index_device):
     device = devices[index_device]
     device_name = devices_name[index_device]
@@ -289,21 +315,14 @@ def _unittest_run_device(index_device):
     result_tests = []
     for unit_test in unit_tests:
         # Build
-        if unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
-            cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_stripped'
+        result = _unittest_build_one(unit_test)
+        if result:
+            info('Succeeded to build ' + unit_test)
+            result_tests.append('PASS')
         else:
-            cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_apk'
-
-        if type == 'debug':
-            cmd += ' md5sum'
-        result = execute(cmd, interactive=True)
-        if result[0]:
-            error('Failed to build \'' + unit_test + '\'', abort=False)
+            error('Failed to build ' + unit_test, abort=False)
             result_tests.append('FAIL')
             continue
-        else:
-            info('Succeeded to build' + unit_test)
-            result_tests.append('PASS')
 
         # Run
         cmd = 'src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device_name + '/' + unit_test + '.log'
@@ -461,6 +480,7 @@ if __name__ == '__main__':
     patch()
     build()
 
+    unittest_build()
     unittest_run()
 
     test_build()
