@@ -56,6 +56,8 @@ examples:
     parser.add_argument('--disable-2nd-arch', dest='disable_2nd_arch', help='disable 2nd arch, only effective for baytrail', action='store_true')
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--backup', dest='backup', help='backup output', action='store_true')
+    parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
+
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
     parser.add_argument('--target-module', dest='target_module', help='target module', choices=['webview', 'system', 'all'], default='system')
@@ -211,6 +213,16 @@ def burn_image():
     execute('sudo dd if=' + img + ' of=' + args.burn_image + ' && sync', interactive=True)
 
 
+def start_emu():
+    if not args.start_emu:
+        return
+
+    for arch in target_archs:
+        combo = _get_combo(arch, 'generic')
+        cmd = '. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard /workspace/gytemp/sdcard-' + arch + '.img'
+        execute(cmd, interactive=True)
+
+
 def _sync_repo(dir, cmd):
     backup_dir(dir)
     result = execute(cmd, interactive=True)
@@ -356,3 +368,4 @@ if __name__ == "__main__":
     build()
     backup()
     burn_image()
+    start_emu()
