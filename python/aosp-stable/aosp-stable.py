@@ -57,6 +57,7 @@ examples:
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('--build-showcommands', dest='build_showcommands', help='build with detailed command', action='store_true')
     parser.add_argument('--build-skip-mk', dest='build_skip_mk', help='skip the generation of makefile', action='store_true')
+    parser.add_argument('--build-no-dep', dest='build_no_dep', help='use mmma or mmm', action='store_true')
     parser.add_argument('--disable-2nd-arch', dest='disable_2nd_arch', help='disable 2nd arch, only effective for baytrail', action='store_true')
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--backup', dest='backup', help='backup output', action='store_true')
@@ -153,8 +154,6 @@ def build():
     if not args.build:
         return
 
-    _patch_cond(args.disable_2nd_arch, patches_disable_2nd_arch)
-
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
         _patch_cond(args.disable_2nd_arch and device == 'baytrail', patches_baytrail_disable_2nd_arch)
         _patch_cond(args.disable_2nd_arch and device == 'generic', patches_generic_disable_2nd_arch)
@@ -169,10 +168,17 @@ def build():
 
         if module == 'system':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && make'
-        elif module == 'webview':
-            cmd = '. build/envsetup.sh && lunch ' + combo + ' && mmma frameworks/webview'
-        elif module == 'libwebviewchromium':
-            cmd = '. build/envsetup.sh && lunch ' + combo + ' && mmma external/chromium_org'
+        elif module == 'webview' or module == 'libwebviewchromium':
+            cmd = '. build/envsetup.sh && lunch ' + combo + ' && '
+            if args.build_no_dep:
+                cmd += 'mmm '
+            else:
+                cmd += 'mmma '
+
+            if module == 'webview':
+                cmd += 'frameworks/webview'
+            elif module == 'libwebviewchromium':
+                cmd += 'external/chromium_org'
 
         if args.build_showcommands:
             cmd += ' showcommands'
