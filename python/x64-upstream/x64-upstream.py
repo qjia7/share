@@ -14,7 +14,9 @@ patches = {
     # Need upstream
 
     # Under review
-
+    'src': [
+         '0001-Do-ApplyGpuDriverBugWorkarounds-after-InitializeOneO.patch',
+     ],
 }
 
 dir_script = sys.path[0]
