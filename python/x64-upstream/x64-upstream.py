@@ -87,6 +87,8 @@ examples:
 def setup():
     global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, unit_tests, devices, devices_name, target_arch, target_module
 
+    target_arch = args.target_arch
+
     if args.dir_root:
         dir_root = args.dir_root
     else:
@@ -94,11 +96,9 @@ def setup():
 
     dir_src = dir_root + '/src'
     type = args.type
-    dir_out_type = dir_src + '/out/' + type.capitalize()
+    dir_out_type = dir_src + '/out-' + target_arch + '/out/' + type.capitalize()
     dir_unittest = dir_root + '/unittest'
     dir_time = dir_unittest + '/' + time
-
-    target_arch = args.target_arch
 
     OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
@@ -224,7 +224,7 @@ def build(force=False):
         else:
             target_arch_temp = 'x64'
 
-        command = bashify('. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp)
+        command = bashify('. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp + ' --generator-output out-' + target_arch)
         execute(command, show_progress=True)
         restore_dir()
 
