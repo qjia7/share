@@ -64,7 +64,7 @@ examples:
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
-    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['webview', 'system', 'all'], default='system')
+    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['webview', 'libwebviewchromium', 'system', 'all'], default='system')
 
     args = parser.parse_args()
 
@@ -171,6 +171,8 @@ def build():
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && make'
         elif module == 'webview':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && mmma frameworks/webview'
+        elif module == 'libwebviewchromium':
+            cmd = '. build/envsetup.sh && lunch ' + combo + ' && mmma external/chromium_org'
 
         if args.build_showcommands:
             cmd += ' showcommands'
