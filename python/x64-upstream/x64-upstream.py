@@ -8,15 +8,13 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = 'c3141922ff29fa5e531e85954e59e4492b926ef8'
+chromium_hash = '2eb21296632666e6f62d2cb0f9bc1a887fdd1e46'
 
 patches = {
     # Need upstream
-    'src/breakpad/src': ['0001-breakpad-Enable-x86_64-for-android.patch'],
-    'src': ['0001-Mute-__NR_ugetrlimit.patch'],
-    'src/third_party/android_tools': ['0001-Fix-experimental-ndk.patch']
 
     # Under review
+
 }
 
 dir_script = sys.path[0]
