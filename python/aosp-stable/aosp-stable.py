@@ -19,8 +19,12 @@ patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
 }
 
-patches_disable_2nd_arch = {
+patches_baytrail_disable_2nd_arch = {
     'device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
+}
+
+patches_generic_disable_2nd_arch = {
+    'build': ['0001-generic_x86_64-Disable-2nd-arch.patch']
 }
 
 patches_disable_libpac = {
@@ -43,7 +47,7 @@ def handle_option():
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      epilog='''
 examples:
-  python %(prog)s -s all -b
+  python %(prog)s -s all -b --disable-2nd-arch --patch
   python %(prog)s -b --build-skip-mk --disable-2nd-arch
 ''')
 
@@ -152,7 +156,9 @@ def build():
     _patch_cond(args.disable_2nd_arch, patches_disable_2nd_arch)
 
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
-        _patch_cond(arch == 'x86_64' and device == 'baytrail', patches_disable_libpac)
+        _patch_cond(args.disable_2nd_arch and device == 'baytrail', patches_baytrail_disable_2nd_arch)
+        _patch_cond(args.disable_2nd_arch and device == 'generic', patches_generic_disable_2nd_arch)
+        _patch_cond(arch == 'x86_64', patches_disable_libpac)
 
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
