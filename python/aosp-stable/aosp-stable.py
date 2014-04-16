@@ -152,13 +152,6 @@ def build():
     _patch_cond(args.disable_2nd_arch, patches_disable_2nd_arch)
 
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
-        #if chromium_version == 'cr36' and arch == 'x86_64' and device == 'baytrail' and module == 'system':
-        #    _ensure_nonexist('external/chromium-libpac/Android.mk')
-        #    _ensure_nonexist('external/v8/Android.mk')
-        #else:
-        #    _ensure_exist('external/chromium-libpac/Android.mk')
-        #    _ensure_exist('external/v8/Android.mk')
-
         _patch_cond(arch == 'x86_64' and device == 'baytrail', patches_disable_libpac)
 
         combo = _get_combo(arch, device)
@@ -219,8 +212,12 @@ def start_emu():
 
     for arch in target_archs:
         combo = _get_combo(arch, 'generic')
-        cmd = '. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard /workspace/gytemp/sdcard-' + arch + '.img'
+        #backup_dir('/workspace/service/www/aosp-stable/temp/20140414-x86_64-generic-system-cr30/out')
+        #cmd = 'host/linux-x86/bin/emulator64-x86 -kernel ../prebuilts/qemu-kernel/x86_64/kernel-qemu -sdcard /workspace/service/www/aosp-stable/sdcard.img -gpu off -system target/product/generic_x86_64/system.img -ramdisk target/product/generic_x86_64/ramdisk.img -skin HVGA -skindir ../sdk/emulator/skins -sysdir target/product/generic_x86_64 -datadir target/product/generic_x86_64 -data target/product/generic_x86_64/userdata-qemu.img -initdata target/product/generic_x86_64/userdata.img -memory 256 -verbose'
+
+        cmd = '. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img'
         execute(cmd, interactive=True)
+        #restore_dir()
 
 
 def _sync_repo(dir, cmd):
@@ -258,38 +255,64 @@ def _get_product(arch, device):
     return product
 
 
-def _backup_one(arch, device, module):
-    if arch == 'x86_64':
-        libs = ['lib64', 'lib']
-    elif arch == 'x86':
-        libs = ['lib']
+# All valid combination:
+# 1. x86_64, baytrail, webview
+# 2. x86_64, baytrail, system
+# 3. x86, baytrail, system
+# 4. x86_64, generic, system
+# 5. x86, generic, system
+# (x86_64, generic, webview) is same as 1
+# (x86, baytrail, webview) is included in 1
+# (x86, generic, webview) is included in 1
 
+def _backup_one(arch, device, module):
     product = _get_product(arch, device)
 
-    backup_files = [
-        'target/product/' + product + '/system/framework/webviewchromium.jar',
-        'target/product/' + product + '/system/framework/webview/paks/*.pak',
-    ]
+    if module == 'webview':
+        if arch == 'x86_64':
+            libs = ['lib64', 'lib']
+        elif arch == 'x86':
+            libs = ['lib']
 
-    for lib in libs:
-        backup_files.append('target/product/' + product + '/system/' + lib + '/libwebviewchromium_plat_support.so')
-        backup_files.append('target/product/' + product + '/system/' + lib + '/libwebviewchromium.so')
-        # binary with symbol is just too big, disable them temporarily.
-        #backup_files.append('target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium_plat_support.so')
-        #backup_files.append('target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium.so')
+        backup_files = [
+            'out/target/product/' + product + '/system/framework/webviewchromium.jar',
+            'out/target/product/' + product + '/system/framework/webview/paks',
+        ]
 
-    if module == 'system':
+        for lib in libs:
+            backup_files.append('out/target/product/' + product + '/system/' + lib + '/libwebviewchromium_plat_support.so')
+            backup_files.append('out/target/product/' + product + '/system/' + lib + '/libwebviewchromium.so')
+            # binary with symbol is just too big, disable them temporarily.
+            #backup_files.append('out/target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium_plat_support.so')
+            #backup_files.append('out/target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium.so')
+
+    else:  # module == 'system'
         if device == 'baytrail':
-            backup_files += [
-                'target/product/' + product + '/live.img'
+            backup_files = [
+                'out/target/product/' + product + '/live.img'
             ]
+
         elif device == 'generic':
-            # TODO: Add emulator files
-            backup_files += [
-                'host/linux-x86/bin/emulator*'
-            ]
+            if arch == 'x86_64':
+                backup_files = [
+                    'out/host/linux-x86/bin/emulator64-x86',
+                    'out/host/linux-x86/lib',
+                    'out/host/linux-x86/usr/share/pc-bios',
+                    'out/target/product/generic_x86_64/system/build.prop',
+                    'out/target/product/generic_x86_64/cache.img'
+                    'out/target/product/generic_x86_64/userdata.img',
+                    'out/target/product/generic_x86_64/userdata-qemu.img',
+                    'out/target/product/generic_x86_64/ramdisk.img',
+                    'out/target/product/generic_x86_64/system.img',
+                    'out/target/product/generic_x86_64/hardware-qemu.ini',
+                    'prebuilts/qemu-kernel/x86_64/kernel-qemu',
+                    'sdk/emulator/skins',
+                ]
+            elif arch == 'x86':
+                pass
 
     time = get_datetime()
+    #time = '2014'
     name = time + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
     if not OS.path.exists(dir_backup_one):
@@ -299,7 +322,7 @@ def _backup_one(arch, device, module):
         dir_backup_relative = os.path.split(backup_file)[0]
         if not OS.path.exists(dir_backup_relative):
             OS.makedirs(dir_backup_relative)
-        execute('cp ' + dir_out + '/' + backup_file + ' ' + dir_backup_relative)
+        execute('cp -rf ' + dir_root + '/' + backup_file + ' ' + dir_backup_relative)
     restore_dir()
 
     backup_dir(dir_backup)
