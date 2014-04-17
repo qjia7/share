@@ -36,7 +36,7 @@ patches_build = {
         '0001-build-Make-v8-and-icu-host-tool-64-bit.patch',
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
     ],
-    'external/chromium_org/src/': ['0001-Fix-sandbox.patch'],
+    'external/chromium_org/src': ['0001-Fix-jni-issue-of-IME-Adapter.patch'],
 }
 
 

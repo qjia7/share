@@ -1,0 +1,30 @@
+From 82866d59bba357281475370ee126c8fdfb1f2bc3 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Mon, 14 Apr 2014 22:52:32 +0800
+Subject: [PATCH] generic_x86_64: Disable 2nd arch
+
+Change-Id: I84a6106766aa09791ddfd5d68184c6c1682e3c2c
+---
+ target/board/generic_x86_64/BoardConfig.mk | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/target/board/generic_x86_64/BoardConfig.mk b/target/board/generic_x86_64/BoardConfig.mk
+index 2b60827..76363b6 100755
+--- a/target/board/generic_x86_64/BoardConfig.mk
++++ b/target/board/generic_x86_64/BoardConfig.mk
+@@ -11,9 +11,9 @@ TARGET_ARCH := x86_64
+ TARGET_ARCH_VARIANT := x86_64
+ TARGET_PRELINK_MODULE := false
+ 
+-TARGET_2ND_CPU_ABI := x86
+-TARGET_2ND_ARCH := x86
+-TARGET_2ND_ARCH_VARIANT := x86
++#TARGET_2ND_CPU_ABI := x86
++#TARGET_2ND_ARCH := x86
++#TARGET_2ND_ARCH_VARIANT := x86
+ 
+ TARGET_USES_64_BIT_BINDER := true
+ 
+-- 
+1.8.3.2
+
