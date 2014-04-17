@@ -49,6 +49,7 @@ def handle_option():
 examples:
   python %(prog)s -s all -b --disable-2nd-arch --patch
   python %(prog)s -b --build-skip-mk --disable-2nd-arch
+  python %(prog)s -b --disable-2nd-arch  --build-skip-mk --target-module libwebviewchromium --build-no-dep
 ''')
 
     parser.add_argument('--init', dest='init', help='init', action='store_true')
@@ -62,6 +63,7 @@ examples:
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--backup', dest='backup', help='backup output', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
+    parser.add_argument('--tombstone', dest='tombstone', help='analyze tombstone file for libwebviewchromium.so', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
@@ -232,6 +234,43 @@ def start_emu():
         cmd = '. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img'
         execute(cmd, interactive=True)
         #restore_dir()
+
+
+def tombstone():
+    if not args.tombstone:
+        return
+
+    count_libwebviewchromium_max = 4
+    count_line_max = 30
+
+    execute('adb connect 192.168.42.1')
+    result = execute('adb shell \ls /data/tombstones', return_output=True)
+    files = result[1].split('\n')
+    result = execute('adb shell cat /data/tombstones/' + files[-2].strip(), return_output=True)
+    lines = result[1].split('\n')
+    pattern = re.compile('pc (.*)  .*libwebviewchromium')
+    count_libwebviewchromium = 0
+    count_line = 0
+    need_print = False
+    for line in lines:
+        if not need_print and re.search('^backtrace', line):
+            need_print = True
+
+        if need_print:
+            print line
+            count_line += 1
+            if count_line > count_line_max:
+                return
+
+        match = pattern.search(line)
+        if match:
+            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -e out/target/product/baytrail_64/symbols/system/lib64/libwebviewchromium.so -f ' + match.group(1)
+            result = execute(cmd, return_output=True, show_command=False)
+            print result[1]
+
+            count_libwebviewchromium += 1
+            if count_libwebviewchromium > count_libwebviewchromium_max:
+                return
 
 
 def _sync_repo(dir, cmd):
@@ -406,3 +445,4 @@ if __name__ == "__main__":
     backup()
     burn_image()
     start_emu()
+    tombstone()
