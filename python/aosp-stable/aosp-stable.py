@@ -20,7 +20,7 @@ patches_init = {
 }
 
 patches_baytrail_disable_2nd_arch = {
-    'device/intel/baytrail_64': ['0001-baytrail_64-Disable-2nd-arch.patch'],
+    'device/intel/baytrail_64': ['0002-baytrail_64-Disable-2nd-arch.patch'],
 }
 
 patches_generic_disable_2nd_arch = {
@@ -37,6 +37,8 @@ patches_build = {
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
     ],
     'external/chromium_org/src': ['0001-Fix-jni-issue-of-IME-Adapter.patch'],
+    'kernel/intel': ['0001-EFI-shutdown-works-on-32bit-kernel.patch'],
+    'device/intel/baytrail_64': ['0001-For-Asus-T100-reboot-p-is-needed-in-kernel-command-l.patch'],
 }
 
 
@@ -240,7 +242,7 @@ def tombstone():
     if not args.tombstone:
         return
 
-    count_libwebviewchromium_max = 4
+    count_libwebviewchromium_max = 10
     count_line_max = 30
 
     execute('adb connect 192.168.42.1')

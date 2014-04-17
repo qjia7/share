@@ -1,7 +1,7 @@
-From 59a7cf46476cf6e848809c6ab718f6e20b7ddf8d Mon Sep 17 00:00:00 2001
+From 63f23bffd2796897616be82ceee01a5a85623f72 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Fri, 28 Mar 2014 13:24:26 +0800
-Subject: [PATCH] baytrail_64: Disable 2nd arch
+Subject: [PATCH 2/2] baytrail_64: Disable 2nd arch
 
 Change-Id: If874b65af5e223cdaddd68af554753aed5b0410c
 ---
@@ -9,7 +9,7 @@ Change-Id: If874b65af5e223cdaddd68af554753aed5b0410c
  1 file changed, 3 insertions(+), 3 deletions(-)
 
 diff --git a/BoardConfig.mk b/BoardConfig.mk
-index 7ed88ae..30894ae 100644
+index b9dd44c..ffba2f7 100644
 --- a/BoardConfig.mk
 +++ b/BoardConfig.mk
 @@ -25,9 +25,9 @@ TARGET_ARCH := x86_64
