@@ -37,8 +37,6 @@ patches_build = {
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
     ],
     'external/chromium_org/src': ['0001-Fix-jni-issue-of-IME-Adapter.patch'],
-    'kernel/intel': ['0001-EFI-shutdown-works-on-32bit-kernel.patch'],
-    'device/intel/baytrail_64': ['0001-For-Asus-T100-reboot-p-is-needed-in-kernel-command-l.patch'],
 }
 
 
@@ -66,6 +64,7 @@ examples:
     parser.add_argument('--backup', dest='backup', help='backup output', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
     parser.add_argument('--tombstone', dest='tombstone', help='analyze tombstone file for libwebviewchromium.so', action='store_true')
+    parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
@@ -275,6 +274,29 @@ def tombstone():
                 return
 
 
+def push():
+    if not args.push:
+        return
+
+    if args.target_module == 'all':
+        modules = ['libwebviewchromium', 'webview']
+    else:
+        modules = args.target_module.split(',')
+
+    cmd = 'adb root && adb remount'
+
+    for module in modules:
+        if module == 'libwebviewchromium':
+            cmd += ' && adb push out/target/product/baytrail_64/obj/lib/libwebviewchromium.so /system/lib64'
+        elif module == 'webview':
+            cmd += ' && adb push out/target/product/baytrail_64/system/framework/webviewchromium.jar /system/framework'
+
+    cmd += ' && adb shell stop && adb shell start'
+    result = execute(cmd)
+    if result[0]:
+        error('Failed to push binaries to system')
+
+
 def _sync_repo(dir, cmd):
     backup_dir(dir)
     result = execute(cmd, interactive=True)
@@ -448,3 +470,4 @@ if __name__ == "__main__":
     burn_image()
     start_emu()
     tombstone()
+    push()
