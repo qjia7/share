@@ -1,0 +1,42 @@
+From 324951bce1cd42f4cedbafbcaaa69a4016f0c694 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 18 Apr 2014 23:53:13 +0800
+Subject: [PATCH] Change drawGLFunctor to 64 bit
+
+Upstream stricts it to 32 bit on purpose. However, if our GL supports 64
+bit, we need to change this to 64 bit. There is still some error related
+to GL showing in logcat, which may result in potential issue.
+
+Change-Id: I9b1fe83c5be60fc80a27358a7e73d0fb2b4ec0c7
+---
+ chromium/java/com/android/webview/chromium/DrawGLFunctor.java | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/chromium/java/com/android/webview/chromium/DrawGLFunctor.java b/chromium/java/com/android/webview/chromium/DrawGLFunctor.java
+index 93ae5d1..6464b6c 100644
+--- a/chromium/java/com/android/webview/chromium/DrawGLFunctor.java
++++ b/chromium/java/com/android/webview/chromium/DrawGLFunctor.java
+@@ -83,7 +83,10 @@ class DrawGLFunctor {
+         DestroyRunnable(long nativeDrawGLFunctor) {
+             mNativeDrawGLFunctor = nativeDrawGLFunctor;
+         }
+-
++        long nativeDrawGLFunctor() {
++            return mNativeDrawGLFunctor;
++        }
++/*
+         int nativeDrawGLFunctor() {
+             if (mNativeDrawGLFunctor <= Integer.MAX_VALUE &&
+                     mNativeDrawGLFunctor >= Integer.MIN_VALUE) {
+@@ -92,7 +95,7 @@ class DrawGLFunctor {
+                 throw new RuntimeException("64bit not supported yet");
+             }
+         }
+-
++*/
+         // Called when the outer DrawGLFunctor instance has been GC'ed, i.e this is its finalizer.
+         @Override
+         public void run() {
+-- 
+1.8.3.2
+
