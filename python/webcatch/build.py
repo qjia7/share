@@ -103,7 +103,7 @@ def setup():
     global os_info, build_every, fail_number_max
 
     if not args.slave_only:
-        result = execute(remotify_cmd('ls ' + dir_out_server), show_command=False)
+        result = execute(remotify_cmd('ls ' + dir_out_server), show_command=True)
         if result[0]:
             error('Can not connect to build server')
 
@@ -367,7 +367,11 @@ def patch_before_build(os, arch, module, rev):
 
 def move_to_server(file, os, arch, module):
     dir_comb_server = dir_out_server + '/' + get_comb_name(os, arch, module)
-    execute('scp ' + file + ' gyagp@' + server + ':' + dir_comb_server)
+    result = execute('scp ' + file + ' gyagp@' + server + ':' + dir_comb_server)
+    if result[0]:
+        # If the failure is caused by network issue of slave machine, most likely it could not send mail too.
+        send_mail('webcatch@intel.com', 'yang.gu@intel.com', '[webcatch] Failed to upload files at ' + host_name, '')
+        error('Failed to upload files to server')
     execute('rm -f ' + file)
 
 
