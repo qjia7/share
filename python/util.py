@@ -209,6 +209,20 @@ def send_mail(sender, to, subject, content, type='plain'):
         error('Failed to send mail at ' + host_name, abort=False)
     finally:
         smtp.quit()
+
+
+# upload file to specified samba server
+def upload_server(smb_server, local_dir, local_file, server_dir, server_file):
+    if not os.path.exists(local_dir + local_file):
+        error('Could not find ' + local_dir + local_file + ' to upload')
+        return
+
+    result = execute('''smbclient \'''' + smb_server + '''\' -N -c 'lcd ''' + local_dir + '''; put ''' + local_file + ''' ''' + server_dir + server_file + ''' ' '''  , show_progress=True)
+    if result[0]:
+        error('Failed to upload: ' + local_dir + local_file, error_code=result[0])
+    else:
+        info('Succeeded to upload: ' + local_dir + local_file)
+
 ################################################################################
 
 
