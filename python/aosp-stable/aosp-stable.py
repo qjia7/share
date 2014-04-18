@@ -246,6 +246,9 @@ def tombstone():
     count_line_max = 30
 
     execute('adb connect 192.168.42.1')
+    # Start browser
+    #execute('adb shell am start -n com.android.browser/com.android.browser.BrowserActivity')
+
     result = execute('adb shell \ls /data/tombstones', return_output=True)
     files = result[1].split('\n')
     result = execute('adb shell cat /data/tombstones/' + files[-2].strip(), return_output=True)
@@ -284,7 +287,7 @@ def push():
     else:
         modules = args.target_module.split(',')
 
-    cmd = 'adb root && adb remount'
+    cmd = 'adb connect 192.168.42.1 && adb root && adb remount'
 
     for module in modules:
         if module == 'libwebviewchromium':
@@ -292,7 +295,9 @@ def push():
         elif module == 'webview':
             cmd += ' && adb push out/target/product/baytrail_64/system/framework/webviewchromium.jar /system/framework'
 
-    cmd += ' && adb shell stop && adb shell start'
+    if len(modules) > 0:
+        cmd += ' && adb shell stop && adb shell start'
+
     result = execute(cmd)
     if result[0]:
         error('Failed to push binaries to system')
