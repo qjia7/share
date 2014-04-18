@@ -232,7 +232,7 @@ def start_emu():
         #backup_dir('/workspace/service/www/aosp-stable/temp/20140414-x86_64-generic-system-cr30/out')
         #cmd = 'host/linux-x86/bin/emulator64-x86 -kernel ../prebuilts/qemu-kernel/x86_64/kernel-qemu -sdcard /workspace/service/www/aosp-stable/sdcard.img -gpu off -system target/product/generic_x86_64/system.img -ramdisk target/product/generic_x86_64/ramdisk.img -skin HVGA -skindir ../sdk/emulator/skins -sysdir target/product/generic_x86_64 -datadir target/product/generic_x86_64 -data target/product/generic_x86_64/userdata-qemu.img -initdata target/product/generic_x86_64/userdata.img -memory 256 -verbose'
 
-        cmd = '. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img'
+        cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img')
         execute(cmd, interactive=True)
         #restore_dir()
 
