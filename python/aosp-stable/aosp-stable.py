@@ -62,6 +62,7 @@ examples:
     parser.add_argument('--disable-2nd-arch', dest='disable_2nd_arch', help='disable 2nd arch, only effective for baytrail', action='store_true')
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--backup', dest='backup', help='backup output', action='store_true')
+    parser.add_argument('--upload', dest='upload', help='upload output to samba server', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
     parser.add_argument('--tombstone', dest='tombstone', help='analyze tombstone file for libwebviewchromium.so', action='store_true')
     parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
@@ -404,6 +405,16 @@ def _backup_one(arch, device, module):
 
     backup_dir(dir_backup)
     execute('tar zcf ' + name + '.tar.gz ' + name)
+
+    if args.upload:
+        combo = _get_combo(arch, device)
+        smb_server = '//ubuntu-ygu5-02.sh.intel.com/aosp-stable/temp/'
+        local_dir = './'
+        local_file = name + '.tar.gz '
+        server_dir = 'image\\' + combo + '\\'
+        server_file = local_file
+        upload_server(smb_server, local_dir, local_file, server_dir, server_file)
+
     restore_dir()
 
 

@@ -27,6 +27,7 @@ dir_out_type = ''
 dir_time = ''
 target_arch = ''
 target_module = ''
+report_name = ''
 
 cpu_count = str(multiprocessing.cpu_count() * 2)
 devices = []
@@ -70,6 +71,7 @@ examples:
     group_unittest.add_argument('--unittest-to', dest='unittest_to', help='unittest email receivers that would override the default for test sake')
     group_unittest.add_argument('--unittest-case', dest='unittest_case', help='unittest case')
     group_unittest.add_argument('--unittest-sendmail', dest='unittest_sendmail', help='send mail about result', action='store_true')
+    group_unittest.add_argument('--unittest-backup', dest='unittest_backup', help='backup result files to samba server', action='store_true')
 
     group_test = parser.add_argument_group('test')
     group_test.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
@@ -97,6 +99,8 @@ def setup():
     dir_out_type = dir_src + '/out-' + target_arch + '/out/' + type.capitalize()
     dir_unittest = dir_root + '/unittest'
     dir_time = dir_unittest + '/' + time
+
+    report_name = 'Chromium x64 Unit Tests Report '
 
     OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
@@ -354,7 +358,8 @@ def _unittest_report(index_device, result_tests):
             'xiaodan.jiang@intel.com',
         ]
 
-    send_mail('x64-noreply@intel.com', to, 'Chromium x64 Unit Tests Report ' + time + ' ' + device_name, _unittest_gen_report(index_device, result_tests), type='html')
+    send_mail('x64-noreply@intel.com', to, report_name + time + ' ' + device_name, _unittest_gen_report(index_device, result_tests), type='html')
+    _unittest_backup(index_device)
 
 
 def _unittest_gen_report(index_device, result_tests):
@@ -405,6 +410,10 @@ def _unittest_gen_report(index_device, result_tests):
     html_end = '''
             </tbody>
           </table>
+          <h2 id="Attach">Attach</h2>
+          <ul>
+            <li>http://ubuntu-ygu5-02.sh.intel.com/chromium64/unittest/report/''' + time + '-' + device_name + '-' + 'report.tar.gz' + '''</li>
+          </ul>
         </div>
       </div>
     </div>
@@ -447,7 +456,7 @@ def _unittest_gen_report(index_device, result_tests):
         ut_rs_td_start = '''<td>'''
         ut_td_end = '''</td>'''
 
-        if int(ut_all) == int(ut_pass):
+        if ut_all != '' and ut_pass != '' and int(ut_all) == int(ut_pass):
             rs = 'PASS'
         else:
             rs = 'FAIL'
@@ -472,7 +481,30 @@ def _unittest_gen_report(index_device, result_tests):
 
         html += ut_row
     html += html_end
+
+    # Save result
+    file_html = dir_device_name + '/'  + report_name + ' of WW' + time + '-' + device_name + '.html'
+    file_report = open(file_html,'w')
+    file_report.write(html)
+    file_report.close()
+
     return html
+
+
+def _unittest_backup(index_device):
+    if not args.unittest_backup:
+        return
+
+    device_name = devices_name[index_device]
+    smb_server = '//ubuntu-ygu5-02.sh.intel.com/chromium64/'
+    local_dir = './'
+    local_file = time + '-' + device_name + '-' + 'report.tar.gz'
+    server_dir = 'unittest\\report\\'
+    server_file = local_file
+    execute('tar zvcf ' + local_file + ' ' + dir_time)
+
+    upload_server(smb_server, local_dir, local_file, server_dir, server_file)
+    execute('rm -f ' + local_dir + local_file, interactive=True)
 
 
 if __name__ == '__main__':
