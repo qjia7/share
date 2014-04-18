@@ -104,7 +104,7 @@ examples:
     parser.add_argument('--layout-test', dest='layout_test', help='cases to run against')
     parser.add_argument('-i', '--install', dest='install', help='install chrome for android', choices=['release', 'debug'])
     parser.add_argument('--log-file', dest='log_file', help='log file to record log', default='')
-    parser.add_argument('--rev', dest='rev', type=int, help='revision', default=0)
+    parser.add_argument('--rev', dest='rev', type=int, help='revision', default=999999)
 
     args = parser.parse_args()
 
