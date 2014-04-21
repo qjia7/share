@@ -38,6 +38,7 @@ patches_build = {
     ],
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
     'external/chromium_org/src': ['0001-Fix-jni-issue-of-IME-Adapter.patch'],
+    'external/skia': ['0001-Fix-crash-of-Chromium-WebView-in-Skia.patch'],
 }
 
 
@@ -270,7 +271,7 @@ def tombstone():
 
         match = pattern.search(line)
         if match:
-            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -e out/target/product/baytrail_64/symbols/system/lib64/libwebviewchromium.so -f ' + match.group(1)
+            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/baytrail_64/symbols/system/lib64/libwebviewchromium.so -f ' + match.group(1)
             result = execute(cmd, return_output=True, show_command=False)
             print result[1]
 

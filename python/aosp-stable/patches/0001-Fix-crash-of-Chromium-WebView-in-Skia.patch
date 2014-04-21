@@ -1,0 +1,30 @@
+From 90f7e9bfda656ae09dd2360db9ffd218ec99e79f Mon Sep 17 00:00:00 2001
+From: Zhenyu Liang <zhenyu.liang@intel.com>
+Date: Tue, 22 Apr 2014 01:06:21 +0800
+Subject: [PATCH] Fix crash of Chromium WebView in Skia
+
+Regression introduced by https://codereview.chromium.org/27343002/
+SkCanvasState should be keep identical in binary on both Android
+and Chromium sides.
+
+Change-Id: Iab3f8963a71e478d5564f02eaf0c77d7c6cdf2a6
+---
+ src/utils/SkCanvasStateUtils.cpp |    2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/src/utils/SkCanvasStateUtils.cpp b/src/utils/SkCanvasStateUtils.cpp
+index 8e07adf..05a22a2 100644
+--- a/src/utils/SkCanvasStateUtils.cpp
++++ b/src/utils/SkCanvasStateUtils.cpp
+@@ -58,7 +58,7 @@ struct SkCanvasLayerState {
+     union {
+         struct {
+             RasterConfig config; // pixel format: a value from RasterConfigs.
+-            uint32_t rowBytes;   // Number of bytes from start of one line to next.
++            size_t rowBytes;     // Number of bytes from start of one line to next.
+             void* pixels;        // The pixels, all (height * rowBytes) of them.
+         } raster;
+         struct {
+-- 
+1.7.10.4
+
