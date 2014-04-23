@@ -8,13 +8,21 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = '2eb21296632666e6f62d2cb0f9bc1a887fdd1e46'
+chromium_hash = '3cbd139ee91537327dadb1baff971f3adccf87da'
 
 patches = {
-    # Need upstream
+    'src': [
+            # Need upstream
 
-    # Under review
-    'src': ['0001-Do-ApplyGpuDriverBugWorkarounds-after-InitializeOneO.patch'],
+            # Under review
+            '0001-Do-ApplyGpuDriverBugWorkarounds-after-InitializeOneO.patch',
+
+            # ndk issues
+            '0002-ndk-pending-issues.patch',
+
+            # image issues
+            '0003-image-pending-issues.patch',
+    ],
 }
 
 dir_script = sys.path[0]
