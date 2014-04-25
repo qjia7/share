@@ -18,6 +18,9 @@ chromium_version = ''
 patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
 }
+patches_init2 = {
+    'manifests': ['0001-Replace-webview-and-chromium_org.patch'],
+}
 
 patches_baytrail_disable_2nd_arch = {
     'device/intel/baytrail_64': ['0002-baytrail_64-Disable-2nd-arch.patch'],
@@ -27,17 +30,12 @@ patches_generic_disable_2nd_arch = {
     'build': ['0001-generic_x86_64-Disable-2nd-arch.patch']
 }
 
-patches_disable_libpac = {
-    'external/chromium-libpac': ['0001-Disable-libpac.patch'],
-}
-
 patches_build = {
     'build': [
         '0001-build-Make-v8-and-icu-host-tool-64-bit.patch',
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
     ],
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
-    'external/chromium_org/src': ['0001-Fix-jni-issue-of-IME-Adapter.patch'],
     'external/skia': ['0001-Fix-crash-of-Chromium-WebView-in-Skia.patch'],
 }
 
@@ -113,11 +111,12 @@ def init():
     if not args.init:
         return()
 
-    execute('curl http://android.intel.com/repo >./repo')
+    execute('curl --noproxy intel.com http://android.intel.com/repo >./repo')
     execute('chmod +x ./repo')
     execute('./repo init -u ssh://android.intel.com/a/aosp/platform/manifest -b abt/private/topic/aosp_stable/master')
     patch(patches_init, force=True)
     execute('./repo sync -c -j16')
+    patch(patches_init2, force=True)
     execute('./repo start x64 --all')
 
     upstream_chromium = 'external/chromium_org/src'
@@ -163,7 +162,6 @@ def build():
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
         _patch_cond(args.disable_2nd_arch and device == 'baytrail', patches_baytrail_disable_2nd_arch)
         _patch_cond(args.disable_2nd_arch and device == 'generic', patches_generic_disable_2nd_arch)
-        _patch_cond(arch == 'x86_64', patches_disable_libpac)
 
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
@@ -363,6 +361,10 @@ def _backup_one(arch, device, module):
             'out/target/product/' + product + '/system/framework/webviewchromium.jar',
             'out/target/product/' + product + '/system/framework/webview/paks',
         ]
+
+        # include libskia.so for the fix of Android skia
+        if arch == 'x86_64':
+            backup_files.append('out/target/product/' + product + '/system/lib64/libskia.so')
 
         for lib in libs:
             backup_files.append('out/target/product/' + product + '/system/' + lib + '/libwebviewchromium_plat_support.so')
