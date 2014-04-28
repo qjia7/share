@@ -58,6 +58,9 @@ examples:
   python %(prog)s --unittest-build --unittest-run
   python %(prog)s --test-unittest
   python %(prog)s --unittest-to yang.gu@intel.com --unittest-case 'webkit_compositor_bindings_unittests' --unittest-run
+
+  crontab -e
+  0 1 * * * cd /workspace/project/chromium64-android && python x64-upstream.py -s --extra-path=/workspace/project/depot_tools
 ''')
 
     parser.add_argument('--clean', dest='clean', help='clean patches and local changes', action='store_true')
@@ -72,6 +75,7 @@ examples:
     parser.add_argument('--devices', dest='devices', help='device id list separated by ","', default='')
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'arm'], default='x86_64')
     parser.add_argument('--target-module', dest='target_module', help='target module to build', choices=['chrome', 'webview', 'content_shell'], default='webview')
+    parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
 
     group_unittest = parser.add_argument_group('unittest')
     group_unittest.add_argument('--unittest-build', dest='unittest_build', help='build unit tests', action='store_true')
@@ -94,6 +98,24 @@ examples:
 
 def setup():
     global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, unit_tests, devices, devices_name, target_arch, target_module, report_name
+
+    path = os.getenv('PATH')
+    path += ':/usr/bin:/usr/sbin'
+    if args.extra_path:
+        path += ':' + args.extra_path
+    os.putenv('PATH', path)
+    for cmd in ['adb', 'git', 'gclient']:
+        result = execute('which ' + cmd, show_command=False)
+        if result[0]:
+            error('Could not find ' + cmd + ', and you may use --extra-path to designate it')
+
+    os.putenv('no_proxy', 'intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,127.0.0.0/8,134.134.0.0/16,172.16.0.0/20,192.168.42.0/16')
+    if os.path.exists('/usr/sbin/privoxy'):
+        os.putenv('http_proxy', '127.0.0.1:8118')
+        os.putenv('https_proxy', '127.0.0.1:8118')
+    else:
+        os.putenv('http_proxy', 'proxy-shz.intel.com:911')
+        os.putenv('https_proxy', 'proxy-shz.intel.com:911')
 
     target_arch = args.target_arch
 
@@ -166,6 +188,11 @@ def setup():
 
     target_module = args.target_module
 
+    info('PATH=' + os.getenv('PATH'))
+    info('http_proxy=' + os.getenv('http_proxy'))
+    info('https_proxy=' + os.getenv('https_proxy'))
+    info('no_proxy=' + os.getenv('no_proxy'))
+
 
 def clean(force=False):
     if not args.clean and not force:
@@ -187,6 +214,9 @@ def sync(force=False):
     if not args.sync and not force:
         return
 
+    if host_os == 'Linux' and os.path.exists('/usr/sbin/privoxy') and not has_process('privoxy'):
+        execute('sudo privoxy /etc/privoxy/config')
+
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
         cmd += ' --revision src@' + chromium_hash
@@ -198,6 +228,9 @@ def sync(force=False):
     result = execute(cmd, show_progress=True)
     if result[0]:
         error('sync failed', error_code=result[0])
+
+    if has_process('privoxy'):
+        execute('sudo killall privoxy')
 
 
 def patch(force=False):
