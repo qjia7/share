@@ -66,6 +66,7 @@ examples:
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
     parser.add_argument('--tombstone', dest='tombstone', help='analyze tombstone file for libwebviewchromium.so', action='store_true')
     parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
+    parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
@@ -158,6 +159,9 @@ def patch(patches, force=False):
 def build():
     if not args.build:
         return
+
+    if args.remove_out:
+        execute('rm -rf out')
 
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
         _patch_cond(args.disable_2nd_arch and device == 'baytrail', patches_baytrail_disable_2nd_arch)
