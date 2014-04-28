@@ -12,8 +12,8 @@ def handle_option():
                                      epilog='''
 examples:
 
-  python %(prog)s -v 1.5
-  python %(prog)s -v 1.7.0_45
+  python %(prog)s -s 1.5
+  python %(prog)s -s 1.7.0_45
 
 ''')
 
