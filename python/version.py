@@ -63,12 +63,7 @@ def get_version_java():
 
     if os.path.exists(default_java_file):
         default_java_result = execute('ls -l ' + default_java_file, show_command=False, return_output=True)
-        match = re.match('.*jdk(.*)', default_java_result[1])
-        if match:
-            default_java = match.group(1)
-        else:
-            error('default-java is not expected', abort=False)
-            default_java = 'NULL'
+        default_java = default_java_result[1].split('/')[-1].rstrip('\n')
     else:
         default_java = 'NULL'
 
