@@ -12,13 +12,13 @@ def handle_option():
                                      epilog='''
 examples:
 
-  python %(prog)s -s 1.5
-  python %(prog)s -s 1.7.0_45
+  python %(prog)s -v 1.5 -t java
+  python %(prog)s -v jdk1.7.0_45 -t java
+  python %(prog)s -v java-7-openjdk-amd64 -t java
 
 ''')
 
-    parser.add_argument('-s', '--set-version', dest='set_version', help='set version')
-    parser.add_argument('-g', '--get', dest='get_version', help='get version', action='store_true')
+    parser.add_argument('-v', '--version', dest='version', help='version of java, gcc, etc.', default='')
     parser.add_argument('-t', '--target', dest='target', help='target to set version with', choices=['java', 'gcc'], default='java')
 
     args = parser.parse_args()
@@ -31,24 +31,17 @@ def setup():
     pass
 
 
-def get_version():
-    if not args.get_version:
-        return
-
-    if args.target == 'java':
-        get_version_java()
-    elif args.target == 'gcc':
-        get_version_gcc()
-
-
-def set_version():
-    if not args.set_version:
-        return
-
-    if args.target == 'java':
-        set_version_java()
-    elif args.target == 'gcc':
-        set_version_gcc()
+def version():
+    if args.version == '':
+        if args.target == 'java':
+            get_version_java()
+        elif args.target == 'gcc':
+            get_version_gcc()
+    else:
+        if args.target == 'java':
+            set_version_java()
+        elif args.target == 'gcc':
+            set_version_gcc()
 
 
 def get_version_java():
@@ -91,22 +84,15 @@ def get_version_java():
 
 
 def set_version_java():
-    if args.set_version == '1.5':
-        version = '1.5.0_22'
-    elif args.set_version == '1.6':
-        version = '1.6.0_45'
-    elif args.set_version == '1.7':
-        version = '1.7.0_45'
-    else:
-        version = args.set_version
+    version = args.version
 
-    execute('sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/jdk' + version + '/bin/javac 50000')
-    execute('sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/jdk' + version + '/bin/java 50000')
-    execute('sudo update-alternatives --install /usr/bin/javaws javaws /usr/lib/jvm/jdk' + version + '/bin/javaws 50000')
-    execute('sudo update-alternatives --install /usr/bin/javap javap /usr/lib/jvm/jdk' + version + '/bin/javap 50000')
-    execute('sudo update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/jdk' + version + '/bin/jar 50000')
-    execute('sudo update-alternatives --install /usr/bin/jarsigner jarsigner /usr/lib/jvm/jdk' + version + '/bin/jarsigner 50000')
-    execute('sudo update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/jdk' + version + '/bin/javadoc 50000')
+    execute('sudo update-alternatives --install /usr/bin/javac javac /usr/lib/jvm/' + version + '/bin/javac 50000')
+    execute('sudo update-alternatives --install /usr/bin/java java /usr/lib/jvm/' + version + '/bin/java 50000')
+    execute('sudo update-alternatives --install /usr/bin/javaws javaws /usr/lib/jvm/' + version + '/bin/javaws 50000')
+    execute('sudo update-alternatives --install /usr/bin/javap javap /usr/lib/jvm/' + version + '/bin/javap 50000')
+    execute('sudo update-alternatives --install /usr/bin/jar jar /usr/lib/jvm/' + version + '/bin/jar 50000')
+    execute('sudo update-alternatives --install /usr/bin/jarsigner jarsigner /usr/lib/jvm/' + version + '/bin/jarsigner 50000')
+    execute('sudo update-alternatives --install /usr/bin/javadoc javadoc /usr/lib/jvm/' + version + '/bin/javadoc 50000')
     execute('sudo update-alternatives --config javac', interactive=True)
     execute('sudo update-alternatives --config java', interactive=True)
     execute('sudo update-alternatives --config javaws', interactive=True)
@@ -116,7 +102,7 @@ def set_version_java():
     execute('sudo update-alternatives --config javadoc', interactive=True)
 
     execute('sudo rm -f ' + default_java_file)
-    execute('sudo ln -s /usr/lib/jvm/jdk' + version + ' /usr/lib/jvm/default-java')
+    execute('sudo ln -s /usr/lib/jvm/' + version + ' /usr/lib/jvm/default-java')
 
     get_version_java()
 
@@ -148,5 +134,4 @@ def set_version_gcc():
 if __name__ == "__main__":
     handle_option()
     setup()
-    get_version()
-    set_version()
+    version()
