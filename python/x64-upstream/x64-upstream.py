@@ -93,7 +93,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, unit_tests, devices, devices_name, target_arch, target_module
+    global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, unit_tests, devices, devices_name, target_arch, target_module, report_name
 
     target_arch = args.target_arch
 
@@ -108,7 +108,7 @@ def setup():
     dir_unittest = dir_root + '/unittest'
     dir_time = dir_unittest + '/' + time
 
-    report_name = 'Chromium x64 Unit Tests Report '
+    report_name = 'Chromium Unit Tests Report '
 
     OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
     backup_dir(dir_root)
