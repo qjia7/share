@@ -103,19 +103,23 @@ def setup():
     path += ':/usr/bin:/usr/sbin'
     if args.extra_path:
         path += ':' + args.extra_path
-    os.putenv('PATH', path)
+    os.environ['PATH'] = path
     for cmd in ['adb', 'git', 'gclient']:
         result = execute('which ' + cmd, show_command=False)
         if result[0]:
             error('Could not find ' + cmd + ', and you may use --extra-path to designate it')
 
-    os.putenv('no_proxy', 'intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,127.0.0.0/8,134.134.0.0/16,172.16.0.0/20,192.168.42.0/16')
+    os.environ['no_proxy'] = 'intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,127.0.0.0/8,134.134.0.0/16,172.16.0.0/20,192.168.42.0/16'
+
     if os.path.exists('/usr/sbin/privoxy'):
-        os.putenv('http_proxy', '127.0.0.1:8118')
-        os.putenv('https_proxy', '127.0.0.1:8118')
+        http_proxy = '127.0.0.1:8118'
+        https_proxy = '127.0.0.1:8118'
     else:
-        os.putenv('http_proxy', 'proxy-shz.intel.com:911')
-        os.putenv('https_proxy', 'proxy-shz.intel.com:911')
+        http_proxy = 'proxy-shz.intel.com:911'
+        https_proxy = 'proxy-shz.intel.com:911'
+
+    os.environ['http_proxy'] = http_proxy
+    os.environ['https_proxy'] = https_proxy
 
     target_arch = args.target_arch
 
@@ -132,7 +136,7 @@ def setup():
 
     report_name = 'Chromium Unit Tests Report '
 
-    OS.putenv('GYP_DEFINES', 'OS=android werror= disable_nacl=1 enable_svg=0')
+    OS.environ['GYP_DEFINES'] = 'OS=android werror= disable_nacl=1 enable_svg=0'
     backup_dir(dir_root)
     if not OS.path.exists(dir_unittest):
         OS.mkdir(dir_unittest)
@@ -206,7 +210,7 @@ def clean(force=False):
             return
 
     cmd = 'gclient revert -n -j16'
-    execute(cmd, show_progress=True)
+    execute(cmd, interactive=True)
     restore_dir()
 
 
