@@ -224,12 +224,12 @@ def sync(force=False):
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
         cmd += ' --revision src@' + chromium_hash
-    result = execute(cmd, show_progress=True)
+    result = execute(cmd, interactive=True)
     if result[0]:
         error('sync failed', error_code=result[0])
 
     cmd = 'gclient runhooks'
-    result = execute(cmd, show_progress=True)
+    result = execute(cmd, interactive=True)
     if result[0]:
         error('sync failed', error_code=result[0])
 
