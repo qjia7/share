@@ -8,7 +8,7 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = '3cbd139ee91537327dadb1baff971f3adccf87da'
+chromium_hash = 'acdd5d75a77c3e1b2b0d619b2d0b5c683e7aa8a3'
 
 patches = {
     'src': [
@@ -136,7 +136,7 @@ def setup():
 
     report_name = 'Chromium Unit Tests Report '
 
-    OS.environ['GYP_DEFINES'] = 'OS=android werror= disable_nacl=1 enable_svg=0'
+    os.environ['GYP_DEFINES'] = 'OS=android werror= disable_nacl=1 enable_svg=0'
     backup_dir(dir_root)
     if not OS.path.exists(dir_unittest):
         OS.mkdir(dir_unittest)
@@ -276,7 +276,9 @@ def build(force=False):
             target_arch_temp = 'x64'
 
         command = bashify('. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp + ' --generator-output out-' + target_arch)
-        execute(command, show_progress=True)
+        result = execute(command, show_progress=True)
+        if result[0]:
+            error('Failed to generate makefile')
         restore_dir()
 
     ninja_cmd = 'ninja -k' + args.build_fail + ' -j' + cpu_count + ' -C ' + dir_out_type
