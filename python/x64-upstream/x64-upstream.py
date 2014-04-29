@@ -223,6 +223,22 @@ def sync(force=False):
     if host_os == 'Linux' and os.path.exists('/usr/sbin/privoxy') and not has_process('privoxy'):
         execute('sudo privoxy /etc/privoxy/config')
 
+    # Judge if the repo is managed or not
+    managed = False
+    file = open('.gclient')
+    lines = file.readlines()
+    file.close()
+    pattern = re.compile('managed.*(True|False)')
+    for line in lines:
+        match = pattern.search(line)
+        if match and match.group(1) == 'True':
+                managed = True
+
+    if not managed:
+        backup_dir('src')
+        execute('git pull --rebase origin master')
+        restore_dir()
+
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
         cmd += ' --revision src@' + chromium_hash
