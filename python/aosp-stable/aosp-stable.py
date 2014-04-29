@@ -36,7 +36,6 @@ patches_build = {
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
     ],
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
-    'external/skia': ['0001-Fix-crash-of-Chromium-WebView-in-Skia.patch'],
 }
 
 
