@@ -22,6 +22,8 @@ patches = {
 
         # image issues
         '0003-image-pending-issues.patch',
+
+        '0004-Correct-the-path-of-android_ndk_lib-for-x64.patch',
     ],
 }
 
