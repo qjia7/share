@@ -301,6 +301,9 @@ def unittest_build(force=False):
     if not args.unittest_build and not force:
         return
 
+    _unittest_build_one('md5sum')
+    _unittest_build_one('forwarder2')
+
     results = []
     for unit_test in unit_tests:
         result = _unittest_build_one(unit_test)
@@ -355,13 +358,14 @@ def test_unittest(force=False):
 
 
 def _unittest_build_one(unit_test):
-    if unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
-        cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_stripped'
+    cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' '
+    if unit_test in ['md5sum', 'forwarder2']:
+        cmd += unit_test
+    elif unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
+        cmd += unit_test + '_stripped'
     else:
-        cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' ' + unit_test + '_apk'
+        cmd += unit_test + '_apk'
 
-    if type == 'debug':
-        cmd += ' md5sum'
     result = execute(cmd, interactive=True)
     if result[0]:
         return False
