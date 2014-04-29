@@ -8,7 +8,7 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = 'acdd5d75a77c3e1b2b0d619b2d0b5c683e7aa8a3'
+chromium_hash = '13f6d9ed0e7bde957f7b9758dafa798c23331f4e'
 
 patches = {
     'src': [
@@ -22,8 +22,6 @@ patches = {
 
         # image issues
         '0003-image-pending-issues.patch',
-
-        '0004-Correct-the-path-of-android_ndk_lib-for-x64.patch',
     ],
 }
 
