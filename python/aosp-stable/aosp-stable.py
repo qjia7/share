@@ -32,7 +32,6 @@ patches_generic_disable_2nd_arch = {
 
 patches_build = {
     'build': [
-        '0001-build-Make-v8-and-icu-host-tool-64-bit.patch',
         '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
     ],
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
