@@ -73,10 +73,14 @@ def sync():
         return()
 
     cmd = 'repo init -u https://android.googlesource.com/platform/manifest'
-    if args.sync != 'master':
+    if args.sync == 'master':
+        cmd += ' -b master'
+    else:
         cmd += ' -b ' + args.sync
     execute(cmd)
-    execute('repo sync -j16', show_progress=True)
+    result = execute('repo sync -j16', show_progress=True)
+    if result[0]:
+        error('Failed to sync')
 
 
 def build():
