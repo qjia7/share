@@ -212,16 +212,12 @@ def send_mail(sender, to, subject, content, type='plain'):
 
 
 # upload file to specified samba server
-def upload_server(smb_server, local_dir, local_file, server_dir, server_file):
-    if not os.path.exists(local_dir + local_file):
-        error('Could not find ' + local_dir + local_file + ' to upload')
-        return
-
-    result = execute('''smbclient \'''' + smb_server + '''\' -N -c 'lcd ''' + local_dir + '''; put ''' + local_file + ''' ''' + server_dir + server_file + ''' ' '''  , show_progress=True)
+def backup_smb(server, dir_server, file_local):
+    result = execute('smbclient %s -N -c "prompt; recurse; cd %s; mput %s"' % (server, dir_server, file_local), interactive=True)
     if result[0]:
-        error('Failed to upload: ' + local_dir + local_file, error_code=result[0])
+        warning('Failed to upload: ' + file_local, error_code=result[0])
     else:
-        info('Succeeded to upload: ' + local_dir + local_file)
+        info('Succeeded to upload: ' + file_local)
 
 ################################################################################
 

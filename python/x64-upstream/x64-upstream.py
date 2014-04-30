@@ -82,8 +82,7 @@ examples:
     group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
     group_unittest.add_argument('--unittest-to', dest='unittest_to', help='unittest email receivers that would override the default for test sake')
     group_unittest.add_argument('--unittest-case', dest='unittest_case', help='unittest case')
-    group_unittest.add_argument('--unittest-sendmail', dest='unittest_sendmail', help='send mail about result', action='store_true')
-    group_unittest.add_argument('--unittest-backup', dest='unittest_backup', help='backup result files to samba server', action='store_true')
+    group_unittest.add_argument('--unittest-formal', dest='unittest_formal', help='formal unittest, which would send email and backup to samba server', action='store_true')
 
     group_test = parser.add_argument_group('test')
     group_test.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
@@ -134,7 +133,7 @@ def setup():
     dir_unittest = dir_root + '/unittest'
     dir_time = dir_unittest + '/' + time
 
-    report_name = 'Chromium Unit Tests Report '
+    report_name = 'Chromium Unit Tests Report'
 
     os.environ['GYP_DEFINES'] = 'OS=android werror= disable_nacl=1 enable_svg=0'
     backup_dir(dir_root)
@@ -345,7 +344,6 @@ def unittest_run(force=False):
     # Build unit test
     results = unittest_build(force=True)
 
-    OS.mkdir(dir_unittest + '/' + time)
     pool = Pool(processes=number_device)
     for index, device in enumerate(devices):
         pool.apply_async(_unittest_run_device, (index, results))
@@ -390,7 +388,7 @@ def _unittest_build_one(unit_test):
 def _unittest_run_device(index_device, results):
     device = devices[index_device]
     device_name = devices_name[index_device]
-    dir_device_name = dir_time + '/' + device_name
+    dir_device_name = dir_time + '-' + device_name
     OS.mkdir(dir_device_name)
 
     for index, unit_test in enumerate(unit_tests):
@@ -400,15 +398,28 @@ def _unittest_run_device(index_device, results):
         cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device_name + '/' + unit_test + '.log'
         result = execute(cmd, interactive=True)
         if result[0]:
-            error('Failed to run \'' + unit_test + '\'', error_code=result[0], abort=False)
+            warning('Failed to run "' + unit_test + '"')
         else:
-            info('Succeeded to run \'' + unit_test + '\'')
+            info('Succeeded to run "' + unit_test + '"')
 
-    if args.unittest_sendmail:
-        _unittest_report(index_device, results)
+    # Generate report
+    html = _unittest_gen_report(index_device, results)
+    file_html = dir_device_name + '/report.html'
+    file_report = open(file_html, 'w')
+    file_report.write(html)
+    file_report.close()
+
+    if args.unittest_formal:
+        # Backup
+        backup_dir(dir_unittest)
+        backup_smb('//ubuntu-ygu5-02.sh.intel.com/chromium64', 'unittest', time + '-' + device_name)
+        restore_dir()
+
+        # Send mail
+        _unittest_sendmail(index_device, html)
 
 
-def _unittest_report(index_device, results):
+def _unittest_sendmail(index_device, html):
     device_name = devices_name[index_device]
     if args.unittest_to:
         to = [args.unittest_to]
@@ -423,12 +434,13 @@ def _unittest_report(index_device, results):
             'xiaodan.jiang@intel.com',
         ]
 
-    send_mail('x64-noreply@intel.com', to, report_name + time + ' ' + device_name, _unittest_gen_report(index_device, results), type='html')
-    _unittest_backup(index_device)
+    send_mail('x64-noreply@intel.com', to, report_name + '-' + time + '-' + device_name, html, type='html')
 
 
 def _unittest_gen_report(index_device, results):
     device_name = devices_name[index_device]
+    dir_device_name = dir_time + '-' + device_name
+
     html_start = '''
 <html>
   <head>
@@ -477,7 +489,7 @@ def _unittest_gen_report(index_device, results):
           </table>
           <h2 id="Attach">Attach</h2>
           <ul>
-            <li>http://ubuntu-ygu5-02.sh.intel.com/chromium64/unittest/report/''' + time + '-' + device_name + '-' + 'report.tar.gz' + '''</li>
+            <li>http://ubuntu-ygu5-02.sh.intel.com/chromium64/unittest/''' + time + '-' + device_name + '''</li>
           </ul>
         </div>
       </div>
@@ -487,11 +499,9 @@ def _unittest_gen_report(index_device, results):
 '''
 
     html = html_start
-    dir_device_name = dir_time + '/' + device_name
     for index, unit_test in enumerate(unit_tests):
         bs = results[index]
-
-        # parse log
+        file_log = dir_device_name + '/' + unit_test + '.log'
         ut_all = ''
         ut_pass = ''
         ut_fail = ''
@@ -499,7 +509,9 @@ def _unittest_gen_report(index_device, results):
         ut_timeout = ''
         ut_unknow = ''
 
-        if len(bs) > 0:
+        if bs == 'FAIL' or not os.path.exists(file_log):
+            rs = 'FAIL'
+        else:
             ut_result = open(dir_device_name + '/' + unit_test + '.log', 'r')
             lines = ut_result.readlines()
             for line in lines:
@@ -516,15 +528,16 @@ def _unittest_gen_report(index_device, results):
                 if 'Main  UNKNOWN (' in line:
                     ut_unknow = line.split('(')[1].split(' ')[0]
 
+            if ut_all != '' and ut_pass != '' and int(ut_all) == int(ut_pass):
+                rs = 'PASS'
+            else:
+                rs = 'FAIL'
+
+        # Generate the html
         ut_tr_start = '''<tr>'''
         ut_bs_td_start = '''<td>'''
         ut_rs_td_start = '''<td>'''
         ut_td_end = '''</td>'''
-
-        if ut_all != '' and ut_pass != '' and int(ut_all) == int(ut_pass):
-            rs = 'PASS'
-        else:
-            rs = 'FAIL'
 
         if bs == 'PASS':
             ut_bs_td_start = '''<td style='color:green'>'''
@@ -547,29 +560,7 @@ def _unittest_gen_report(index_device, results):
         html += ut_row
     html += html_end
 
-    # Save result
-    file_html = dir_device_name + '/' + report_name + ' of WW' + time + '-' + device_name + '.html'
-    file_report = open(file_html, 'w')
-    file_report.write(html)
-    file_report.close()
-
     return html
-
-
-def _unittest_backup(index_device):
-    if not args.unittest_backup:
-        return
-
-    device_name = devices_name[index_device]
-    smb_server = '//ubuntu-ygu5-02.sh.intel.com/chromium64/'
-    local_dir = './'
-    local_file = time + '-' + device_name + '-' + 'report.tar.gz'
-    server_dir = 'unittest\\report\\'
-    server_file = local_file
-    execute('tar zvcf ' + local_file + ' ' + dir_time)
-
-    upload_server(smb_server, local_dir, local_file, server_dir, server_file)
-    execute('rm -f ' + local_dir + local_file, interactive=True)
 
 
 if __name__ == '__main__':
