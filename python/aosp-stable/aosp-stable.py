@@ -171,6 +171,7 @@ def build():
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-x86'
             if arch == 'x86_64':
                 cmd += ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-x86_64'
+            cmd = bashify(cmd)
             execute(cmd, interactive=True)
 
         if module == 'system':
@@ -190,6 +191,7 @@ def build():
         if args.build_showcommands:
             cmd += ' showcommands'
         cmd += ' -j16 2>&1 |tee log.txt'
+        cmd = bashify(cmd)
         result = execute(cmd, interactive=True)
         if result[0]:
             error('Failed to build %s %s %s' % (arch, device, module))
