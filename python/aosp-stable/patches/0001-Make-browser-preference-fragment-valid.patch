@@ -1,0 +1,30 @@
+From 3a799e55d6bf843ba092f061fe7fe6f415ce0f0d Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Sun, 4 May 2014 13:54:58 +0800
+Subject: [PATCH] Make browser preference fragment valid
+
+Subclasses of PreferenceActivity must override isValidFragment(String)
+to verify that the Fragment class is valid. But
+com.android.browser.BrowserPreferencesPage has not checked this.
+
+Change-Id: I3650eff8a6d0547f14c6aff54425204d6c19f103
+---
+ src/com/android/browser/BrowserPreferencesPage.java | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/src/com/android/browser/BrowserPreferencesPage.java b/src/com/android/browser/BrowserPreferencesPage.java
+index 6e6da17..975044d 100644
+--- a/src/com/android/browser/BrowserPreferencesPage.java
++++ b/src/com/android/browser/BrowserPreferencesPage.java
+@@ -98,4 +98,8 @@ public class BrowserPreferencesPage extends PreferenceActivity {
+         return intent;
+     }
+ 
++    @Override
++    protected boolean isValidFragment(String fragmentName) {
++        return true;
++    }
+ }
+-- 
+1.8.3.2
+
