@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+import fileinput
 import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
@@ -188,6 +189,8 @@ def setup():
                 print index
                 del devices[index]
                 del devices_name[index]
+
+    _hack_app_process()
 
     target_module = args.target_module
 
@@ -562,6 +565,23 @@ def _unittest_gen_report(index_device, results):
 
     return html
 
+
+def _hack_app_process():
+    if not target_arch == 'x86_64':
+        return
+
+    for device in devices:
+        for file in ['am', 'pm']:
+            execute('adb -s ' + device + ' pull /system/bin/' + file + ' /tmp/' + file)
+            need_hack = False
+            for line in fileinput.input('/tmp/' + file, inplace=1):
+                if re.search('app_process ', line):
+                    line = line.replace('app_process', 'app_process64')
+                    need_hack = True
+                sys.stdout.write(line)
+
+            if need_hack:
+                execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
 
 if __name__ == '__main__':
     handle_option()
