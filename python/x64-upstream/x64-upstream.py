@@ -9,7 +9,7 @@ import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
-chromium_hash = '13f6d9ed0e7bde957f7b9758dafa798c23331f4e'
+chromium_hash = '8c2b268683bf9f5c2b63dfa99c3fc7fc8adf0744'
 
 patches = {
     'src': [
