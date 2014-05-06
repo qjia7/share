@@ -15,15 +15,14 @@
 # install jdk 1.6.0.45: copy /usr/lib/jvm/jdk1.6.0_45/
 
 from util import *
-import os as OS
 import commands
 import getpass
 
 dir_repo = '/workspace/project/gyagp/share'
 dir_linux = dir_repo + '/linux'
 dir_python = dir_repo + '/python'
-dir_home = OS.getenv("HOME")
-user = OS.getenv("USER")
+dir_home = os.getenv("HOME")
+user = os.getenv("USER")
 profile = ''
 username = ''
 
@@ -62,7 +61,7 @@ def patch_sudo():
     file_name = '10_' + username + '_sudo'
     sudo_file = '/etc/sudoers.d/' + file_name
 
-    if OS.path.exists(sudo_file):
+    if os.path.exists(sudo_file):
         info("You were able to sudo without password")
     else:
         execute('sudo echo "' + username + ' ALL=NOPASSWD:ALL" >' + file_name)
@@ -83,15 +82,15 @@ def copy_file(srcFile, destDir, sudo=False, srcSubDir=''):
     else:
         srcPath = dir_linux + "/" + srcFile
 
-    if not OS.path.exists(srcPath):
+    if not os.path.exists(srcPath):
         error(srcPath + " doesn't exist")
         return -1
 
-    if OS.path.exists(destDir + "/" + srcFile):
+    if os.path.exists(destDir + "/" + srcFile):
         info(destDir + "/" + srcFile + " already exists")
         return 0
 
-    if not OS.path.exists(destDir):
+    if not os.path.exists(destDir):
         commands.getstatusoutput("mkdir -p " + destDir)
         info(srcFile + destDir + " doesn't exist, so just create it")
 
@@ -104,11 +103,11 @@ def copy_file(srcFile, destDir, sudo=False, srcSubDir=''):
 
 
 def overwrite_file(srcFile, destDir, sudo, srcSubDir=""):
-    if not OS.path.exists(destDir + "/" + srcFile):
+    if not os.path.exists(destDir + "/" + srcFile):
         error(destDir + "/" + srcFile + " doesn't exist")
         return -1
 
-    if OS.path.exists(destDir + "/" + srcFile + ".bk"):
+    if os.path.exists(destDir + "/" + srcFile + ".bk"):
         info(destDir + "/" + srcFile + " was already overwritten")
         return 0
 
@@ -212,7 +211,7 @@ if __name__ == "__main__":
     copy_file(".vimrc", dir_home, 0)
 
     copy_file('privoxy_config', '/etc/privoxy', 1)
-    OS.system('sudo mv -f /etc/privoxy/privoxy_config /etc/privoxy/config')
+    os.system('sudo mv -f /etc/privoxy/privoxy_config /etc/privoxy/config')
 
     overwrite_file("tsocks.conf", "/etc", 1)
 

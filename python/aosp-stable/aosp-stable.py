@@ -3,7 +3,6 @@
 import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
-import os as OS
 
 dir_root = ''
 dir_chromium = ''
@@ -99,12 +98,12 @@ def setup():
     else:
         target_modules = args.target_module.split(',')
 
-    if OS.path.exists(dir_chromium + '/src'):
+    if os.path.exists(dir_chromium + '/src'):
         chromium_version = 'cr36'
     else:
         chromium_version = 'cr30'
 
-    OS.chdir(dir_root)
+    os.chdir(dir_root)
 
 
 def init():
@@ -120,7 +119,7 @@ def init():
     execute('./repo start x64 --all')
 
     upstream_chromium = 'external/chromium_org/src'
-    if not OS.path.exists(upstream_chromium):
+    if not os.path.exists(upstream_chromium):
         info('Please put upstream Chromium under ' + upstream_chromium)
 
 
@@ -407,13 +406,13 @@ def _backup_one(arch, device, module):
     #time = '2014'
     name = time + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
-    if not OS.path.exists(dir_backup_one):
-        OS.makedirs(dir_backup_one)
+    if not os.path.exists(dir_backup_one):
+        os.makedirs(dir_backup_one)
     backup_dir(dir_backup_one)
     for backup_file in backup_files:
         dir_backup_relative = os.path.split(backup_file)[0]
-        if not OS.path.exists(dir_backup_relative):
-            OS.makedirs(dir_backup_relative)
+        if not os.path.exists(dir_backup_relative):
+            os.makedirs(dir_backup_relative)
         execute('cp -rf ' + dir_root + '/' + backup_file + ' ' + dir_backup_relative)
     restore_dir()
 
@@ -425,12 +424,12 @@ def _backup_one(arch, device, module):
 
 
 def _ensure_exist(file):
-    if not OS.path.exists(file):
+    if not os.path.exists(file):
         execute('mv -f %s.bk %s' % (file, file))
 
 
 def _ensure_nonexist(file):
-    if OS.path.exists(file):
+    if os.path.exists(file):
         execute('mv -f %s %s.bk' % (file, file))
 
 

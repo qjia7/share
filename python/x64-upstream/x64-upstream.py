@@ -5,7 +5,6 @@ import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
 
-import os as OS
 import multiprocessing
 from multiprocessing import Pool
 
@@ -138,8 +137,8 @@ def setup():
 
     os.environ['GYP_DEFINES'] = 'OS=android werror= disable_nacl=1 enable_svg=0'
     backup_dir(dir_root)
-    if not OS.path.exists(dir_unittest):
-        OS.mkdir(dir_unittest)
+    if not os.path.exists(dir_unittest):
+        os.mkdir(dir_unittest)
 
     if args.unittest_case:
         unit_tests = args.unittest_case.split(',')
@@ -337,8 +336,8 @@ def unittest_run(force=False):
     if not args.unittest_run and not force:
         return
 
-    if not OS.path.exists(dir_unittest):
-        OS.mkdir(dir_unittest)
+    if not os.path.exists(dir_unittest):
+        os.mkdir(dir_unittest)
 
     number_device = len(devices)
     if number_device < 1:
@@ -392,7 +391,7 @@ def _unittest_run_device(index_device, results):
     device = devices[index_device]
     device_name = devices_name[index_device]
     dir_device_name = dir_time + '-' + device_name
-    OS.mkdir(dir_device_name)
+    os.mkdir(dir_device_name)
 
     for index, unit_test in enumerate(unit_tests):
         if results[index] == 'FAIL':

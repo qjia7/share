@@ -1,6 +1,5 @@
 from util import *
 from common import *
-import os as OS
 
 
 # Define result for good rev
@@ -28,9 +27,9 @@ examples:
   python %(prog)s -g 218527 -b 226662 --benchmark cocos
 
 ''')
-    parser.add_argument('--os', dest='os', help='os', choices=os_all, default='android')
-    parser.add_argument('--arch', dest='arch', help='arch', choices=arch_all, default='x86')
-    parser.add_argument('--module', dest='module', help='module', choices=module_all, default='content_shell')
+    parser.add_argument('--os', dest='os', help='os', choices=target_os_all, default='android')
+    parser.add_argument('--arch', dest='arch', help='arch', choices=target_arch_all, default='x86')
+    parser.add_argument('--module', dest='module', help='module', choices=target_module_all, default='content_shell')
     parser.add_argument('--benchmark', dest='benchmark', help='benchmark', required=True)
     parser.add_argument('-g', '--good-rev', dest='good_rev', type=int, help='small revision, which is good')
     parser.add_argument('-b', '--bad-rev', dest='bad_rev', type=int, help='big revision, which is bad')
@@ -62,9 +61,9 @@ def setup():
 
     if os == 'linux' and module == 'chrome':
         sandbox_file = '/usr/local/sbin/chrome-devel-sandbox'
-        if not OS.path.exists(sandbox_file):
+        if not os.path.exists(sandbox_file):
             error('SUID Sandbox file "' + sandbox_file + '" does not exist')
-        sandbox_env = OS.getenv('CHROME_DEVEL_SANDBOX')
+        sandbox_env = os.getenv('CHROME_DEVEL_SANDBOX')
         if not sandbox_env:
             error('SUID Sandbox environmental variable does not set')
 
@@ -77,6 +76,7 @@ def parse_result(benchmark, output):
     if match:
         results = match.group(1).split(',')
     return results
+
 
 def is_good(rev):
     r = execute('python ../webmark/webmark.py --os ' + os + ' --arch ' + arch + ' --module-name ' + module + ' --module-path ' + dir_out + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk' + ' --benchmark ' + benchmark, return_output=True)
@@ -169,7 +169,7 @@ def bisect(index_good, index_bad, check_boundry=False):
 
 def get_rev_list(rev_min, rev_max):
     global rev_list
-    for file in OS.listdir(dir_out + '/' + comb_name):
+    for file in os.listdir(dir_out + '/' + comb_name):
         pattern = re.compile(comb_valid[os, arch, module])
         match = pattern.search(file)
         if match:

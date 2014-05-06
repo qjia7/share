@@ -21,29 +21,28 @@ from util import *
 from common import *
 
 import time
-import os as OS
 import fileinput
 import random
 import select
 
 rev_commit = {}
 
-# os -> [build, fetch_time, rev_min, rev_max, rev_git_max]
-# build -> [[arch, module, rev_next], [arch, module, rev_next]]
+# target_os -> [build, fetch_time, rev_min, rev_max, rev_git_max]
+# build -> [[target_arch, target_module, rev_next], [target_arch, target_module, rev_next]]
 # Example: {'android': [[['x86', 'webview', 100000], ['x86', 'content_shell', 200000]], 20140115, 10000, 999999, 150000]}
 
-os_info = {}
-OS_INFO_INDEX_BUILD = 0
-OS_INFO_INDEX_TIME = 1
-OS_INFO_INDEX_REV_MIN = 2
-OS_INFO_INDEX_REV_MAX = 3
-OS_INFO_INDEX_REV_GIT = 4
+target_os_info = {}
+TARGET_OS_INFO_INDEX_BUILD = 0
+TARGET_OS_INFO_INDEX_TIME = 1
+TARGET_OS_INFO_INDEX_REV_MIN = 2
+TARGET_OS_INFO_INDEX_REV_MAX = 3
+TARGET_OS_INFO_INDEX_REV_GIT = 4
 
-OS_INFO_INDEX_BUILD_ARCH = 0
-OS_INFO_INDEX_BUILD_MODULE = 1
-OS_INFO_INDEX_BUILD_REV_NEXT = 2
+TARGET_OS_INFO_INDEX_BUILD_ARCH = 0
+TARGET_OS_INFO_INDEX_BUILD_MODULE = 1
+TARGET_OS_INFO_INDEX_BUILD_REV_NEXT = 2
 
-# build_next = [os, arch, module, rev_next, index_next]
+# build_next = [target_os, target_arch, target_module, rev_next, index_next]
 BUILD_NEXT_INDEX_OS = 0
 BUILD_NEXT_INDEX_ARCH = 1
 BUILD_NEXT_INDEX_MODULE = 2
@@ -76,13 +75,13 @@ def handle_option():
 examples:
   python %(prog)s --root password
   python %(prog)s -b -r 217377-225138
-  python %(prog)s -b --os linux --module chrome -r 233137-242710 --build-every 5
-  python %(prog)s -b --os android --module content_shell --keep_out
+  python %(prog)s -b --target-os linux --target-module chrome -r 233137-242710 --build-every 5
+  python %(prog)s -b --target-os android --target-module content_shell --keep_out
 
 ''')
-    parser.add_argument('--os', dest='os', help='os', choices=os_all + ['all'], default='all')
-    parser.add_argument('--arch', dest='arch', help='arch', choices=arch_all + ['all'], default='all')
-    parser.add_argument('--module', dest='module', help='module', choices=module_all + ['all'], default='all')
+    parser.add_argument('--target-os', dest='target_os', help='target os', choices=target_os_all + ['all'], default='all')
+    parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=target_arch_all + ['all'], default='all')
+    parser.add_argument('--target-module', dest='target_module', help='target module', choices=target_module_all + ['all'], default='all')
     parser.add_argument('-r', '--rev', dest='rev', help='revisions to build. E.g., 233137, 217377-225138')
     parser.add_argument('--root', dest='root_pwd', help='root password')
     parser.add_argument('--build-every', dest='build_every', help='build every number')
@@ -100,7 +99,7 @@ examples:
 
 
 def setup():
-    global os_info, build_every, fail_number_max
+    global target_os_info, build_every, fail_number_max
 
     if not args.slave_only:
         result = execute(remotify_cmd('ls ' + dir_out_server), show_command=True)
@@ -114,29 +113,29 @@ def setup():
     # Packages is split by white space so that you may easily install them all
     ensure_package('libnss3-dev ant libcups2-dev libcap-dev libxtst-dev libasound2-dev libxss-dev')
 
-    OS.putenv('JAVA_HOME', '/usr/lib/jvm/jdk1.6.0_45')
+    os.putenv('JAVA_HOME', '/usr/lib/jvm/jdk1.6.0_45')
 
-    if args.os == 'all':
-        arg_os = os_all
+    if args.target_os == 'all':
+        arg_target_os = target_os_all
     else:
-        arg_os = args.os.split(',')
+        arg_target_os = args.target_os.split(',')
 
-    if args.arch == 'all':
-        arg_arch = arch_all
+    if args.target_arch == 'all':
+        arg_target_arch = target_arch_all
     else:
-        arg_arch = args.arch.split(',')
+        arg_target_arch = args.target_arch.split(',')
 
-    if args.module == 'all':
-        arg_module = module_all
+    if args.target_module == 'all':
+        arg_target_module = target_module_all
     else:
-        arg_module = args.module.split(',')
+        arg_target_module = args.target_module.split(',')
 
-    for os, arch, module in [(os, arch, module) for os in arg_os for arch in arg_arch for module in arg_module]:
-        if not (os, arch, module) in comb_valid:
+    for target_os, target_arch, target_module in [(target_os, target_arch, target_module) for target_os in arg_target_os for target_arch in arg_target_arch for target_module in arg_target_module]:
+        if not (target_os, target_arch, target_module) in comb_valid:
             continue
 
-        if not os in os_info:
-            os_info[os] = [[], 0, 0, 0, 0]
+        if not target_os in target_os_info:
+            target_os_info[target_os] = [[], 0, 0, 0, 0]
             if args.rev:
                 revs = [int(x) for x in args.rev.split('-')]
                 if len(revs) > 1:
@@ -146,31 +145,31 @@ def setup():
                     rev_min = revs[0]
                     rev_max = revs[0]
 
-                os_info[os][OS_INFO_INDEX_REV_MIN] = rev_min
-                os_info[os][OS_INFO_INDEX_REV_MAX] = rev_max
+                target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MIN] = rev_min
+                target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MAX] = rev_max
             else:
-                os_info[os][OS_INFO_INDEX_REV_MIN] = rev_default[0]
-                os_info[os][OS_INFO_INDEX_REV_MAX] = rev_default[1]
+                target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MIN] = rev_default[0]
+                target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MAX] = rev_default[1]
 
-        os_info[os][OS_INFO_INDEX_BUILD].append([arch, module, os_info[os][OS_INFO_INDEX_REV_MIN]])
+        target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD].append([target_arch, target_module, target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MIN]])
 
     update_git_info(fetch=False)
 
-    if not OS.path.exists(dir_log):
-        OS.mkdir(dir_log)
+    if not os.path.exists(dir_log):
+        os.mkdir(dir_log)
 
-    if not OS.path.exists(dir_out):
-        OS.mkdir(dir_out)
+    if not os.path.exists(dir_out):
+        os.mkdir(dir_out)
 
-    for os in os_info:
-        for build in os_info[os][OS_INFO_INDEX_BUILD]:
-            arch = build[OS_INFO_INDEX_BUILD_ARCH]
-            module = build[OS_INFO_INDEX_BUILD_MODULE]
-            dir_comb_slave = dir_out + '/' + get_comb_name(os, arch, module)
-            dir_comb_server = dir_out_server + '/' + get_comb_name(os, arch, module)
+    for target_os in target_os_info:
+        for build in target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD]:
+            target_arch = build[TARGET_OS_INFO_INDEX_BUILD_ARCH]
+            target_module = build[TARGET_OS_INFO_INDEX_BUILD_MODULE]
+            dir_comb_slave = dir_out + '/' + get_comb_name(target_os, target_arch, target_module)
+            dir_comb_server = dir_out_server + '/' + get_comb_name(target_os, target_arch, target_module)
             # Make dir_comb for slave
-            if not OS.path.exists(dir_comb_slave):
-                OS.mkdir(dir_comb_slave)
+            if not os.path.exists(dir_comb_slave):
+                os.mkdir(dir_comb_slave)
             # Make dir_comb for server
 
             result = execute(remotify_cmd('ls ' + dir_comb_server))
@@ -191,11 +190,11 @@ def build():
     need_sleep = False
     while True:
         build_next = get_build_next()
-        os_next = build_next[BUILD_NEXT_INDEX_OS]
+        target_os_next = build_next[BUILD_NEXT_INDEX_OS]
         rev_next = build_next[BUILD_NEXT_INDEX_REV_NEXT]
         index_next = build_next[BUILD_NEXT_INDEX_INDEX_NEXT]
         if rev_next in rev_commit:
-            os_info[os_next][OS_INFO_INDEX_BUILD][index_next][OS_INFO_INDEX_BUILD_REV_NEXT] = rev_next + 1
+            target_os_info[target_os_next][TARGET_OS_INFO_INDEX_BUILD][index_next][TARGET_OS_INFO_INDEX_BUILD_REV_NEXT] = rev_next + 1
             result = build_one(build_next)
             if result:
                 fail_number += 1
@@ -204,12 +203,12 @@ def build():
             else:
                 fail_number = 0
         else:
-            os = build_next[BUILD_NEXT_INDEX_OS]
-            rev_max = os_info[os][OS_INFO_INDEX_REV_MAX]
+            target_os = build_next[BUILD_NEXT_INDEX_OS]
+            rev_max = target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MAX]
             if rev_next > rev_max:
                 return
 
-            time_fetch = os_info[os][OS_INFO_INDEX_TIME]
+            time_fetch = target_os_info[target_os][TARGET_OS_INFO_INDEX_TIME]
             time_diff = get_time() - time_fetch
 
             if time_diff < time_sleep_default:
@@ -263,7 +262,7 @@ def patch_src_basename():
     file_browser_new = file_browser.replace('update_manifest_unittest', 'component_update_manifest_unittest')
     file_common = 'common/extensions/update_manifest_unittest.cc'
 
-    if not OS.path.exists(file_browser) or not OS.path.exists(file_common):
+    if not os.path.exists(file_browser) or not os.path.exists(file_common):
         return
 
     gypi_file = 'chrome_tests_unit.gypi'
@@ -326,8 +325,8 @@ def patch_src_sampling():
 
 
 # Patch the code to solve some build error problem in upstream
-def patch_after_sync(os, arch, module, rev):
-    dir_repo = dir_project + '/chromium-' + os
+def patch_after_sync(target_os, target_arch, target_module, rev):
+    dir_repo = dir_project + '/chromium-' + target_os
     backup_dir(dir_repo)
 
     if rev >= 233687 and rev < 233690:
@@ -357,16 +356,16 @@ def patch_after_sync(os, arch, module, rev):
     restore_dir()
 
 
-def patch_before_build(os, arch, module, rev):
-    dir_repo = dir_project + '/chromium-' + os
+def patch_before_build(target_os, target_arch, target_module, rev):
+    dir_repo = dir_project + '/chromium-' + target_os
 
     # For 7c849b3d759fa9fedd7d4aea73577d643465918d (rev 253545)
     # http://comments.gmane.org/gmane.comp.web.chromium.devel/50482
     execute('rm -f ' + dir_repo + '/src/out/Release/gen/templates/org/chromium/base/ActivityState.java')
 
 
-def move_to_server(file, os, arch, module):
-    dir_comb_server = dir_out_server + '/' + get_comb_name(os, arch, module)
+def move_to_server(file, target_os, target_arch, target_module):
+    dir_comb_server = dir_out_server + '/' + get_comb_name(target_os, target_arch, target_module)
     result = execute('scp ' + file + ' gyagp@' + server + ':' + dir_comb_server)
     if result[0]:
         # If the failure is caused by network issue of slave machine, most likely it could not send mail too.
@@ -376,24 +375,24 @@ def move_to_server(file, os, arch, module):
 
 
 def build_one(build_next):
-    (os, arch, module, rev, index) = build_next
+    (target_os, target_arch, target_module, rev, index) = build_next
 
-    info('Begin to build ' + get_comb_name(os, arch, module) + '@' + str(rev) + '...')
-    dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
+    info('Begin to build ' + get_comb_name(target_os, target_arch, target_module) + '@' + str(rev) + '...')
+    dir_comb = dir_out + '/' + get_comb_name(target_os, target_arch, target_module)
     if rev in expectfail_list:
         file_final = dir_comb + '/' + str(rev) + '.EXPECTFAIL'
         execute('touch ' + file_final)
-        move_to_server(file_final, os, arch, module)
+        move_to_server(file_final, target_os, target_arch, target_module)
         return 0
 
-    file_log = dir_log + '/' + get_comb_name(os, arch, module) + '@' + str(rev) + '.log'
+    file_log = dir_log + '/' + get_comb_name(target_os, target_arch, target_module) + '@' + str(rev) + '.log'
 
     if not args.slave_only:
-        file_lock = dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '.LOCK'
+        file_lock = dir_out_server + '/' + get_comb_name(target_os, target_arch, target_module) + '/' + str(rev) + '.LOCK'
         execute(remotify_cmd('touch ' + file_lock))
 
     commit = rev_commit[rev]
-    dir_repo = dir_project + '/chromium-' + os
+    dir_repo = dir_project + '/chromium-' + target_os
 
     cmd_sync = run_chromium_script + ' -u "sync -f -n -j16 --revision src@' + commit + '"' + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_sync, dryrun=DRYRUN, interactive=True)
@@ -402,9 +401,9 @@ def build_one(build_next):
         send_mail('webcatch@intel.com', 'yang.gu@intel.com', '[webcatch] Failed to sync at ' + host_name, '')
         error('Sync failed', error_code=result[0])
 
-    patch_after_sync(os, arch, module, rev)
+    patch_after_sync(target_os, target_arch, target_module, rev)
 
-    cmd_gen_mk = run_chromium_script + ' --gen-mk --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
+    cmd_gen_mk = run_chromium_script + ' --gen-mk --target-arch ' + target_arch + ' --target-module ' + target_module + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_gen_mk, dryrun=DRYRUN, show_progress=True)
     if result[0]:
         # Run hook to retry. E.g., for revision >=252065, we have to run with hook to update gn tool.
@@ -416,14 +415,14 @@ def build_one(build_next):
             send_mail('webcatch@intel.com', 'yang.gu@intel.com', '[webcatch] Failed to generate makefile at ' + host_name, '')
             error('Failed to generate makefile')
 
-    patch_before_build(os, arch, module, rev)
+    patch_before_build(target_os, target_arch, target_module, rev)
 
-    cmd_build = run_chromium_script + ' -b --target-arch ' + arch + ' --target-module ' + module + ' -d ' + dir_repo + ' --rev ' + str(rev)
+    cmd_build = run_chromium_script + ' -b --target-arch ' + target_arch + ' --target-module ' + target_module + ' -d ' + dir_repo + ' --rev ' + str(rev)
     result = execute(cmd_build, dryrun=DRYRUN, show_progress=True)
 
     # Retry here
     if result[0]:
-        if os == 'android':
+        if target_os == 'android':
             execute('sudo ' + dir_repo + '/src/build/install-build-deps-android.sh', dryrun=DRYRUN)
         if result[0] and not args.keep_out:
             execute('rm -rf ' + dir_repo + '/src/out', dryrun=DRYRUN)
@@ -431,7 +430,7 @@ def build_one(build_next):
         result = execute(cmd_build, dryrun=DRYRUN)
 
     # Handle result, either success or failure. TODO: Need to handle other comb.
-    if os == 'android' and module == 'content_shell':
+    if target_os == 'android' and target_module == 'content_shell':
         if result[0]:
             file_final = dir_comb + '/' + str(rev) + '.FAIL'
             execute('touch ' + file_final)
@@ -439,7 +438,7 @@ def build_one(build_next):
             file_final = dir_comb + '/' + str(rev) + '.apk'
             execute('cp ' + dir_repo + '/src/out/Release/apks/ContentShell.apk ' + file_final, dryrun=DRYRUN)
             execute('rm -f ' + file_log)
-    elif os == 'android' and module == 'webview':
+    elif target_os == 'android' and target_module == 'webview':
         if result[0]:
             file_final = dir_comb + '/' + str(rev) + '.FAIL'
             execute('touch ' + file_final)
@@ -447,15 +446,15 @@ def build_one(build_next):
             file_final = dir_comb + '/' + str(rev) + '.apk'
             execute('cp ' + dir_repo + '/src/out/Release/apks/AndroidWebView.apk ' + file_final, dryrun=DRYRUN)
             execute('rm -f ' + file_log)
-    elif os == 'linux' and module == 'chrome':
+    elif target_os == 'linux' and target_module == 'chrome':
         dest_dir = dir_comb + '/' + str(rev)
         if result[0]:
             file_final = dest_dir + '.FAIL'
             execute('touch ' + file_final)
         else:
-            OS.mkdir(dest_dir)
+            os.mkdir(dest_dir)
             src_dir = dir_repo + '/src/out/Release'
-            config_file = dir_repo + '/src/chrome/tools/build/' + os + '/FILES.cfg'
+            config_file = dir_repo + '/src/chrome/tools/build/' + target_os + '/FILES.cfg'
             file = open(config_file)
             lines = file.readlines()
             file.close()
@@ -463,15 +462,15 @@ def build_one(build_next):
             files = []
             for line in lines:
                 match = pattern.search(line)
-                if match and OS.path.exists(src_dir + '/' + match.group(1)):
+                if match and os.path.exists(src_dir + '/' + match.group(1)):
                     files.append(match.group(1))
 
             # This file is not included in FILES.cfg. Bug?
             files.append('lib/*.so')
 
             for file_name in files:
-                dest_dir_temp = OS.path.dirname(dest_dir + '/' + file_name)
-                if not OS.path.exists(dest_dir_temp):
+                dest_dir_temp = os.path.dirname(dest_dir + '/' + file_name)
+                if not os.path.exists(dest_dir_temp):
                     execute('mkdir -p ' + dest_dir_temp)
 
                 # Some are just dir, so we need -r option
@@ -479,7 +478,7 @@ def build_one(build_next):
 
             backup_dir(dir_comb)
             # It's strange some builds have full debug info
-            #size = int(OS.path.getsize(str(rev) + '/chrome'))
+            #size = int(os.path.getsize(str(rev) + '/chrome'))
             #if size > 300000000:
             #    execute('strip ' + str(rev) + '/chrome')
             execute('tar zcf ' + str(rev) + '.tar.gz ' + str(rev))
@@ -490,25 +489,25 @@ def build_one(build_next):
             file_final = dir_comb + '/' + str(rev) + '.tar.gz'
 
     if not args.slave_only:
-        move_to_server(file_final, os, arch, module)
+        move_to_server(file_final, target_os, target_arch, target_module)
         execute(remotify_cmd('rm -f ' + file_lock))
 
     return result[0]
 
 
-def rev_is_built(os, arch, module, rev):
+def rev_is_built(target_os, target_arch, target_module, rev):
     # Skip the revision marked as built
     if not args.slave_only:
-        rev_min = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MIN]
-        rev_max = comb_valid[(os, arch, module)][COMB_VALID_INDEX_REV_MAX]
+        rev_min = comb_valid[(target_os, target_arch, target_module)][COMB_VALID_INDEX_REV_MIN]
+        rev_max = comb_valid[(target_os, target_arch, target_module)][COMB_VALID_INDEX_REV_MAX]
         if rev >= rev_min and rev <= rev_max:
             return True
 
     # Check if file exists or not
     if args.slave_only:
-        cmd = 'ls ' + dir_out + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*'
+        cmd = 'ls ' + dir_out + '/' + get_comb_name(target_os, target_arch, target_module) + '/' + str(rev) + '*'
     else:
-        cmd = remotify_cmd('ls ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/' + str(rev) + '*')
+        cmd = remotify_cmd('ls ' + dir_out_server + '/' + get_comb_name(target_os, target_arch, target_module) + '/' + str(rev) + '*')
 
     result = execute(cmd, show_command=True)
     if result[0] == 0:
@@ -525,12 +524,12 @@ def rev_is_built(os, arch, module, rev):
     return False
 
 
-def get_rev_next(os, index):
-    arch = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_ARCH]
-    module = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_MODULE]
-    rev_next = os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_REV_NEXT]
-    rev_max = os_info[os][OS_INFO_INDEX_REV_MAX]
-    rev_git = os_info[os][OS_INFO_INDEX_REV_GIT]
+def get_rev_next(target_os, index):
+    target_arch = target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD][index][TARGET_OS_INFO_INDEX_BUILD_ARCH]
+    target_module = target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD][index][TARGET_OS_INFO_INDEX_BUILD_MODULE]
+    rev_next = target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD][index][TARGET_OS_INFO_INDEX_BUILD_REV_NEXT]
+    rev_max = target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MAX]
+    rev_git = target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_GIT]
     for rev in range(rev_next, rev_max + 1):
         if rev > rev_git:
             return rev
@@ -538,9 +537,9 @@ def get_rev_next(os, index):
         if not rev % build_every == 0:
             continue
 
-        if rev_is_built(os, arch, module, rev):
+        if rev_is_built(target_os, target_arch, target_module, rev):
             info(str(rev) + ' has been built')
-            os_info[os][OS_INFO_INDEX_BUILD][index][OS_INFO_INDEX_BUILD_REV_NEXT] = rev + 1
+            target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD][index][TARGET_OS_INFO_INDEX_BUILD_REV_NEXT] = rev + 1
             continue
 
         # Does not exist from here
@@ -549,35 +548,35 @@ def get_rev_next(os, index):
             return rev
 
         # Handle invalid revision number here. TODO: Need to handle other comb.
-        dir_comb = dir_out + '/' + get_comb_name(os, arch, module)
+        dir_comb = dir_out + '/' + get_comb_name(target_os, target_arch, target_module)
         file_final = dir_comb + '/' + str(rev) + '.NULL'
         info(str(rev) + ' does not exist')
         execute('touch ' + file_final)
         if not args.slave_only:
-            move_to_server(file_final, os, arch, module)
+            move_to_server(file_final, target_os, target_arch, target_module)
     return rev_max + 1
 
 
 # Get the smallest revision from all targeted builds
 def get_build_next():
     is_base = True
-    for os in os_info:
-        for index, comb in enumerate(os_info[os][OS_INFO_INDEX_BUILD]):
-            arch = comb[0]
-            module = comb[1]
-            rev_next_temp = get_rev_next(os, index)
+    for target_os in target_os_info:
+        for index, comb in enumerate(target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD]):
+            target_arch = comb[0]
+            target_module = comb[1]
+            rev_next_temp = get_rev_next(target_os, index)
 
             if is_base or rev_next_temp < rev_next:
-                os_next = os
-                arch_next = arch
-                module_next = module
+                target_os_next = target_os
+                target_arch_next = target_arch
+                target_module_next = target_module
                 rev_next = rev_next_temp
                 index_next = index
 
             if is_base:
                 is_base = False
 
-    build_next = [os_next, arch_next, module_next, rev_next, index_next]
+    build_next = [target_os_next, target_arch_next, target_module_next, rev_next, index_next]
     return build_next
 
 
@@ -593,9 +592,9 @@ def get_time():
     return int(time.time())
 
 
-def update_git_info_one(os):
+def update_git_info_one(target_os):
     global rev_commit
-    backup_dir(dir_root + '/project/chromium-' + os + '/src')
+    backup_dir(dir_root + '/project/chromium-' + target_os + '/src')
     execute('git log origin master >git_log')
     file = open('git_log')
     lines = file.readlines()
@@ -615,17 +614,17 @@ def update_git_info_one(os):
 
             if is_max_rev:
                 is_max_rev = False
-                if rev <= os_info[os][OS_INFO_INDEX_REV_GIT]:
+                if rev <= target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_GIT]:
                     return
                 else:
-                    rev_git_old = os_info[os][OS_INFO_INDEX_REV_GIT]
-                    os_info[os][OS_INFO_INDEX_REV_GIT] = rev
+                    rev_git_old = target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_GIT]
+                    target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_GIT] = rev
 
             if rev <= rev_git_old:
                 return
-            elif rev < os_info[os][OS_INFO_INDEX_REV_MIN]:
+            elif rev < target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MIN]:
                 return
-            elif rev > os_info[os][OS_INFO_INDEX_REV_MAX]:
+            elif rev > target_os_info[target_os][TARGET_OS_INFO_INDEX_REV_MAX]:
                 continue
             else:
                 rev_commit[rev] = commit
@@ -634,12 +633,12 @@ def update_git_info_one(os):
 
 
 def update_git_info(fetch=True):
-    for os in os_info:
+    for target_os in target_os_info:
         if fetch:
-            dir_repo = dir_project + '/chromium-' + os
+            dir_repo = dir_project + '/chromium-' + target_os
             execute(run_chromium_script + ' -u "fetch" --root-dir ' + dir_repo, dryrun=DRYRUN)
-            os_info[os][OS_INFO_INDEX_TIME] = get_time()
-        update_git_info_one(os)
+            target_os_info[target_os][TARGET_OS_INFO_INDEX_TIME] = get_time()
+        update_git_info_one(target_os)
 
 
 # Patch command if it needs to run on build server
@@ -651,15 +650,15 @@ def clean_lock():
     if not args.clean_lock:
         return
 
-    for os in os_info:
-        for comb in os_info[os][OS_INFO_INDEX_BUILD]:
-            arch = comb[0]
-            module = comb[1]
+    for target_os in target_os_info:
+        for comb in target_os_info[target_os][TARGET_OS_INFO_INDEX_BUILD]:
+            target_arch = comb[0]
+            target_module = comb[1]
 
             if args.slave_only:
-                cmd = 'rm ' + dir_out + '/' + get_comb_name(os, arch, module) + '/*.LOCK'
+                cmd = 'rm ' + dir_out + '/' + get_comb_name(target_os, target_arch, target_module) + '/*.LOCK'
             else:
-                cmd = remotify_cmd('rm ' + dir_out_server + '/' + get_comb_name(os, arch, module) + '/*.LOCK')
+                cmd = remotify_cmd('rm ' + dir_out_server + '/' + get_comb_name(target_os, target_arch, target_module) + '/*.LOCK')
 
             execute(cmd)
 

@@ -25,9 +25,9 @@ args = argparse.Namespace()
 dir_stack = []
 
 
-os_all = ['android', 'linux']
-arch_all = ['x86', 'arm']
-module_all = ['webview', 'chrome', 'content_shell']
+target_os_all = ['android', 'linux']
+target_arch_all = ['x86', 'arm']
+target_module_all = ['webview', 'chrome', 'content_shell']
 
 
 def get_datetime(format='%Y%m%d%H%M%S'):
