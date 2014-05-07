@@ -226,6 +226,21 @@ def unsetenv(env):
 
 def setenv(env, value):
     os.environ[env] = value
+
+
+# Execute a adb shell command and know the return value
+# adb shell would always return 0, so a trick has to be used here to get return value
+def execute_adb(cmd, device=''):
+    cmd_adb = 'adb'
+    if device != '':
+        cmd_adb += ' -s ' + device
+    cmd_adb += ' shell "' + cmd + '|| echo FAIL"'
+    result = execute(cmd_adb, return_output=True, show_command=False)
+    if re.search('FAIL', result[1].rstrip('\n')):
+        return False
+    else:
+        return True
+
 ################################################################################
 
 

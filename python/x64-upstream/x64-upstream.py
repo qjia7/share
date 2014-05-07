@@ -566,10 +566,10 @@ def _unittest_gen_report(index_device, results):
 
 
 def _hack_app_process():
-    if not target_arch == 'x86_64':
-        return
-
     for device in devices:
+        if not execute_adb("test -d /system/lib64", device=device):
+            continue
+
         for file in ['am', 'pm']:
             execute('adb -s ' + device + ' pull /system/bin/' + file + ' /tmp/' + file)
             need_hack = False
