@@ -219,6 +219,13 @@ def backup_smb(server, dir_server, file_local):
     else:
         info('Succeeded to upload: ' + file_local)
 
+
+def unsetenv(env):
+    del os.environ[env]
+
+
+def setenv(env, value):
+    os.environ[env] = value
 ################################################################################
 
 
