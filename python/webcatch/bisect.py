@@ -1,15 +1,18 @@
+import sys
+sys.path.append(sys.path[0] + '/..')
 from util import *
 from common import *
 
 
 # Define result for good rev
 benchmarks = {
-    'cocos': ['>20']
+    'cocos': ['>20'],
+    'galacticmobile': ['>50'],
 }
 
-os = ''
-arch = ''
-module = ''
+target_os = ''
+target_arch = ''
+target_module = ''
 benchmark = ''
 rev_list = []
 comb_name = ''
@@ -27,9 +30,9 @@ examples:
   python %(prog)s -g 218527 -b 226662 --benchmark cocos
 
 ''')
-    parser.add_argument('--os', dest='os', help='os', choices=target_os_all, default='android')
-    parser.add_argument('--arch', dest='arch', help='arch', choices=target_arch_all, default='x86')
-    parser.add_argument('--module', dest='module', help='module', choices=target_module_all, default='content_shell')
+    parser.add_argument('--target-os', dest='target_os', help='target os', choices=target_os_all, default='android')
+    parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=target_arch_all, default='x86')
+    parser.add_argument('--target-module', dest='target_module', help='target module', choices=target_module_all, default='content_shell')
     parser.add_argument('--benchmark', dest='benchmark', help='benchmark', required=True)
     parser.add_argument('-g', '--good-rev', dest='good_rev', type=int, help='small revision, which is good')
     parser.add_argument('-b', '--bad-rev', dest='bad_rev', type=int, help='big revision, which is bad')
@@ -38,13 +41,13 @@ examples:
 
 
 def setup():
-    global os, arch, module, comb_name, benchmark, dir_out
+    global target_os, target_arch, target_module, comb_name, benchmark
 
-    os = args.os
-    arch = args.arch
-    module = args.module
+    target_os = args.target_os
+    target_arch = args.target_arch
+    target_module = args.target_module
     benchmark = args.benchmark
-    comb_name = get_comb_name(os, arch, module)
+    comb_name = get_comb_name(target_os, target_arch, target_module)
 
     if args.good_rev:
         rev_min = args.good_rev
@@ -59,7 +62,7 @@ def setup():
     get_rev_list(rev_min, rev_max)
     #print rev_list
 
-    if os == 'linux' and module == 'chrome':
+    if target_os == 'linux' and target_module == 'chrome':
         sandbox_file = '/usr/local/sbin/chrome-devel-sandbox'
         if not os.path.exists(sandbox_file):
             error('SUID Sandbox file "' + sandbox_file + '" does not exist')
@@ -79,7 +82,10 @@ def parse_result(benchmark, output):
 
 
 def is_good(rev):
-    r = execute('python ../webmark/webmark.py --os ' + os + ' --arch ' + arch + ' --module-name ' + module + ' --module-path ' + dir_out + '/' + get_comb_name(os, arch, module) + '/ContentShell@' + str(rev) + '.apk' + ' --benchmark ' + benchmark, return_output=True)
+    backup_dir('../webmark')
+    r = execute('python webmark.py --target-os ' + target_os + ' --target-arch ' + target_arch + ' --target-module ' + target_module + ' --target-module-path ' + dir_out_server + '/' + get_comb_name(target_os, target_arch, target_module) + '/' + str(rev) + '.apk' + ' --benchmark ' + benchmark, return_output=True)
+    restore_dir()
+
     if r[0]:
         error('Failed to run benchmark ' + benchmark + ' with revision ' + str(rev))
 
@@ -96,7 +102,7 @@ def is_good(rev):
 
 
 def get_commit(rev_good, rev_bad):
-    backup_dir(dir_root + '/project/chromium-' + os + '/src')
+    backup_dir(dir_root + '/project/chromium-' + target_os + '/src')
     execute('git log origin master >git_log', show_command=False)
     file = open('git_log')
     lines = file.readlines()
@@ -169,8 +175,8 @@ def bisect(index_good, index_bad, check_boundry=False):
 
 def get_rev_list(rev_min, rev_max):
     global rev_list
-    for file in os.listdir(dir_out + '/' + comb_name):
-        pattern = re.compile(comb_valid[os, arch, module])
+    for file in os.listdir(dir_out_server + '/' + comb_name):
+        pattern = re.compile(comb_valid[target_os, target_arch, target_module][0])
         match = pattern.search(file)
         if match:
             rev = int(match.group(1))
