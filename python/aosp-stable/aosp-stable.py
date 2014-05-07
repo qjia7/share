@@ -35,7 +35,10 @@ patches_build = {
     ],
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
     'device/intel/baytrail': ['0001-Disable-prebuilding-webviewchromium.patch'],
-    'packages/apps/Browser': ['0001-Make-browser-preference-fragment-valid.patch'],
+    'packages/apps/Browser': [
+        '0001-Make-browser-preference-fragment-valid.patch',
+        '0002-Fix-a-crash-when-creating-an-incognito-tab-on-tablet.patch',
+    ],
 }
 
 
