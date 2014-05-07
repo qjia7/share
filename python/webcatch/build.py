@@ -57,10 +57,14 @@ build_every = 1
 
 time_sleep_default = 300
 
-expectfail_list = [
-    233707, 236662, 234213, 234223, 234517, 234689, 235193, 235194, 237586,
+# [reva, revb], where reva is bad, and revb is good
+expectfail = [
+    233707, 236662, 234213, 234223, 234517, 234689, [235193, 235195], 237586,
     241661, 241848,
+    [262675, 262701],  # Because of v8 error
 ]
+
+rev_expectfail = []
 
 run_chromium_script = 'python ' + dir_python + '/chromium.py'
 
@@ -99,7 +103,7 @@ examples:
 
 
 def setup():
-    global target_os_info, build_every, fail_number_max
+    global target_os_info, build_every, fail_number_max, rev_expectfail
 
     if not args.slave_only:
         result = execute(remotify_cmd('ls ' + dir_out_server), show_command=True)
@@ -178,6 +182,13 @@ def setup():
 
     if args.build_every:
         build_every = int(args.build_every)
+
+    for rev in expectfail:
+        if isinstance(rev, list):
+            for i in range(rev[0], rev[1]):
+                rev_expectfail.append(i)
+        else:
+            rev_expectfail.append(rev)
 
     restore_dir()
 
@@ -379,7 +390,7 @@ def build_one(build_next):
 
     info('Begin to build ' + get_comb_name(target_os, target_arch, target_module) + '@' + str(rev) + '...')
     dir_comb = dir_out + '/' + get_comb_name(target_os, target_arch, target_module)
-    if rev in expectfail_list:
+    if rev in rev_expectfail:
         file_final = dir_comb + '/' + str(rev) + '.EXPECTFAIL'
         execute('touch ' + file_final)
         move_to_server(file_final, target_os, target_arch, target_module)
