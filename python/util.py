@@ -221,7 +221,8 @@ def backup_smb(server, dir_server, file_local):
 
 
 def unsetenv(env):
-    del os.environ[env]
+    if hasattr(os.environ, env):
+        del os.environ[env]
 
 
 def setenv(env, value):
