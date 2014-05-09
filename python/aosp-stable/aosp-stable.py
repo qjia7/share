@@ -389,10 +389,6 @@ def _backup_one(arch, device, module):
             'out/target/product/' + product + '/system/framework/webview/paks',
         ]
 
-        # include libskia.so for the fix of Android skia
-        if arch == 'x86_64':
-            backup_files.append('out/target/product/' + product + '/system/lib64/libskia.so')
-
         for lib in libs:
             backup_files.append('out/target/product/' + product + '/system/' + lib + '/libwebviewchromium_plat_support.so')
             backup_files.append('out/target/product/' + product + '/system/' + lib + '/libwebviewchromium.so')
