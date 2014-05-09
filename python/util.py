@@ -27,7 +27,7 @@ dir_stack = []
 
 target_os_all = ['android', 'linux']
 target_arch_all = ['x86', 'arm']
-target_module_all = ['webview', 'chrome', 'content_shell']
+target_module_all = ['webview', 'chrome', 'content_shell', 'chrome_stable', 'chrome_beta', 'webview_shell', 'chrome_shell', 'stock_browser']
 
 
 def get_datetime(format='%Y%m%d%H%M%S'):
@@ -215,13 +215,13 @@ def send_mail(sender, to, subject, content, type='plain'):
 def backup_smb(server, dir_server, file_local):
     result = execute('smbclient %s -N -c "prompt; recurse; cd %s; mput %s"' % (server, dir_server, file_local), interactive=True)
     if result[0]:
-        warning('Failed to upload: ' + file_local, error_code=result[0])
+        warning('Failed to upload: ' + file_local)
     else:
         info('Succeeded to upload: ' + file_local)
 
 
 def unsetenv(env):
-    if hasattr(os.environ, env):
+    if env in os.environ:
         del os.environ[env]
 
 
