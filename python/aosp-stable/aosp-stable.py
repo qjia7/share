@@ -65,6 +65,7 @@ examples:
     parser.add_argument('--tombstone', dest='tombstone', help='analyze tombstone file for libwebviewchromium.so', action='store_true')
     parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
     parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
+    parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
@@ -78,6 +79,28 @@ examples:
 
 def setup():
     global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version
+
+    # Set path
+    path = os.getenv('PATH')
+    path += ':/usr/bin:/usr/sbin'
+    if args.extra_path:
+        path += ':' + args.extra_path
+    setenv('PATH', path)
+    for cmd in ['adb', 'git', 'gclient']:
+        result = execute('which ' + cmd, show_command=False)
+        if result[0]:
+            error('Could not find ' + cmd + ', and you may use --extra-path to designate it')
+
+    # Set proxy
+    if os.path.exists('/usr/sbin/privoxy'):
+        http_proxy = '127.0.0.1:8118'
+        https_proxy = '127.0.0.1:8118'
+    else:
+        http_proxy = 'proxy-shz.intel.com:911'
+        https_proxy = 'proxy-shz.intel.com:911'
+    setenv('http_proxy', http_proxy)
+    setenv('https_proxy', https_proxy)
+    setenv('no_proxy', 'intel.com,.intel.com,10.0.0.0/8,192.168.0.0/16,localhost,127.0.0.0/8,134.134.0.0/16,172.16.0.0/20,192.168.42.0/16')
 
     dir_root = os.path.abspath(os.getcwd())
     dir_chromium = dir_root + '/external/chromium_org'
