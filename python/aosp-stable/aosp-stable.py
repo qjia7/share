@@ -30,9 +30,6 @@ patches_generic_disable_2nd_arch = {
 }
 
 patches_build = {
-    'build': [
-        '0002-build-Remove-webview-and-chromium_org-from-blacklist.patch',
-    ],
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
     'device/intel/baytrail': ['0001-Disable-prebuilding-webviewchromium.patch'],
     'packages/apps/Browser': [

@@ -1,19 +1,19 @@
-From 60ccaceed8575d096dd3575eff6217c776008b7b Mon Sep 17 00:00:00 2001
+From 9ecacb794b6b500f845cb2f687fca15f68e2a983 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Fri, 4 Apr 2014 16:15:11 +0800
+Date: Fri, 9 May 2014 13:42:27 +0800
 Subject: [PATCH] Replace webview and chromium_org
 
-Change-Id: I17976413ff50727cf381ef181291556b72755be6
+Change-Id: I1acfc603ac48f8eb89d4b5a4b72010c41e2ead51
 ---
- aosp.xml    | 25 -------------------------
+ aosp.xml    | 32 --------------------------------
  default.xml |  7 +++++++
- 2 files changed, 7 insertions(+), 25 deletions(-)
+ 2 files changed, 7 insertions(+), 32 deletions(-)
 
 diff --git a/aosp.xml b/aosp.xml
-index 133d001..cf827c3 100644
+index c03b587..4a12252 100644
 --- a/aosp.xml
 +++ b/aosp.xml
-@@ -60,30 +60,6 @@
+@@ -60,37 +60,6 @@
    <project path="external/chromium" name="a/aosp/platform/external/chromium" />
    <project path="external/chromium-libpac" name="a/aosp/platform/external/chromium-libpac" />
    <project path="external/chromium-trace" name="a/aosp/platform/external/chromium-trace" groups="pdk" />
@@ -21,7 +21,8 @@ index 133d001..cf827c3 100644
 -  <project path="external/chromium_org/sdch/open-vcdiff" name="a/aosp/platform/external/chromium_org/sdch/open-vcdiff" />
 -  <project path="external/chromium_org/testing/gtest" name="a/aosp/platform/external/chromium_org/testing/gtest" />
 -  <project path="external/chromium_org/third_party/WebKit" name="a/aosp/platform/external/chromium_org/third_party/WebKit" />
--  <project path="external/chromium_org/third_party/angle_dx11" name="a/aosp/platform/external/chromium_org/third_party/angle_dx11" />
+-  <project path="external/chromium_org/third_party/angle" name="a/aosp/platform/external/chromium_org/third_party/angle" />
+-  <project path="external/chromium_org/third_party/brotli/src" name="a/aosp/platform/external/chromium_org/third_party/brotli/src" />
 -  <project path="external/chromium_org/third_party/eyesfree/src/android/java/src/com/googlecode/eyesfree/braille" name="a/aosp/platform/external/chromium_org/third_party/eyesfree/src/android/java/src/com/googlecode/eyesfree/braille" />
 -  <project path="external/chromium_org/third_party/freetype" name="a/aosp/platform/external/chromium_org/third_party/freetype" />
 -  <project path="external/chromium_org/third_party/icu" name="a/aosp/platform/external/chromium_org/third_party/icu" />
@@ -29,14 +30,20 @@ index 133d001..cf827c3 100644
 -  <project path="external/chromium_org/third_party/libjingle/source/talk" name="a/aosp/platform/external/chromium_org/third_party/libjingle/source/talk" />
 -  <project path="external/chromium_org/third_party/libphonenumber/src/phonenumbers" name="a/aosp/platform/external/chromium_org/third_party/libphonenumber/src/phonenumbers" />
 -  <project path="external/chromium_org/third_party/libphonenumber/src/resources" name="a/aosp/platform/external/chromium_org/third_party/libphonenumber/src/resources" />
+-  <project path="external/chromium_org/third_party/libsrtp" name="a/aosp/platform/external/chromium_org/third_party/libsrtp" />
+-  <project path="external/chromium_org/third_party/libvpx" name="a/aosp/platform/external/chromium_org/third_party/libvpx" />
+-  <project path="external/chromium_org/third_party/libyuv" name="a/aosp/platform/external/chromium_org/third_party/libyuv" />
 -  <project path="external/chromium_org/third_party/mesa/src" name="a/aosp/platform/external/chromium_org/third_party/mesa/src" />
 -  <project path="external/chromium_org/third_party/openssl" name="a/aosp/platform/external/chromium_org/third_party/openssl" />
 -  <project path="external/chromium_org/third_party/opus/src" name="a/aosp/platform/external/chromium_org/third_party/opus/src" />
 -  <project path="external/chromium_org/third_party/ots" name="a/aosp/platform/external/chromium_org/third_party/ots" />
+-  <project path="external/chromium_org/third_party/sfntly/cpp/src" name="a/aosp/platform/external/chromium_org/third_party/sfntly/cpp/src" />
 -  <project path="external/chromium_org/third_party/skia/gyp" name="a/aosp/platform/external/chromium_org/third_party/skia/gyp" />
 -  <project path="external/chromium_org/third_party/skia/include" name="a/aosp/platform/external/chromium_org/third_party/skia/include" />
 -  <project path="external/chromium_org/third_party/skia/src" name="a/aosp/platform/external/chromium_org/third_party/skia/src" />
 -  <project path="external/chromium_org/third_party/smhasher/src" name="a/aosp/platform/external/chromium_org/third_party/smhasher/src" />
+-  <project path="external/chromium_org/third_party/usrsctp/usrsctplib" name="a/aosp/platform/external/chromium_org/third_party/usrsctp/usrsctplib" />
+-  <project path="external/chromium_org/third_party/webrtc" name="a/aosp/platform/external/chromium_org/third_party/webrtc" />
 -  <project path="external/chromium_org/third_party/yasm/source/patched-yasm" name="a/aosp/platform/external/chromium_org/third_party/yasm/source/patched-yasm" />
 -  <project path="external/chromium_org/tools/grit" name="a/aosp/platform/external/chromium_org/tools/grit" />
 -  <project path="external/chromium_org/tools/gyp" name="a/aosp/platform/external/chromium_org/tools/gyp" />
@@ -44,7 +51,7 @@ index 133d001..cf827c3 100644
    <project path="external/clang" name="a/aosp/platform/external/clang" groups="pdk" />
    <project path="external/compiler-rt" name="a/aosp/platform/external/compiler-rt" groups="pdk" />
    <project path="external/conscrypt" name="a/aosp/platform/external/conscrypt" />
-@@ -270,7 +246,6 @@
+@@ -280,7 +249,6 @@
    <project path="frameworks/testing" name="a/aosp/platform/frameworks/testing" />
    <project path="frameworks/uiautomator" name="a/aosp/platform/frameworks/uiautomator" />
    <project path="frameworks/volley" name="a/aosp/platform/frameworks/volley" />
@@ -69,5 +76,5 @@ index bcc6342..4a7c453 100644
 +  <project path="frameworks/webview" name="platform/frameworks/webview" remote="aosp" revision="chromium-dev" />
  </manifest>
 -- 
-1.8.3.2
+1.9.1
 
