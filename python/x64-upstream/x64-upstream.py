@@ -42,6 +42,11 @@ devices = []
 devices_name = []
 unit_tests = []
 
+unit_tests_filter = {
+    'media_unittests': '*:-MediaSourcePlayerTest.A_StarvationDuringEOSDecode:MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation'
+}
+
+
 ################################################################################
 
 
@@ -379,8 +384,10 @@ def _unittest_run_device(index_device, results):
     for index, unit_test in enumerate(unit_tests):
         if results[index] == 'FAIL':
             continue
-
-        cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/test_runner.py gtest -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device_name + '/' + unit_test + '.log'
+        cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/test_runner.py gtest'
+        if unit_test in unit_tests_filter:
+            cmd += ' --gtest_filter="' + unit_tests_filter[unit_test] + '"'
+        cmd += ' -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device_name + '/' + unit_test + '.log'
         result = execute(cmd, interactive=True)
         if result[0]:
             warning('Failed to run "' + unit_test + '"')
