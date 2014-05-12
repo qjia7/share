@@ -167,8 +167,8 @@ def setup():
             'webkit_unit_tests',
             'content_gl_tests',
             'breakpad_unittests',  # Need breakpad
-            'content_browsertests',  # Need breakpad
             'unit_tests',  # Need breakpad
+            'content_browsertests',  # Need breakpad
         ]
 
     if args.devices:
