@@ -424,6 +424,8 @@ def _unittest_sendmail(index_device, html):
             'ying.han@intel.com',
             'zhiqiangx.yu@intel.com',
             'xiaodan.jiang@intel.com',
+            'jiajia.qin@intel.com',
+            'guanxian.li@intel.com'
         ]
 
     send_mail('x64-noreply@intel.com', to, report_name + '-' + time + '-' + device_name, html, type='html')
