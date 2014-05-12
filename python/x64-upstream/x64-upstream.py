@@ -166,28 +166,11 @@ def setup():
             'unit_tests',  # Need breakpad
         ]
 
-    cmd = 'adb devices -l'
-    device_lines = commands.getoutput(cmd).split('\n')
-    for device_line in device_lines:
-        if re.match('List of devices attached', device_line):
-            continue
-        elif re.match('^\s*$', device_line):
-            continue
-
-        pattern = re.compile('device:(.*)')
-        match = pattern.search(device_line)
-        device_name = match.group(1)
-        devices_name.append(device_name)
-        device = device_line.split(' ')[0]
-        devices.append(device)
-
     if args.devices:
-        devices_temp = args.devices.split(',')
-        for index, device in enumerate(devices):
-            if device not in devices_temp:
-                print index
-                del devices[index]
-                del devices_name[index]
+        devices_limit = args.devices.split(',')
+    else:
+        devices_limit = []
+    (devices, devices_name) = setup_device(devices_limit=devices_limit)
 
     _hack_app_process()
 

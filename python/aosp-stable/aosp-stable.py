@@ -3,6 +3,7 @@
 import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
+import fileinput
 
 dir_root = ''
 dir_chromium = ''
@@ -12,6 +13,8 @@ dir_backup = 'backup'
 target_archs = []
 target_devices = []
 target_modules = []
+devices = []
+devices_name = []
 chromium_version = ''
 
 patches_init = {
@@ -66,6 +69,7 @@ examples:
     parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
     parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
+    parser.add_argument('--hack-app-process', dest='hack_app_process', help='hack app_process', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
@@ -78,7 +82,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name
 
     # Set path
     path = os.getenv('PATH')
@@ -125,6 +129,8 @@ def setup():
         chromium_version = 'cr36'
     else:
         chromium_version = 'cr30'
+
+    (devices, devices_name) = setup_device()
 
     os.chdir(dir_root)
 
@@ -330,6 +336,27 @@ def push():
         error('Failed to push binaries to system')
 
 
+def hack_app_process():
+    if not args.hack_app_process:
+        return
+
+    for device in devices:
+        if not execute_adb("test -d /system/lib64", device=device):
+            continue
+
+        for file in ['am', 'pm']:
+            execute('adb -s ' + device + ' pull /system/bin/' + file + ' /tmp/' + file)
+            need_hack = False
+            for line in fileinput.input('/tmp/' + file, inplace=1):
+                if re.search('app_process ', line):
+                    line = line.replace('app_process', 'app_process64')
+                    need_hack = True
+                sys.stdout.write(line)
+
+            if need_hack:
+                execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
+
+
 def _sync_repo(dir, cmd):
     backup_dir(dir)
     result = execute(cmd, interactive=True)
@@ -506,3 +533,4 @@ if __name__ == "__main__":
     start_emu()
     tombstone()
     push()
+    hack_app_process()

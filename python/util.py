@@ -242,6 +242,33 @@ def execute_adb(cmd, device=''):
     else:
         return True
 
+
+# Setup devices and their names
+def setup_device(devices_limit=[]):
+    devices = []
+    devices_name = []
+    cmd = 'adb devices -l'
+    device_lines = commands.getoutput(cmd).split('\n')
+    for device_line in device_lines:
+        if re.match('List of devices attached', device_line):
+            continue
+        elif re.match('^\s*$', device_line):
+            continue
+
+        pattern = re.compile('device:(.*)')
+        match = pattern.search(device_line)
+        device_name = match.group(1)
+        devices_name.append(device_name)
+        device = device_line.split(' ')[0]
+        devices.append(device)
+
+    if devices_limit:
+        for index, device in enumerate(devices):
+            if device not in devices_limit:
+                del devices[index]
+                del devices_name[index]
+
+    return (devices, devices_name)
 ################################################################################
 
 
