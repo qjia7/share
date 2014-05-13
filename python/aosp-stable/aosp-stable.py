@@ -65,7 +65,7 @@ examples:
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--backup', dest='backup', help='backup output to both local and samba server', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
-    parser.add_argument('--tombstone', dest='tombstone', help='analyze tombstone file for libwebviewchromium.so', action='store_true')
+    parser.add_argument('--analyze', dest='analyze', help='analyze tombstone or trace file for libwebviewchromium.so')
     parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
     parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
@@ -271,43 +271,39 @@ def start_emu():
         #restore_dir()
 
 
-def tombstone():
-    if not args.tombstone:
+def analyze():
+    if not args.analyze:
         return
 
-    count_libwebviewchromium_max = 10
-    count_line_max = 30
+    count_line_max = 1000
+    count_valid_max = 30
 
     execute('adb connect 192.168.42.1')
-    # Start browser
-    #execute('adb shell am start -n com.android.browser/com.android.browser.BrowserActivity')
+    if args.analyze == 'tombstone':
+        result = execute('adb shell \ls /data/tombstones', return_output=True)
+        files = result[1].split('\n')
+        result = execute('adb shell cat /data/tombstones/' + files[-2].strip(), return_output=True)
+        lines = result[1].split('\n')
+    elif args.analyze == 'anr':
+        result = execute('adb shell cat /data/anr/traces.txt', return_output=True)
+        lines = result[1].split('\n')
 
-    result = execute('adb shell \ls /data/tombstones', return_output=True)
-    files = result[1].split('\n')
-    result = execute('adb shell cat /data/tombstones/' + files[-2].strip(), return_output=True)
-    lines = result[1].split('\n')
-    pattern = re.compile('pc (.*)  .*libwebviewchromium')
-    count_libwebviewchromium = 0
+    pattern = re.compile('pc (.*)  .*lib(webviewchromium|art|c)')
     count_line = 0
-    need_print = False
+    count_valid = 0
     for line in lines:
-        if not need_print and re.search('^backtrace', line):
-            need_print = True
-
-        if need_print:
-            print line
-            count_line += 1
-            if count_line > count_line_max:
-                return
-
+        count_line += 1
+        if count_line > count_line_max:
+            return
         match = pattern.search(line)
         if match:
-            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/baytrail_64/symbols/system/lib64/libwebviewchromium.so -f ' + match.group(1)
+            print line
+            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/baytrail_64/symbols/system/lib64/lib%s.so -f %s' % (match.group(2), match.group(1))
             result = execute(cmd, return_output=True, show_command=False)
             print result[1]
 
-            count_libwebviewchromium += 1
-            if count_libwebviewchromium > count_libwebviewchromium_max:
+            count_valid += 1
+            if count_valid > count_valid_max:
                 return
 
 
@@ -531,6 +527,6 @@ if __name__ == "__main__":
     backup()
     burn_image()
     start_emu()
-    tombstone()
+    analyze()
     push()
     hack_app_process()
