@@ -1,12 +1,18 @@
 #!/usr/bin/env python
 
+# Naming convention:
+# gtest and instrumentation etc. are command for test
+# android_webview_unittests is suite in gtest.
+
+# Debug
+# Use --time-fixed, and set dryrun for run to True
+
 import fileinput
+import multiprocessing
+from multiprocessing import Pool
 import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
-
-import multiprocessing
-from multiprocessing import Pool
 
 chromium_hash = '8c2b268683bf9f5c2b63dfa99c3fc7fc8adf0744'
 
@@ -28,10 +34,10 @@ patches = {
 dir_script = sys.path[0]
 dir_root = ''
 dir_src = ''
-dir_unittest = ''
-time = get_datetime()
-type = ''
-dir_out_type = ''
+dir_test = ''
+time = ''
+test_type = ''
+dir_out_test_type = ''
 dir_time = ''
 target_arch = ''
 target_module = ''
@@ -40,9 +46,47 @@ report_name = ''
 cpu_count = str(multiprocessing.cpu_count() * 2)
 devices = []
 devices_name = []
-unit_tests = []
 
-unit_tests_filter = {
+test_command_default = [
+    'gtest',
+    'instrumentation',
+    #'linker',
+    #'uiautomator',
+    #'monkey',
+    #'perf'
+]
+
+gtest_suite_default = [
+    'android_webview_unittests',
+    'base_unittests',
+    'cc_unittests',
+    'components_unittests',
+    'content_unittests',
+    'gl_tests',
+    'gpu_unittests',
+    'ipc_tests',
+    'media_unittests',
+    'net_unittests',
+    'sandbox_linux_unittests',
+    'sql_unittests',
+    'sync_unit_tests',
+    'ui_unittests',
+    'webkit_compositor_bindings_unittests',
+    'webkit_unit_tests',
+    'content_gl_tests',
+    'breakpad_unittests',  # Need breakpad
+    'unit_tests',  # Need breakpad
+    'content_browsertests',  # Need breakpad
+]
+
+instrumentation_suite_default = [
+    'ContentShellTest',
+    'ChromeShellTest',
+    'AndroidWebViewTest',
+]
+
+test_suite = {}
+test_suite_filter = {
     'media_unittests': '*:-MediaSourcePlayerTest.A_StarvationDuringEOSDecode:MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation'
 }
 
@@ -51,18 +95,19 @@ unit_tests_filter = {
 
 
 def handle_option():
-    global args
+    global args, args_dict
     parser = argparse.ArgumentParser(description='Script to sync, build upstream x64 Chromium',
                                      formatter_class=argparse.RawTextHelpFormatter,
                                      epilog='''
 examples:
   python %(prog)s --clean -s --patch -b
-  python %(prog)s --test-build
-  python %(prog)s --test-build --sync-upstream
+  python %(prog)s --batch-build
+  python %(prog)s --batch-build --sync-upstream
   python %(prog)s --clean -s --sync-upstream --patch
-  python %(prog)s --unittest-build --unittest-run
-  python %(prog)s --test-unittest
-  python %(prog)s --unittest-to yang.gu@intel.com --unittest-case 'webkit_compositor_bindings_unittests' --unittest-run
+  python %(prog)s --batch-build --test-run
+  python %(prog)s --batch-test
+  python %(prog)s --test-to yang.gu@intel.com --test-case 'webkit_compositor_bindings_unittests' --test-run
+  python %(prog)s --instrumentation-suite ContentShellTest --test-run --test-command instrumentation --test-formal --test-to yang.gu@intel.com
 
   crontab -e
   0 1 * * * cd /workspace/project/chromium64-android && python x64-upstream.py -s --extra-path=/workspace/project/depot_tools
@@ -75,25 +120,29 @@ examples:
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
     parser.add_argument('--build-fail', dest='build_fail', help='allow n build failures before it stops', default='0')
     parser.add_argument('--skip-mk', dest='skip_mk', help='skip the generation of makefile', action='store_true')
-    parser.add_argument('--type', dest='type', help='type', choices=['release', 'debug'], default='release')
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
     parser.add_argument('--devices', dest='devices', help='device id list separated by ","', default='')
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'arm'], default='x86_64')
     parser.add_argument('--target-module', dest='target_module', help='target module to build', choices=['chrome', 'webview', 'content_shell'], default='webview')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
-
-    group_unittest = parser.add_argument_group('unittest')
-    group_unittest.add_argument('--unittest-build', dest='unittest_build', help='build unit tests', action='store_true')
-    group_unittest.add_argument('--unittest-run', dest='unittest_run', help='run all unittests and generate unittests report (adb conection being ready is necessary)', action='store_true')
-    group_unittest.add_argument('--unittest-to', dest='unittest_to', help='unittest email receivers that would override the default for test sake')
-    group_unittest.add_argument('--unittest-case', dest='unittest_case', help='unittest case')
-    group_unittest.add_argument('--unittest-formal', dest='unittest_formal', help='formal unittest, which would send email and backup to samba server', action='store_true')
+    parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
 
     group_test = parser.add_argument_group('test')
     group_test.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
-    group_test.add_argument('--test-unittest', dest='test_unittest', help='unittest test', action='store_true')
+    group_test.add_argument('--test-run', dest='test_run', help='run test and generate report (adb conection being ready is necessary)', action='store_true')
+    group_test.add_argument('--test-to', dest='test_to', help='test email receivers that would override the default for test sake')
+    group_test.add_argument('--test-formal', dest='test_formal', help='formal test, which would send email and backup to samba server', action='store_true')
+    group_test.add_argument('--test-type', dest='test_type', help='test_type', choices=['release', 'debug'], default='release')
+    group_test.add_argument('--test-command', dest='test_command', help='test command split by ","')
+    group_test.add_argument('--gtest-suite', dest='gtest_suite', help='gtest suite')
+    group_test.add_argument('--instrumentation-suite', dest='instrumentation_suite', help='instrumentation suite')
+
+    group_batch = parser.add_argument_group('test')
+    group_batch.add_argument('--batch-build', dest='batch_build', help='build batch', action='store_true')
+    group_batch.add_argument('--batch-test', dest='batch_test', help='test batch', action='store_true')
 
     args = parser.parse_args()
+    args_dict = vars(args)
 
     if len(sys.argv) <= 1:
         parser.print_help()
@@ -101,7 +150,12 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, type, dir_out_type, dir_unittest, dir_time, unit_tests, devices, devices_name, target_arch, target_module, report_name
+    global dir_root, dir_src, test_type, dir_out_test_type, dir_test, dir_time, devices, devices_name, target_arch, target_module, report_name, test_suite, time
+
+    if args.time_fixed:
+        time = get_datetime(format='%Y%m%d')
+    else:
+        time = get_datetime()
 
     # Set path
     path = os.getenv('PATH')
@@ -133,43 +187,17 @@ def setup():
         dir_root = get_symbolic_link_dir()
 
     dir_src = dir_root + '/src'
-    type = args.type
-    dir_out_type = dir_src + '/out-' + target_arch + '/out/' + type.capitalize()
-    dir_unittest = dir_root + '/unittest'
-    dir_time = dir_unittest + '/' + time
+    test_type = args.test_type
+    dir_out_test_type = dir_src + '/out-' + target_arch + '/out/' + test_type.capitalize()
+    dir_test = dir_root + '/test'
+    dir_time = dir_test + '/' + time
 
-    report_name = 'Chromium Unit Tests Report'
+    report_name = 'Chromium Tests Report'
 
     os.environ['GYP_DEFINES'] = 'OS=android werror= disable_nacl=1 enable_svg=0'
     backup_dir(dir_root)
-    if not os.path.exists(dir_unittest):
-        os.mkdir(dir_unittest)
-
-    if args.unittest_case:
-        unit_tests = args.unittest_case.split(',')
-    else:
-        unit_tests = [
-            'android_webview_unittests',
-            'base_unittests',
-            'cc_unittests',
-            'components_unittests',
-            'content_unittests',
-            'gl_tests',
-            'gpu_unittests',
-            'ipc_tests',
-            'media_unittests',
-            'net_unittests',
-            'sandbox_linux_unittests',
-            'sql_unittests',
-            'sync_unit_tests',
-            'ui_unittests',
-            'webkit_compositor_bindings_unittests',
-            'webkit_unit_tests',
-            'content_gl_tests',
-            'breakpad_unittests',  # Need breakpad
-            'unit_tests',  # Need breakpad
-            'content_browsertests',  # Need breakpad
-        ]
+    if not os.path.exists(dir_test):
+        os.mkdir(dir_test)
 
     if args.devices:
         devices_limit = args.devices.split(',')
@@ -185,6 +213,12 @@ def setup():
     info('http_proxy=' + os.getenv('http_proxy'))
     info('https_proxy=' + os.getenv('https_proxy'))
     info('no_proxy=' + os.getenv('no_proxy'))
+
+    # Setup test_suite
+    for command in _setup_list('test_command'):
+        test_suite[command] = []
+        for suite in _setup_list(command + '_suite'):
+            test_suite[command].append(suite)
 
 
 def clean(force=False):
@@ -286,7 +320,7 @@ def build(force=False):
             error('Failed to generate makefile')
         restore_dir()
 
-    ninja_cmd = 'ninja -k' + args.build_fail + ' -j' + cpu_count + ' -C ' + dir_out_type
+    ninja_cmd = 'ninja -k' + args.build_fail + ' -j' + cpu_count + ' -C ' + dir_out_test_type
     if target_module == 'webview':
         ninja_cmd += ' android_webview_apk'
     elif target_module == 'content_shell':
@@ -300,49 +334,65 @@ def build(force=False):
         error('Failed to execute command: ' + ninja_cmd, error_code=result[0])
 
 
-def unittest_build(force=False):
-    if not args.unittest_build and not force:
+def test_build(force=False):
+    if not args.test_build and not force:
         return
 
-    _unittest_build_one('md5sum')
-    _unittest_build_one('forwarder2')
+    results = {}
+    for command in test_suite:
+        results[command] = []
+        # test command specific build
+        if command == 'gtest':
+            _test_build_name(command, 'md5sum forwarder2')
 
-    results = []
-    for unit_test in unit_tests:
-        result = _unittest_build_one(unit_test)
-        if result:
-            info('Succeeded to build ' + unit_test)
-            results.append('PASS')
-        else:
-            error('Failed to build ' + unit_test, abort=False)
-            results.append('FAIL')
+        for suite in test_suite[command]:
+            if command == 'gtest':
+                if suite in ['breakpad_unittests', 'sandbox_linux_unittests']:
+                    name = suite + '_stripped'
+                else:
+                    name = suite + '_apk'
+            elif command == 'instrumentation':
+                if suite == 'ContentShellTest':
+                    name = 'content_shell_apk content_shell_test_apk'
+                elif suite == 'ChromeShellTest':
+                    name = 'chrome_shell_apk chrome_shell_test_apk'
+                elif suite == 'AndroidWebViewTest':
+                    name = 'android_webview_apk android_webview_test_apk'
+
+            result = _test_build_name(command, name)
+            if result:
+                info('Succeeded to build ' + suite)
+                results[command].append('PASS')
+            else:
+                error('Failed to build ' + suite, abort=False)
+                results[command].append('FAIL')
 
     return results
 
 
-def unittest_run(force=False):
-    if not args.unittest_run and not force:
+def test_run(force=False):
+    if not args.test_run and not force:
         return
 
-    if not os.path.exists(dir_unittest):
-        os.mkdir(dir_unittest)
+    if not os.path.exists(dir_test):
+        os.mkdir(dir_test)
 
     number_device = len(devices)
     if number_device < 1:
         error('Please ensure test device is connected')
 
-    # Build unit test
-    results = unittest_build(force=True)
+    # Build test
+    results = test_build(force=True)
 
     pool = Pool(processes=number_device)
     for index, device in enumerate(devices):
-        pool.apply_async(_unittest_run_device, (index, results))
+        pool.apply_async(_test_run_device, (index, results))
     pool.close()
     pool.join()
 
 
-def test_build(force=False):
-    if not args.test_build and not force:
+def batch_build(force=False):
+    if not args.batch_build and not force:
         return
 
     clean(force=True)
@@ -351,23 +401,16 @@ def test_build(force=False):
     build(force=True)
 
 
-def test_unittest(force=False):
-    if not args.test_unittest and not force:
+def batch_test(force=False):
+    if not args.batch_test and not force:
         return
 
-    test_build(force=True)
-    unittest_run(force=True)
+    batch_build(force=True)
+    test_run(force=True)
 
 
-def _unittest_build_one(unit_test):
-    cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_type + ' '
-    if unit_test in ['md5sum', 'forwarder2']:
-        cmd += unit_test
-    elif unit_test in ['breakpad_unittests', 'sandbox_linux_unittests']:
-        cmd += unit_test + '_stripped'
-    else:
-        cmd += unit_test + '_apk'
-
+def _test_build_name(command, name):
+    cmd = 'ninja -j' + cpu_count + ' -C ' + dir_out_test_type + ' ' + name
     result = execute(cmd, interactive=True)
     if result[0]:
         return False
@@ -375,46 +418,67 @@ def _unittest_build_one(unit_test):
         return True
 
 
-def _unittest_run_device(index_device, results):
+def _test_run_device(index_device, results):
     device = devices[index_device]
     device_name = devices_name[index_device]
     dir_device_name = dir_time + '-' + device_name
-    os.mkdir(dir_device_name)
+    if not os.path.exists(dir_device_name):
+        os.mkdir(dir_device_name)
 
-    for index, unit_test in enumerate(unit_tests):
-        if results[index] == 'FAIL':
-            continue
-        cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/test_runner.py gtest'
-        if unit_test in unit_tests_filter:
-            cmd += ' --gtest_filter="' + unit_tests_filter[unit_test] + '"'
-        cmd += ' -d ' + device + ' -s ' + unit_test + ' --' + type + ' 2>&1 | tee ' + dir_device_name + '/' + unit_test + '.log'
-        result = execute(cmd, interactive=True)
-        if result[0]:
-            warning('Failed to run "' + unit_test + '"')
-        else:
-            info('Succeeded to run "' + unit_test + '"')
+    dryrun = False
+    if not dryrun:
+        for command in test_suite:
+            for index, suite in enumerate(test_suite[command]):
+                if results[command][index] == 'FAIL':
+                    continue
+
+                # Install packages before running
+                if command == 'instrumentation':
+                    apks = [suite, suite.replace('Test', '')]
+                    for apk in apks:
+                        result = execute('CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/adb_install_apk.py --apk=%s.apk --%s' % (apk, test_type), interactive=True)
+                        if result[0]:
+                            warning('Failed to install "' + suite + '"')
+
+                cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/test_runner.py ' + command
+                # test command specific cmd
+                if command == 'gtest':
+                    cmd += ' -s ' + suite + ' --num_retries 0 -t 20'
+                elif command == 'instrumentation':
+                    cmd += ' --test-apk ' + suite
+
+                if suite in test_suite_filter:
+                    cmd += ' -f "' + test_suite_filter[suite] + '"'
+
+                cmd += ' -d ' + device + ' --' + test_type + ' 2>&1 | tee ' + dir_device_name + '/' + suite + '.log'
+                result = execute(cmd, interactive=True)
+                if result[0]:
+                    warning('Failed to run "' + suite + '"')
+                else:
+                    info('Succeeded to run "' + suite + '"')
 
     # Generate report
-    html = _unittest_gen_report(index_device, results)
+    html = _test_gen_report(index_device, results)
     file_html = dir_device_name + '/report.html'
+    print file_html
     file_report = open(file_html, 'w')
     file_report.write(html)
     file_report.close()
 
-    if args.unittest_formal:
+    if args.test_formal:
         # Backup
-        backup_dir(dir_unittest)
-        backup_smb('//ubuntu-ygu5-02.sh.intel.com/chromium64', 'unittest', time + '-' + device_name)
+        backup_dir(dir_test)
+        backup_smb('//ubuntu-ygu5-02.sh.intel.com/chromium64', 'test', time + '-' + device_name)
         restore_dir()
 
         # Send mail
-        _unittest_sendmail(index_device, html)
+        _test_sendmail(index_device, html)
 
 
-def _unittest_sendmail(index_device, html):
+def _test_sendmail(index_device, html):
     device_name = devices_name[index_device]
-    if args.unittest_to:
-        to = [args.unittest_to]
+    if args.test_to:
+        to = [args.test_to]
     else:
         to = [
             'jie.a.chen@intel.com',
@@ -431,10 +495,9 @@ def _unittest_sendmail(index_device, html):
     send_mail('x64-noreply@intel.com', to, report_name + '-' + time + '-' + device_name, html, type='html')
 
 
-def _unittest_gen_report(index_device, results):
+def _test_gen_report(index_device, results):
     device_name = devices_name[index_device]
     dir_device_name = dir_time + '-' + device_name
-
     html_start = '''
 <html>
   <head>
@@ -462,98 +525,107 @@ def _unittest_gen_report(index_device, results):
             <li>Target Device: ''' + device_name + '''</li>
           </ul>
 
-          <h2 id="Details">Details</h2>
-          <table>
-            <tbody>
-              <tr>
-                <td> <strong>Test Case Category</strong>  </td>
-                <td> <strong>Build Status</strong>  </td>
-                <td> <strong>Run Status</strong>  </td>
-                <td> <strong>All</strong> </td>
-                <td> <strong>Pass</strong> </td>
-                <td> <strong>Fail</strong> </td>
-                <td> <strong>Crash</strong> </td>
-                <td> <strong>Timeout</strong> </td>
-                <td> <strong>Unknown</strong> </td>
-              </tr>
-'''
+          <h2>Details</h2>
+    '''
 
     html_end = '''
-            </tbody>
-          </table>
-          <h2 id="Attach">Attach</h2>
+          <h2>Log</h2>
           <ul>
-            <li>http://ubuntu-ygu5-02.sh.intel.com/chromium64/unittest/''' + time + '-' + device_name + '''</li>
+            <li>http://ubuntu-ygu5-02.sh.intel.com/chromium64/test/''' + time + '-' + device_name + '''</li>
           </ul>
         </div>
       </div>
     </div>
   </body>
 </html>
-'''
+    '''
 
     html = html_start
-    for index, unit_test in enumerate(unit_tests):
-        bs = results[index]
-        file_log = dir_device_name + '/' + unit_test + '.log'
-        ut_all = ''
-        ut_pass = ''
-        ut_fail = ''
-        ut_crash = ''
-        ut_timeout = ''
-        ut_unknow = ''
+    for command in test_suite:
+        html += '''
+     <h3>%s</h3>
+        ''' % command
 
-        if bs == 'FAIL' or not os.path.exists(file_log):
-            rs = 'FAIL'
-        else:
-            ut_result = open(dir_device_name + '/' + unit_test + '.log', 'r')
-            lines = ut_result.readlines()
-            for line in lines:
-                if 'Main  ALL (' in line:
-                    ut_all = line.split('(')[1].split(' ')[0]
-                if 'Main  PASS (' in line:
-                    ut_pass = line.split('(')[1].split(' ')[0]
-                if 'Main  FAIL (' in line:
-                    ut_fail = line.split('(')[1].split(' ')[0]
-                if 'Main  CRASH (' in line:
-                    ut_crash = line.split('(')[1].split(' ')[0]
-                if 'Main  TIMEOUT (' in line:
-                    ut_timeout = line.split('(')[1].split(' ')[0]
-                if 'Main  UNKNOWN (' in line:
-                    ut_unknow = line.split('(')[1].split(' ')[0]
+        html += '''
+      <table>
+        <tbody>
+          <tr>
+            <td> <strong>Test Case Category</strong>  </td>
+            <td> <strong>Build Status</strong>  </td>
+            <td> <strong>Run Status</strong>  </td>
+            <td> <strong>All</strong> </td>
+            <td> <strong>Pass</strong> </td>
+            <td> <strong>Fail</strong> </td>
+            <td> <strong>Crash</strong> </td>
+            <td> <strong>Timeout</strong> </td>
+            <td> <strong>Unknown</strong> </td>
+          </tr>
+        '''
 
-            if ut_all != '' and ut_pass != '' and int(ut_all) == int(ut_pass):
-                rs = 'PASS'
-            else:
+        for index, suite in enumerate(test_suite[command]):
+            bs = results[command][index]
+            file_log = dir_device_name + '/' + suite + '.log'
+            ut_all = ''
+            ut_pass = ''
+            ut_fail = ''
+            ut_crash = ''
+            ut_timeout = ''
+            ut_unknow = ''
+
+            if bs == 'FAIL' or not os.path.exists(file_log):
                 rs = 'FAIL'
+            else:
+                ut_result = open(dir_device_name + '/' + suite + '.log', 'r')
+                lines = ut_result.readlines()
+                for line in lines:
+                    if 'Main  ALL (' in line:
+                        ut_all = line.split('(')[1].split(' ')[0]
+                    if 'Main  PASS (' in line:
+                        ut_pass = line.split('(')[1].split(' ')[0]
+                    if 'Main  FAIL (' in line:
+                        ut_fail = line.split('(')[1].split(' ')[0]
+                    if 'Main  CRASH (' in line:
+                        ut_crash = line.split('(')[1].split(' ')[0]
+                    if 'Main  TIMEOUT (' in line:
+                        ut_timeout = line.split('(')[1].split(' ')[0]
+                    if 'Main  UNKNOWN (' in line:
+                        ut_unknow = line.split('(')[1].split(' ')[0]
 
-        # Generate the html
-        ut_tr_start = '''<tr>'''
-        ut_bs_td_start = '''<td>'''
-        ut_rs_td_start = '''<td>'''
-        ut_td_end = '''</td>'''
+                if ut_all != '' and ut_pass != '' and int(ut_all) == int(ut_pass):
+                    rs = 'PASS'
+                else:
+                    rs = 'FAIL'
 
-        if bs == 'PASS':
-            ut_bs_td_start = '''<td style='color:green'>'''
-            if rs == 'PASS':
-                ut_tr_start = '''<tr style='color:green'>'''
-            elif rs == 'FAIL':
-                ut_rs_td_start = '''<td style='color:red'>'''
-        elif bs == 'FAIL':
-            ut_bs_td_start = '''<td style='color:red'>'''
+            # Generate the html
+            ut_tr_start = '''<tr>'''
+            ut_bs_td_start = '''<td>'''
+            ut_rs_td_start = '''<td>'''
+            ut_td_end = '''</td>'''
 
-        ut_row = ut_tr_start + '''
-                     <td> <strong>''' + unit_test + ''' <strong></td> ''' + ut_bs_td_start + bs + ut_td_end + ut_rs_td_start + rs + ut_td_end + '''
-                     <td>''' + ut_all + '''</td>
-                     <td>''' + ut_pass + '''</td>
-                     <td>''' + ut_fail + '''</td>
-                     <td>''' + ut_crash + '''</td>
-                     <td>''' + ut_timeout + '''</td>
-                     <td>''' + ut_unknow + '''</td></tr>'''
+            if bs == 'PASS':
+                ut_bs_td_start = '''<td style='color:green'>'''
+                if rs == 'PASS':
+                    ut_tr_start = '''<tr style='color:green'>'''
+                elif rs == 'FAIL':
+                    ut_rs_td_start = '''<td style='color:red'>'''
+            elif bs == 'FAIL':
+                ut_bs_td_start = '''<td style='color:red'>'''
 
-        html += ut_row
+            ut_row = ut_tr_start + '''
+                         <td> <strong>''' + suite + ''' <strong></td> ''' + ut_bs_td_start + bs + ut_td_end + ut_rs_td_start + rs + ut_td_end + '''
+                         <td>''' + ut_all + '''</td>
+                         <td>''' + ut_pass + '''</td>
+                         <td>''' + ut_fail + '''</td>
+                         <td>''' + ut_crash + '''</td>
+                         <td>''' + ut_timeout + '''</td>
+                         <td>''' + ut_unknow + '''</td></tr>'''
+            html += ut_row
+        html += '''
+        </tbody>
+      </table>
+        '''
+
     html += html_end
-
     return html
 
 
@@ -574,6 +646,21 @@ def _hack_app_process():
             if need_hack:
                 execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
 
+
+def _setup_list(var):
+    if var in args_dict and args_dict[var]:
+        if args_dict[var] == 'all':
+            list_temp = eval(var + '_default')
+        else:
+            list_temp = eval('args.' + var).split(',')
+    else:
+        if (var + '_default') in globals():
+            list_temp = eval(var + '_default')
+        else:
+            list_temp = []
+    return list_temp
+
+
 if __name__ == '__main__':
     handle_option()
     setup()
@@ -582,8 +669,8 @@ if __name__ == '__main__':
     patch()
     build()
 
-    unittest_build()
-    unittest_run()
-
     test_build()
-    test_unittest()
+    test_run()
+
+    batch_build()
+    batch_test()
