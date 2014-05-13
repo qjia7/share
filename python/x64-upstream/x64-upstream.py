@@ -1,12 +1,5 @@
 #!/usr/bin/env python
 
-# Naming convention:
-# gtest and instrumentation etc. are command for test
-# android_webview_unittests is suite in gtest.
-
-# Debug
-# Use --time-fixed, and set dryrun for run to True
-
 import fileinput
 import multiprocessing
 from multiprocessing import Pool
@@ -106,6 +99,7 @@ examples:
   python %(prog)s --clean -s --sync-upstream --patch
   python %(prog)s --batch-build --test-run
   python %(prog)s --batch-test
+  python %(prog)s --test-dryrun --time-fixed
   python %(prog)s --test-to yang.gu@intel.com --test-case 'webkit_compositor_bindings_unittests' --test-run
   python %(prog)s --instrumentation-suite ContentShellTest --test-run --test-command instrumentation --test-formal --test-to yang.gu@intel.com
 
@@ -134,6 +128,7 @@ examples:
     group_test.add_argument('--test-formal', dest='test_formal', help='formal test, which would send email and backup to samba server', action='store_true')
     group_test.add_argument('--test-type', dest='test_type', help='test_type', choices=['release', 'debug'], default='release')
     group_test.add_argument('--test-command', dest='test_command', help='test command split by ","')
+    group_test.add_argument('--test-dryrun', dest='test_dryrun', help='dry run test', action='store_true')
     group_test.add_argument('--gtest-suite', dest='gtest_suite', help='gtest suite')
     group_test.add_argument('--instrumentation-suite', dest='instrumentation_suite', help='instrumentation suite')
 
@@ -425,8 +420,7 @@ def _test_run_device(index_device, results):
     if not os.path.exists(dir_device_name):
         os.mkdir(dir_device_name)
 
-    dryrun = False
-    if not dryrun:
+    if not args.test_dryrun:
         for command in test_suite:
             for index, suite in enumerate(test_suite[command]):
                 if results[command][index] == 'FAIL':
@@ -478,19 +472,9 @@ def _test_run_device(index_device, results):
 def _test_sendmail(index_device, html):
     device_name = devices_name[index_device]
     if args.test_to:
-        to = [args.test_to]
+        to = args.test_to.split(',')
     else:
-        to = [
-            'jie.a.chen@intel.com',
-            'yang.gu@intel.com',
-            'halton.huo@intel.com',
-            'zhenyu.liang@intel.com',
-            'ying.han@intel.com',
-            'zhiqiangx.yu@intel.com',
-            'xiaodan.jiang@intel.com',
-            'jiajia.qin@intel.com',
-            'guanxian.li@intel.com'
-        ]
+        to = 'webperf@intel.com'
 
     send_mail('x64-noreply@intel.com', to, report_name + '-' + time + '-' + device_name, html, type='html')
 
