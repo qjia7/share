@@ -86,8 +86,8 @@ examples:
 def setup():
     global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name
 
-    # Ensure T100 is ready if available
-    _connect_device()
+    # Ensure device is connected if available
+    connect_device()
 
     # Set path
     path = os.getenv('PATH')
@@ -297,7 +297,7 @@ def flash_image():
         while not _device_connected():
             info('Sleeping %s seconds' % str(sleep_sec))
             time.sleep(sleep_sec)
-            _connect_device()
+            connect_device()
 
         break
 
@@ -562,16 +562,12 @@ def _patch_remove(patches):
 
 
 # Check if device is connected in bootloader or system
-def _device_connected(cmd='adb devices'):
+def _device_connected(ip='192.168.42.1', cmd='adb devices'):
     result = execute(cmd, return_output=True, show_command=False)
     if re.search(ip, result[1]):
         return True
     else:
         return False
-
-
-def _connect_device():
-    execute('adb disconnect %s && timeout 1s adb connect %s' % (ip, ip), interactive=True)
 
 
 if __name__ == "__main__":

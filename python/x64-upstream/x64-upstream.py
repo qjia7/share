@@ -141,6 +141,9 @@ examples:
 def setup():
     global dir_root, dir_src, test_type, dir_out_test_type, dir_test, dir_time, devices, devices_name, target_arch, target_module, report_name, test_suite, time
 
+    # Ensure device is connected if available
+    connect_device()
+
     if args.time_fixed:
         time = get_datetime(format='%Y%m%d')
     else:
