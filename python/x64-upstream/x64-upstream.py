@@ -7,7 +7,7 @@ import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
 
-chromium_info = ['a6447e09e1141b91ceec52ac7f1d59394f6e14d6', '270277']
+chromium_info = ['d5b0dd25e5231618219b8cea1e2126ee6a284bfb', '270349']
 CHROMIUM_INFO_INDEX_HASH = 0
 CHROMIUM_INFO_INDEX_REV = 1
 
