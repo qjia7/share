@@ -571,7 +571,7 @@ def _device_connected(cmd='adb devices'):
 
 
 def _connect_device():
-    execute('adb disconnect %s && adb connect %s' % (ip, ip), interactive=True)
+    execute('adb disconnect %s && timeout 1s adb connect %s' % (ip, ip), interactive=True)
 
 
 if __name__ == "__main__":
