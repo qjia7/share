@@ -16,6 +16,7 @@ target_modules = []
 devices = []
 devices_name = []
 chromium_version = ''
+ip = '192.168.42.1'
 
 patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
@@ -63,6 +64,7 @@ examples:
     parser.add_argument('--build-no-dep', dest='build_no_dep', help='use mmma or mmm', action='store_true')
     parser.add_argument('--disable-2nd-arch', dest='disable_2nd_arch', help='disable 2nd arch, only effective for baytrail', action='store_true')
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
+    parser.add_argument('--flash-image', dest='flash_image', help='flash the boot and system', action='store_true')
     parser.add_argument('--backup', dest='backup', help='backup output to both local and samba server', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
     parser.add_argument('--analyze', dest='analyze', help='analyze tombstone or trace file for libwebviewchromium.so')
@@ -83,6 +85,9 @@ examples:
 
 def setup():
     global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name
+
+    # Ensure T100 is ready if available
+    execute('adb disconnect %s && adb connect %s' % (ip, ip), interactive=True)
 
     # Set path
     path = os.getenv('PATH')
@@ -257,6 +262,39 @@ def burn_image():
     execute('sudo dd if=' + img + ' of=' + args.burn_image + ' && sync', interactive=True)
 
 
+def flash_image():
+    if not args.flash_image:
+        return
+
+    if len(target_archs) > 1:
+        error('You need to specify the target arch')
+
+    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+        error('Only baytrail can burn the image')
+
+    arch = target_archs[0]
+    device = target_devices[0]
+
+    # This command would not return so we have to use timeout here
+    execute('timeout 5s adb reboot bootloader')
+    sleep_sec = 3
+    for i in range(0, 60):
+        if not _is_bootloader():
+            info('Sleeping %s seconds' % str(sleep_sec))
+            time.sleep(sleep_sec)
+            continue
+
+        android_product_out = dir_out + '/target/product/' + _get_product(arch, device)
+        cmd = 'fastboot -t %s oem unlock' % ip
+        execute(cmd)
+        cmd = 'ANDROID_PRODUCT_OUT=%s fastboot -t %s flashall' % (android_product_out, ip)
+        execute(cmd, interactive=True)
+        # This command would not return so we have to use timeout here
+        cmd = 'timeout 10s fastboot -t %s reboot' % ip
+        execute(cmd)
+        break
+
+
 def start_emu():
     if not args.start_emu:
         return
@@ -278,7 +316,7 @@ def analyze():
     count_line_max = 1000
     count_valid_max = 30
 
-    execute('adb connect 192.168.42.1')
+    execute('adb connect ' + ip)
     if args.analyze == 'tombstone':
         result = execute('adb shell \ls /data/tombstones', return_output=True)
         files = result[1].split('\n')
@@ -316,7 +354,7 @@ def push():
     else:
         modules = args.target_module.split(',')
 
-    cmd = 'adb connect 192.168.42.1 && adb root && adb remount'
+    cmd = 'adb root && adb remount'
 
     for module in modules:
         if module == 'libwebviewchromium':
@@ -445,7 +483,6 @@ def _backup_one(arch, device, module):
                 pass
 
     time = get_datetime()
-    #time = '2014'
     name = time + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
     if not os.path.exists(dir_backup_one):
@@ -517,6 +554,14 @@ def _patch_remove(patches):
     restore_dir()
 
 
+def _is_bootloader():
+    result = execute('fastboot devices', return_output=True, show_command=False)
+    if re.search(ip, result[1]):
+        return True
+    else:
+        return False
+
+
 if __name__ == "__main__":
     handle_option()
     setup()
@@ -526,6 +571,7 @@ if __name__ == "__main__":
     build()
     backup()
     burn_image()
+    flash_image()
     start_emu()
     analyze()
     push()
