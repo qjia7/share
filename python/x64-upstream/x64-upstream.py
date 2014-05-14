@@ -7,20 +7,12 @@ import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
 
-chromium_hash = '8c2b268683bf9f5c2b63dfa99c3fc7fc8adf0744'
+chromium_info = ['a6447e09e1141b91ceec52ac7f1d59394f6e14d6', '270277']
+CHROMIUM_INFO_INDEX_HASH = 0
+CHROMIUM_INFO_INDEX_REV = 1
 
 patches = {
     'src': [
-        # Need upstream
-
-        # Under review
-        '0001-Do-ApplyGpuDriverBugWorkarounds-after-InitializeOneO.patch',
-
-        # ndk issues
-        '0002-ndk-pending-issues.patch',
-
-        # image issues
-        '0003-image-pending-issues.patch',
     ],
 }
 
@@ -80,7 +72,8 @@ instrumentation_suite_default = [
 
 test_suite = {}
 test_suite_filter = {
-    'media_unittests': '*:-MediaSourcePlayerTest.A_StarvationDuringEOSDecode:MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation'
+    'media_unittests': '*:-MediaSourcePlayerTest.A_StarvationDuringEOSDecode:MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
+    'net_unittests': '*:-AndroidKeyStore,SignWithPrivateKeyDSA:AndroidKeyStore,SignWithWrapperKeyDSA:AndroidKeyStore,SignWithPrivateKeyECDSA:AndroidKeyStore, SignWithWrapperKeyECDSA',
 }
 
 
@@ -104,7 +97,7 @@ examples:
   python %(prog)s --instrumentation-suite ContentShellTest --test-run --test-command instrumentation --test-formal --test-to yang.gu@intel.com
 
   crontab -e
-  0 1 * * * cd /workspace/project/chromium64-android && python x64-upstream.py -s --extra-path=/workspace/project/depot_tools
+  0 1 * * * cd /workspace/project/chromium64-android && python %(prog)s -s --extra-path=/workspace/project/depot_tools
 ''')
 
     parser.add_argument('--clean', dest='clean', help='clean patches and local changes', action='store_true')
@@ -257,7 +250,7 @@ def sync(force=False):
 
     cmd = 'gclient sync -f -n -j16'
     if not args.sync_upstream:
-        cmd += ' --revision src@' + chromium_hash
+        cmd += ' --revision src@' + chromium_info[CHROMIUM_INFO_INDEX_HASH]
     result = execute(cmd, interactive=True)
     if result[0]:
         error('sync failed', error_code=result[0])
@@ -505,7 +498,7 @@ def _test_gen_report(index_device, results):
         <div>
           <h2 id="Environment">Environment</h2>
           <ul>
-            <li>Chromium hash: ''' + chromium_hash + '''</li>
+            <li>Chromium hash: ''' + chromium_info[CHROMIUM_INFO_INDEX_REV] + '''</li>
             <li>Target Device: ''' + device_name + '''</li>
           </ul>
 
