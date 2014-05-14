@@ -73,7 +73,7 @@ instrumentation_suite_default = [
 test_suite = {}
 test_suite_filter = {
     'media_unittests': '*:-MediaSourcePlayerTest.A_StarvationDuringEOSDecode:MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
-    'net_unittests': '*:-AndroidKeyStore,SignWithPrivateKeyDSA:AndroidKeyStore,SignWithWrapperKeyDSA:AndroidKeyStore,SignWithPrivateKeyECDSA:AndroidKeyStore, SignWithWrapperKeyECDSA',
+    #'net_unittests': '*:-AndroidKeyStore,SignWithPrivateKeyDSA:AndroidKeyStore,SignWithWrapperKeyDSA:AndroidKeyStore,SignWithPrivateKeyECDSA:AndroidKeyStore, SignWithWrapperKeyECDSA',
 }
 
 
@@ -125,7 +125,7 @@ examples:
     group_test.add_argument('--gtest-suite', dest='gtest_suite', help='gtest suite')
     group_test.add_argument('--instrumentation-suite', dest='instrumentation_suite', help='instrumentation suite')
 
-    group_batch = parser.add_argument_group('test')
+    group_batch = parser.add_argument_group('batch')
     group_batch.add_argument('--batch-build', dest='batch_build', help='build batch', action='store_true')
     group_batch.add_argument('--batch-test', dest='batch_test', help='test batch', action='store_true')
 
