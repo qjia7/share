@@ -27,6 +27,7 @@ dir_time = ''
 target_arch = ''
 target_module = ''
 report_name = ''
+name_file = sys._getframe().f_code.co_filename
 
 cpu_count = str(multiprocessing.cpu_count() * 2)
 devices = []
@@ -294,6 +295,9 @@ def build(force=False):
     if not args.build and not force:
         return
 
+    name_func = get_caller_name()
+    timer_start(name_func)
+
     if not args.skip_mk:
         backup_dir(dir_src)
 
@@ -321,10 +325,15 @@ def build(force=False):
     if result[0]:
         error('Failed to execute command: ' + ninja_cmd, error_code=result[0])
 
+    timer_end(name_func)
+
 
 def test_build(force=False):
     if not args.test_build and not force:
         return
+
+    name_func = get_caller_name()
+    timer_start(name_func)
 
     results = {}
     for command in test_suite:
@@ -354,6 +363,8 @@ def test_build(force=False):
             else:
                 error('Failed to build ' + suite, abort=False)
                 results[command].append('FAIL')
+
+    timer_end(name_func)
 
     return results
 
@@ -407,6 +418,8 @@ def _test_build_name(command, name):
 
 
 def _test_run_device(index_device, results):
+    timer_start('test_run_' + str(index_device))
+
     device = devices[index_device]
     device_name = devices_name[index_device]
     dir_device_name = dir_time + '-' + device_name
@@ -444,10 +457,10 @@ def _test_run_device(index_device, results):
                 else:
                     info('Succeeded to run "' + suite + '"')
 
+    timer_end('test_run_' + str(index_device))
     # Generate report
     html = _test_gen_report(index_device, results)
     file_html = dir_device_name + '/report.html'
-    print file_html
     file_report = open(file_html, 'w')
     file_report.write(html)
     file_report.close()
@@ -475,6 +488,7 @@ def _test_sendmail(index_device, html):
 def _test_gen_report(index_device, results):
     device_name = devices_name[index_device]
     dir_device_name = dir_time + '-' + device_name
+
     html_start = '''
 <html>
   <head>
@@ -498,8 +512,11 @@ def _test_gen_report(index_device, results):
         <div>
           <h2 id="Environment">Environment</h2>
           <ul>
-            <li>Chromium hash: ''' + chromium_info[CHROMIUM_INFO_INDEX_REV] + '''</li>
+            <li>Chromium Revision: ''' + chromium_info[CHROMIUM_INFO_INDEX_REV] + '''</li>
             <li>Target Device: ''' + device_name + '''</li>
+            <li>Build Duration: ''' + timer_diff('build') + '''</li>
+            <li>Test Build Duration: ''' + timer_diff('test_build') + '''</li>
+            <li>Test Run Duration: ''' + timer_diff('test_run_' + str(index_device)) + '''</li>
           </ul>
 
           <h2>Details</h2>

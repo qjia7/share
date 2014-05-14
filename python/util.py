@@ -14,6 +14,7 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import socket
+import inspect
 
 import re
 import commands
@@ -23,6 +24,7 @@ host_os = platform.system()
 host_name = socket.gethostname()
 args = argparse.Namespace()
 dir_stack = []
+timer = {}
 
 
 target_os_all = ['android', 'linux']
@@ -269,6 +271,27 @@ def setup_device(devices_limit=[]):
                 del devices_name[index]
 
     return (devices, devices_name)
+
+
+def timer_start(tag):
+    if not tag in timer:
+        timer[tag] = [0, 0]
+    timer[tag][0] = datetime.datetime.now().replace(microsecond=0)
+
+
+def timer_end(tag):
+    timer[tag][1] = datetime.datetime.now().replace(microsecond=0)
+
+
+def timer_diff(tag):
+    if tag in timer:
+        return str(timer[tag][1] - timer[tag][0])
+    else:
+        return '0:00:00'
+
+
+def get_caller_name():
+    return inspect.stack()[1][3]
 ################################################################################
 
 
