@@ -87,7 +87,7 @@ def setup():
     global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name
 
     # Ensure T100 is ready if available
-    execute('adb disconnect %s && adb connect %s' % (ip, ip), interactive=True)
+    _connect_device()
 
     # Set path
     path = os.getenv('PATH')
@@ -279,7 +279,7 @@ def flash_image():
     execute('timeout 5s adb reboot bootloader')
     sleep_sec = 3
     for i in range(0, 60):
-        if not _is_bootloader():
+        if not _device_connected(cmd='fastboot devices'):
             info('Sleeping %s seconds' % str(sleep_sec))
             time.sleep(sleep_sec)
             continue
@@ -292,6 +292,13 @@ def flash_image():
         # This command would not return so we have to use timeout here
         cmd = 'timeout 10s fastboot -t %s reboot' % ip
         execute(cmd)
+
+        # Wait until system is up
+        while not _device_connected():
+            info('Sleeping %s seconds' % str(sleep_sec))
+            time.sleep(sleep_sec)
+            _connect_device()
+
         break
 
 
@@ -554,12 +561,17 @@ def _patch_remove(patches):
     restore_dir()
 
 
-def _is_bootloader():
-    result = execute('fastboot devices', return_output=True, show_command=False)
+# Check if device is connected in bootloader or system
+def _device_connected(cmd='adb devices'):
+    result = execute(cmd, return_output=True, show_command=False)
     if re.search(ip, result[1]):
         return True
     else:
         return False
+
+
+def _connect_device():
+    execute('adb disconnect %s && adb connect %s' % (ip, ip), interactive=True)
 
 
 if __name__ == "__main__":
