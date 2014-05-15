@@ -479,7 +479,7 @@ def _backup_one(arch, device, module):
                     'out/host/linux-x86/lib',
                     'out/host/linux-x86/usr/share/pc-bios',
                     'out/target/product/generic_x86_64/system/build.prop',
-                    'out/target/product/generic_x86_64/cache.img'
+                    'out/target/product/generic_x86_64/cache.img',
                     'out/target/product/generic_x86_64/userdata.img',
                     'out/target/product/generic_x86_64/userdata-qemu.img',
                     'out/target/product/generic_x86_64/ramdisk.img',
