@@ -132,7 +132,7 @@ def install_package(pkg_list):
             info("Package " + pkg + " was already installed")
         else:
             info("Package " + pkg + " is installing...")
-            result = execute("sudo apt-get install -y " + pkg, show_progress=True)
+            result = execute("sudo apt-get install -y " + pkg, interactive=True)
             if result[0]:
                 warning("Package " + pkg + "'s installation failed")
 
@@ -194,6 +194,8 @@ if __name__ == "__main__":
         'libpci-dev', 'linux-tools', 'binutils-dev', 'libelf-dev', 'gperf', 'gcc-4.7-multilib', 'g++-4.7-multilib', 'bison', 'python-pip',
         'module-assistant', 'autoconf', 'automake', 'libnss3-dev', 'ant', 'libcups2-dev', 'libasound2-dev', 'libxss-dev', 'libxtst-dev',
         'libpulse-dev',
+        'postfix',  # smtp server
+        'android-tools-adb', 'android-tools-adbd', 'android-tools-fastboot',
     ])
 
     install_chromium()
