@@ -166,7 +166,7 @@ def sync():
         info('Syncing aosp...')
         _sync_repo(dir_root, './repo sync -c -j16')
 
-    if args.sync == 'all' or args.sync == 'chromium':
+    if (args.sync == 'all' or args.sync == 'chromium') and os.path.exists(dir_chromium + '/src'):
         info('Syncing chromium...')
         _sync_repo(dir_chromium, 'GYP_DEFINES="OS=android werror= disable_nacl=1 enable_svg=0" gclient sync -f -n -j16')
 
@@ -504,7 +504,7 @@ def _backup_one(arch, device, module):
     restore_dir()
 
     backup_dir(dir_backup)
-    name_tar = name + '.tar.gz'
+    name_tar = name + '-' + host_name + '.tar.gz'
     execute('tar zcf ' + name_tar + ' ' + name)
     backup_smb('//ubuntu-ygu5-02.sh.intel.com/aosp-stable', 'temp', name_tar)
     restore_dir()
