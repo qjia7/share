@@ -25,8 +25,10 @@ examples:
   python %(prog)s -b all
 ''')
 
-    parser.add_argument('--repo', dest='repo', help='repo to build', choices=repo_default + ['all'], default='aosp-stable')
+    parser.add_argument('--repo', dest='repo', help='repo to build', choices=repo_default + ['all'], default='aosp-stable-cr')
     parser.add_argument('-b', '--build', dest='build', help='build', action='store_true')
+    parser.add_argument('--keep-out', dest='keep_out', help='keep the out dir', action='store_true')
+    parser.add_argument('--skip-sync', dest='skip_sync', help='skip sync', action='store_true')
 
     args = parser.parse_args()
     args_dict = vars(args)
@@ -49,9 +51,22 @@ def build():
 
     for repo_temp in repo:
         backup_dir(repo_temp + '-daily')
-        execute('rm -rf out_bk')
-        execute('mv out out_bk')
-        execute('python aosp-stable.py -s all --patch -b --backup', interactive=True)
+
+        # Ensure last good build is kept if available
+        if not args.keep_out:
+            if not os.path.exists('out_bk'):
+                execute('mv out out_bk')
+            else:
+                if os.path.exists('out/target/product/baytrail_64/live.img'):
+                    execute('rm -rf out_bk')
+                    execute('mv out out_bk')
+                else:
+                    execute('rm -rf out')
+
+        cmd = 'python aosp-stable.py --patch --target-arch all --target-device all -b --backup'
+        if not args.skip_sync:
+            cmd += ' --sync all'
+        execute(cmd, interactive=True)
         restore_dir()
 
 
