@@ -176,13 +176,15 @@ def patch(patches, force=False):
         return
 
     for dir_repo in patches:
+        if not os.path.exists(dir_repo):
+            continue
         for patch in patches[dir_repo]:
             path_patch = dir_script + '/patches/' + patch
             if _patch_applied(dir_repo, path_patch):
                 info('Patch ' + patch + ' was applied before, so is just skipped here')
             else:
-                cmd = 'git am ' + path_patch
                 backup_dir(dir_repo)
+                cmd = 'git am ' + path_patch
                 result = execute(cmd, show_progress=True)
                 restore_dir()
                 if result[0]:
