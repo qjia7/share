@@ -302,6 +302,14 @@ def flash_image():
             time.sleep(sleep_sec)
             connect_device()
 
+        execute('adb connect 192.168.42.1 && adb -s 192.168.42.1:5555 root && adb -s 192.168.42.1:5555 remount && adb -s 192.168.42.1:5555 shell "stop zygote-secondary && stop zygote && rm -rf /data/dalvik-cache/*"')
+        execute('timeout 30s adb -s 192.168.42.1:5555 reboot')
+
+        while not _device_connected():
+            info('Sleeping %s seconds' % str(sleep_sec))
+            time.sleep(sleep_sec)
+            connect_device()
+
         break
 
 
