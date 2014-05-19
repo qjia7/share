@@ -387,7 +387,7 @@ export PATH=$PATH:/workspace/project/depot_tools
 # ccache related
 export USE_CCACHE=1
 export CCACHE_DIR=/workspace/ccache
-export CCACHE_SIZE="60G"
+export CCACHE_SIZE="40G"
 export CCACHE_BASEDIR=/workspace/project
 export CCACHE_SLOPPINESS=include_file_mtime
 export PATH=/usr/lib/ccache:$PATH
