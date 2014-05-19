@@ -259,10 +259,11 @@ def setup_device(devices_limit=[]):
 
         pattern = re.compile('device:(.*)')
         match = pattern.search(device_line)
-        device_name = match.group(1)
-        devices_name.append(device_name)
-        device = device_line.split(' ')[0]
-        devices.append(device)
+        if match:
+            device_name = match.group(1)
+            devices_name.append(device_name)
+            device = device_line.split(' ')[0]
+            devices.append(device)
 
     if devices_limit:
         for index, device in enumerate(devices):
