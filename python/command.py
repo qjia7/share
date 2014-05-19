@@ -46,6 +46,7 @@ commands = [
     ('basic', "cat /proc/NNNN/maps | awk '{print $6}' | grep '\.so' | sort | uniq", 'see if a file is opened', TYPE_NULL),
     ('basic', "strace CMD.... 2>&1 | grep '^open(\".*\.so\"'", 'see if a file is opened', TYPE_NULL),
     ('basic', "lsof -p NNNN | awk '{print $9}' | grep '\.so'", 'see if a file is opened', TYPE_NULL),
+    ('basic', "rsync -avzL /media/GYAGP/* /workspace/backup/usb", 'rsync usb key', TYPE_NULL),
     ('upgrade', 'do-release-upgrade', 'Upgrade system', TYPE_NULL),
     ('info', 'cat /etc/os-release', 'List distribution info', TYPE_RUNNABLE),
     ('info', 'cat /etc/lsb-release', 'List distribution info', TYPE_RUNNABLE),
