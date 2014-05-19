@@ -74,7 +74,7 @@ instrumentation_suite_default = [
 test_suite = {}
 test_suite_filter = {
     'media_unittests': '*:-MediaSourcePlayerTest.A_StarvationDuringEOSDecode:MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
-    'net_unittests': '*:-AndroidKeyStore,SignWithPrivateKeyDSA:AndroidKeyStore,SignWithWrapperKeyDSA:AndroidKeyStore,SignWithPrivateKeyECDSA:AndroidKeyStore, SignWithWrapperKeyECDSA',
+    'net_unittests': '*:-AndroidKeyStore.SignWithPrivateKeyDSA:AndroidKeyStore.SignWithWrapperKeyDSA:AndroidKeyStore.SignWithPrivateKeyECDSA:AndroidKeyStore.SignWithWrapperKeyECDSA',
 }
 
 
