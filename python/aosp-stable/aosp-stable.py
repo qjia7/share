@@ -40,6 +40,7 @@ patches_build = {
         '0001-Make-browser-preference-fragment-valid.patch',
         '0002-Fix-a-crash-when-creating-an-incognito-tab-on-tablet.patch',
     ],
+    'external/chromium_org/src': ['0001-patch-from-issue-274153002.patch'],
 }
 
 

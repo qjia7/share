@@ -1,23 +1,23 @@
-From 9ccd8059f1163e329bc9f178e34f7cef3249b302 Mon Sep 17 00:00:00 2001
+From d852ad901e3426620d18672edbd1579f195b3202 Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
-Date: Sun, 4 May 2014 14:57:39 +0800
+Date: Mon, 19 May 2014 14:17:23 +0800
 Subject: [PATCH] Disable prebuilding webviewchromium
 
-Change-Id: I92a9bf4291b8e4098f0753aac25f79b6598ffe40
+Change-Id: I22e4353e55fd7ad46b44d6b1af7c970d5b4ef09b
 ---
  BoardConfig.mk | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
 diff --git a/BoardConfig.mk b/BoardConfig.mk
-index 1874f82..050ccca 100644
+index 6148a66..b139de8 100644
 --- a/BoardConfig.mk
 +++ b/BoardConfig.mk
 @@ -146,4 +146,4 @@ BUILD_WITH_FULL_STAGEFRIGHT := true
  USE_INTEL_MDP := true
  
  # Use Prebuilts webviewchromium packages
--PRODUCT_PREBUILT_WEBVIEWCHROMIUM := yes
-+PRODUCT_PREBUILT_WEBVIEWCHROMIUM := no
+-# PRODUCT_PREBUILT_WEBVIEWCHROMIUM := yes
++# PRODUCT_PREBUILT_WEBVIEWCHROMIUM := no
 -- 
 1.8.3.2
 
