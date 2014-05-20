@@ -293,7 +293,7 @@ def flash_image():
         android_product_out = dir_out + '/target/product/' + _get_product(arch, device)
         cmd = 'fastboot -t %s oem unlock' % ip
         execute(cmd)
-        cmd = 'ANDROID_PRODUCT_OUT=%s fastboot -t %s flashall' % (android_product_out, ip)
+        cmd = 'fastboot -t %s erase cache && fastboot -t %s erase data && fastboot -t %s erase system && ANDROID_PRODUCT_OUT=%s fastboot -t %s flashall' % (ip, ip, ip, android_product_out, ip)
         execute(cmd, interactive=True)
         # This command would not return so we have to use timeout here
         cmd = 'timeout 10s fastboot -t %s reboot' % ip
@@ -305,7 +305,7 @@ def flash_image():
             time.sleep(sleep_sec)
             connect_device()
 
-        hack_reboot()
+        hack_reboot(force=True)
 
         break
 
@@ -335,10 +335,13 @@ def analyze():
     if args.analyze == 'tombstone':
         result = execute('adb shell \ls /data/tombstones', return_output=True)
         files = result[1].split('\n')
-        result = execute('adb shell cat /data/tombstones/' + files[-2].strip(), return_output=True)
+        file_name = files[-2].strip()
+        execute('adb pull /data/tombstones/' + file_name + ' /tmp/')
+        result = execute('cat /tmp/' + file_name, return_output=True)
         lines = result[1].split('\n')
     elif args.analyze == 'anr':
-        result = execute('adb shell cat /data/anr/traces.txt', return_output=True)
+        execute('adb pull /data/anr/traces.txt /tmp/')
+        result = execute('cat /tmp/traces.txt', return_output=True)
         lines = result[1].split('\n')
 
     pattern = re.compile('pc (.*)  .*lib(webviewchromium|art|c)')
@@ -408,8 +411,8 @@ def hack_app_process():
                 execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
 
 
-def hack_reboot():
-    if not args.hack_reboot:
+def hack_reboot(force=False):
+    if not args.hack_reboot and not force:
         return
 
     sleep_sec = 3
