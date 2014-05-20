@@ -73,10 +73,11 @@ examples:
     parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
     parser.add_argument('--hack-app-process', dest='hack_app_process', help='hack app_process', action='store_true')
+    parser.add_argument('--hack-reboot', dest='hack_reboot', help='hack reboot to workaround dalvik cache issue', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
-    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['webview', 'libwebviewchromium', 'system', 'all'], default='system')
+    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['libwebviewchromium', 'webview', 'browser', 'system', 'all'], default='system')
 
     args = parser.parse_args()
 
@@ -212,14 +213,16 @@ def build():
 
         if module == 'system':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && make'
-        elif module == 'webview' or module == 'libwebviewchromium':
+        elif module == 'browser' or module == 'webview' or module == 'libwebviewchromium':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && '
             if args.build_no_dep:
                 cmd += 'mmm '
             else:
                 cmd += 'mmma '
 
-            if module == 'webview':
+            if module == 'browser':
+                cmd += 'packages/apps/Browser'
+            elif module == 'webview':
                 cmd += 'frameworks/webview'
             elif module == 'libwebviewchromium':
                 cmd += 'external/chromium_org'
@@ -302,13 +305,7 @@ def flash_image():
             time.sleep(sleep_sec)
             connect_device()
 
-        execute('adb connect 192.168.42.1 && adb -s 192.168.42.1:5555 root && adb -s 192.168.42.1:5555 remount && adb -s 192.168.42.1:5555 shell "stop zygote-secondary && stop zygote && rm -rf /data/dalvik-cache/*"')
-        execute('timeout 30s adb -s 192.168.42.1:5555 reboot')
-
-        while not _device_connected():
-            info('Sleeping %s seconds' % str(sleep_sec))
-            time.sleep(sleep_sec)
-            connect_device()
+        hack_reboot()
 
         break
 
@@ -375,6 +372,8 @@ def push():
     cmd = 'adb root && adb remount'
 
     for module in modules:
+        if module == 'browser':
+            cmd += ' && adb push out/target/product/baytrail_64/system/app/Browser.apk /system/app'
         if module == 'libwebviewchromium':
             cmd += ' && adb push out/target/product/baytrail_64/obj/lib/libwebviewchromium.so /system/lib64'
         elif module == 'webview':
@@ -407,6 +406,20 @@ def hack_app_process():
 
             if need_hack:
                 execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
+
+
+def hack_reboot():
+    if not args.hack_reboot:
+        return
+
+    sleep_sec = 3
+    execute('adb connect 192.168.42.1 && adb -s 192.168.42.1:5555 root && adb -s 192.168.42.1:5555 remount && adb -s 192.168.42.1:5555 shell "stop zygote-secondary && stop zygote && rm -rf /data/dalvik-cache/*"')
+    execute('timeout 30s adb -s 192.168.42.1:5555 reboot')
+
+    while not _device_connected():
+        info('Sleeping %s seconds' % str(sleep_sec))
+        time.sleep(sleep_sec)
+        connect_device()
 
 
 def _sync_repo(dir, cmd):
@@ -595,3 +608,4 @@ if __name__ == "__main__":
     analyze()
     push()
     hack_app_process()
+    hack_reboot()
