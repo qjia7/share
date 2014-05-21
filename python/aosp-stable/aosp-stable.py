@@ -17,6 +17,7 @@ devices = []
 devices_name = []
 chromium_version = ''
 ip = '192.168.42.1'
+time = ''
 
 patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
@@ -54,6 +55,7 @@ examples:
   python %(prog)s -s all -b --disable-2nd-arch --patch
   python %(prog)s -b --build-skip-mk --disable-2nd-arch
   python %(prog)s -b --disable-2nd-arch  --build-skip-mk --target-module libwebviewchromium --build-no-dep
+  python %(prog)s --target-device generic --backup --backup-skip-server --time-fixed
 ''')
 
     parser.add_argument('--init', dest='init', help='init', action='store_true')
@@ -67,13 +69,16 @@ examples:
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--flash-image', dest='flash_image', help='flash the boot and system', action='store_true')
     parser.add_argument('--backup', dest='backup', help='backup output to both local and samba server', action='store_true')
+    parser.add_argument('--backup-skip-server', dest='backup_skip_server', help='only local backup', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
+    parser.add_argument('--dir-emu', dest='dir_emu', help='emulator dir')
     parser.add_argument('--analyze', dest='analyze', help='analyze tombstone or trace file for libwebviewchromium.so')
     parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
     parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
     parser.add_argument('--hack-app-process', dest='hack_app_process', help='hack app_process', action='store_true')
     parser.add_argument('--hack-reboot', dest='hack_reboot', help='hack reboot to workaround dalvik cache issue', action='store_true')
+    parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
@@ -86,10 +91,15 @@ examples:
 
 
 def setup():
-    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, time
 
     # Ensure device is connected if available
     connect_device()
+
+    if args.time_fixed:
+        time = get_datetime(format='%Y%m%d')
+    else:
+        time = get_datetime()
 
     # Set path
     path = os.getenv('PATH')
@@ -315,13 +325,42 @@ def start_emu():
         return
 
     for arch in target_archs:
-        combo = _get_combo(arch, 'generic')
-        #backup_dir('/workspace/service/www/aosp-stable/temp/20140414-x86_64-generic-system-cr30/out')
-        #cmd = 'host/linux-x86/bin/emulator64-x86 -kernel ../prebuilts/qemu-kernel/x86_64/kernel-qemu -sdcard /workspace/service/www/aosp-stable/sdcard.img -gpu off -system target/product/generic_x86_64/system.img -ramdisk target/product/generic_x86_64/ramdisk.img -skin HVGA -skindir ../sdk/emulator/skins -sysdir target/product/generic_x86_64 -datadir target/product/generic_x86_64 -data target/product/generic_x86_64/userdata-qemu.img -initdata target/product/generic_x86_64/userdata.img -memory 256 -verbose'
+        product = _get_product(arch, 'generic')
+        if args.dir_emu:
+            dir_backup = args.dir_emu
+        else:
+            result = execute('ls -t backup', return_output=True)
+            dir_backup = 'backup/' + result[1].split('\n')[0]
+        backup_dir(dir_backup)
+        #combo = _get_combo(arch, 'generic')
+        #cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img')
 
-        cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img')
+        # Currently there are several problems to run emulator
+        # 1. userdata-qemu.img has to be deleted everytime
+        # 2. must not designate -data option. Use full path can not work
+        # 3. gpu has to be off
+        # 4. Rely on several environmental variables, and use emulator instead of emulator64-x86
+        # 5. Skin still loads HVGA/hardware.ini from source code dir.
+        execute('rm -f out/target/product/%s/userdata-qemu.img' % product)
+        cmd = '''
+ANDROID_BUILD_TOP=%s \
+ANDROID_PRODUCT_OUT=out/target/product/%s \
+TARGET_PRODUCT=aosp_%s \
+prebuilts/android-emulator/linux-%s/emulator -verbose -show-kernel -no-snapshot -gpu off -memory 512 \
+-skin HVGA \
+-skindir development/tools/emulator/skins \
+-kernel prebuilts/qemu-kernel/%s/kernel-qemu \
+-ramdisk out/target/product/%s/ramdisk.img \
+-sysdir out/target/product/%s \
+-system out/target/product/%s/system.img \
+-datadir out/target/product/%s \
+-cache out/target/product/%s/cache.img \
+-initdata out/target/product/%s/userdata.img \
+''' % (dir_root, product, arch, arch, arch, product, product, product, product, product, product)
+#-data out/target/product/generic_x86_64/userdata-qemu.img \
+
         execute(cmd, interactive=True)
-        #restore_dir()
+        restore_dir()
 
 
 def analyze():
@@ -479,61 +518,87 @@ def _backup_one(arch, device, module):
         elif arch == 'x86':
             libs = ['lib']
 
-        backup_files = [
-            'out/target/product/' + product + '/system/framework/webviewchromium.jar',
-            'out/target/product/' + product + '/system/framework/webview/paks',
-        ]
+        backup_files = {
+            'out/target/product/' + product + '/system/framework': 'out/target/product/' + product + '/system/framework/webviewchromium.jar',
+            'out/target/product/' + product + '/system/framework/webview': 'out/target/product/' + product + '/system/framework/webview/paks',
+        }
 
         for lib in libs:
-            backup_files.append('out/target/product/' + product + '/system/' + lib + '/libwebviewchromium_plat_support.so')
-            backup_files.append('out/target/product/' + product + '/system/' + lib + '/libwebviewchromium.so')
-            # binary with symbol is just too big, disable them temporarily.
-            #backup_files.append('out/target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium_plat_support.so')
-            #backup_files.append('out/target/product/' + product + '/symbols/system/' + lib + '/libwebviewchromium.so')
+            backup_files['out/target/product/' + product + '/system/' + lib] = [
+                'out/target/product/' + product + '/system/' + lib + '/libwebviewchromium_plat_support.so',
+                'out/target/product/' + product + '/system/' + lib + '/libwebviewchromium.so'
+            ]
 
     else:  # module == 'system'
         if device == 'baytrail':
-            backup_files = [
-                'out/target/product/' + product + '/live.img'
-            ]
+            backup_files = {
+                '.': 'out/target/product/' + product + '/live.img'
+            }
 
         elif device == 'generic':
             if arch == 'x86_64':
-                backup_files = [
-                    'out/host/linux-x86/bin/emulator64-x86',
-                    'out/host/linux-x86/lib',
-                    'out/host/linux-x86/usr/share/pc-bios',
-                    'out/target/product/generic_x86_64/system/build.prop',
-                    'out/target/product/generic_x86_64/cache.img',
-                    'out/target/product/generic_x86_64/userdata.img',
-                    'out/target/product/generic_x86_64/userdata-qemu.img',
-                    'out/target/product/generic_x86_64/ramdisk.img',
-                    'out/target/product/generic_x86_64/system.img',
-                    'out/target/product/generic_x86_64/hardware-qemu.ini',
-                    'prebuilts/qemu-kernel/x86_64/kernel-qemu',
-                    'sdk/emulator/skins',
-                ]
+                backup_files = {
+                    #'platforms': 'development/tools/emulator/skins',
+                    'development/tools/emulator': 'development/tools/emulator/skins',
+
+                    #'tools': [
+                    'out/host/linux-x86': [
+                        'out/host/linux-x86/bin',
+                        'out/host/linux-x86/framework',
+                        'out/host/linux-x86/lib',
+                        'out/host/linux-x86/usr',
+                    ],
+
+                    #'tools/bin': 'prebuilts/android-emulator/linux-x86_64/emulator64-x86',
+                    'prebuilts/android-emulator/linux-x86_64': ['prebuilts/android-emulator/linux-x86_64/emulator64-x86', 'prebuilts/android-emulator/linux-x86_64/emulator'],
+
+                    #'tools/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
+                    'prebuilts/android-emulator/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
+
+                    'prebuilts/android-emulator/linux-x86_64/lib': 'prebuilts/android-emulator/linux-x86_64/lib/*',
+
+                    #'system-images/generic_x86_64/system': 'out/target/product/generic_x86_64/system/build.prop',
+                    'out/target/product/generic_x86_64/system': 'out/target/product/generic_x86_64/system/build.prop',
+
+                    #'system-images/generic_x86_64': [
+                    'out/target/product/generic_x86_64': [
+                        'out/target/product/generic_x86_64/cache.img',
+                        'out/target/product/generic_x86_64/userdata.img',
+                        'out/target/product/generic_x86_64/userdata-qemu.img',  # not existed
+                        'out/target/product/generic_x86_64/ramdisk.img',
+                        'out/target/product/generic_x86_64/system.img',
+                        'out/target/product/generic_x86_64/hardware-qemu.ini',  # not existed
+                        #'prebuilts/qemu-kernel/x86_64/kernel-qemu',
+                    ],
+                    'prebuilts/qemu-kernel/x86_64': 'prebuilts/qemu-kernel/x86_64/kernel-qemu',
+                }
             elif arch == 'x86':
                 pass
 
-    time = get_datetime()
     name = time + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
     if not os.path.exists(dir_backup_one):
         os.makedirs(dir_backup_one)
     backup_dir(dir_backup_one)
-    for backup_file in backup_files:
-        dir_backup_relative = os.path.split(backup_file)[0]
-        if not os.path.exists(dir_backup_relative):
-            os.makedirs(dir_backup_relative)
-        execute('cp -rf ' + dir_root + '/' + backup_file + ' ' + dir_backup_relative)
+    for dir_dest in backup_files:
+        if not os.path.exists(dir_dest):
+            os.makedirs(dir_dest)
+
+        if isinstance(backup_files[dir_dest], str):
+            files = [backup_files[dir_dest]]
+        else:
+            files = backup_files[dir_dest]
+
+        for file in files:
+            execute('cp -rf ' + dir_root + '/' + file + ' ' + dir_dest)
     restore_dir()
 
-    backup_dir(dir_backup)
-    name_tar = name + '-' + host_name + '.tar.gz'
-    execute('tar zcf ' + name_tar + ' ' + name)
-    backup_smb('//ubuntu-ygu5-02.sh.intel.com/aosp-stable', 'temp', name_tar)
-    restore_dir()
+    if not args.backup_skip_server:
+        backup_dir(dir_backup)
+        name_tar = name + '-' + host_name + '.tar.gz'
+        execute('tar zcf ' + name_tar + ' ' + name)
+        backup_smb('//ubuntu-ygu5-02.sh.intel.com/aosp-stable', 'temp', name_tar)
+        restore_dir()
 
 
 def _ensure_exist(file):
