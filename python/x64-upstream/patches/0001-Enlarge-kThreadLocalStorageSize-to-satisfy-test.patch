@@ -1,0 +1,25 @@
+From 388df2b589c520692e82b9df480e9cb23748cd5e Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Wed, 21 May 2014 17:18:43 +0800
+Subject: [PATCH] Enlarge kThreadLocalStorageSize to satisfy test
+
+---
+ base/threading/thread_local_storage.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/base/threading/thread_local_storage.cc b/base/threading/thread_local_storage.cc
+index e1749c4..170b947 100644
+--- a/base/threading/thread_local_storage.cc
++++ b/base/threading/thread_local_storage.cc
+@@ -31,7 +31,7 @@ base::subtle::AtomicWord g_native_tls_key =
+ base::subtle::Atomic32 g_last_used_tls_key = 0;
+ 
+ // The maximum number of 'slots' in our thread local storage stack.
+-const int kThreadLocalStorageSize = 256;
++const int kThreadLocalStorageSize = 2048;
+ 
+ // The maximum number of times to try to clear slots by calling destructors.
+ // Use pthread naming convention for clarity.
+-- 
+1.8.3.2
+
