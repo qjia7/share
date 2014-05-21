@@ -27,6 +27,15 @@ dir_stack = []
 timer = {}
 
 
+def _get_real_dir(path):
+    return os.path.split(os.path.realpath(path))[0]
+dir_temp = _get_real_dir(__file__)
+while not os.path.exists(dir_temp + '/.git'):
+    dir_temp = _get_real_dir(dir_temp)
+dir_share = dir_temp
+dir_python = dir_share + '/python'
+dir_linux = dir_share + '/linux'
+
 target_os_all = ['android', 'linux']
 target_arch_all = ['x86', 'arm']
 target_module_all = ['webview', 'chrome', 'content_shell', 'chrome_stable', 'chrome_beta', 'webview_shell', 'chrome_shell', 'stock_browser']
