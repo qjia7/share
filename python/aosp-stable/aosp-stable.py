@@ -341,6 +341,9 @@ def start_emu():
         # 3. gpu has to be off
         # 4. Rely on several environmental variables, and use emulator instead of emulator64-x86
         # 5. Skin still loads HVGA/hardware.ini from source code dir.
+
+        if not os.path.exists(dir_root + '/sdcard.img'):
+            error('Please put sdcard.img into ' + dir_root)
         execute('rm -f out/target/product/%s/userdata-qemu.img' % product)
         cmd = '''
 ANDROID_BUILD_TOP=%s \
@@ -356,7 +359,8 @@ prebuilts/android-emulator/linux-%s/emulator -verbose -show-kernel -no-snapshot 
 -datadir out/target/product/%s \
 -cache out/target/product/%s/cache.img \
 -initdata out/target/product/%s/userdata.img \
-''' % (dir_root, product, arch, arch, arch, product, product, product, product, product, product)
+-sdcard %s/sdcard.img \
+''' % (dir_root, product, arch, arch, arch, product, product, product, product, product, product, dir_root)
 #-data out/target/product/generic_x86_64/userdata-qemu.img \
 
         execute(cmd, interactive=True)
