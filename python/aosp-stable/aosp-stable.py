@@ -17,7 +17,7 @@ devices = []
 devices_name = []
 chromium_version = ''
 ip = '192.168.42.1'
-time = ''
+time_stamp = ''
 
 patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
@@ -91,15 +91,15 @@ examples:
 
 
 def setup():
-    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, time
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, time_stamp
 
     # Ensure device is connected if available
     connect_device()
 
     if args.time_fixed:
-        time = get_datetime(format='%Y%m%d')
+        time_stamp = get_datetime(format='%Y%m%d')
     else:
-        time = get_datetime()
+        time_stamp = get_datetime()
 
     # Set path
     path = os.getenv('PATH')
@@ -579,7 +579,7 @@ def _backup_one(arch, device, module):
             elif arch == 'x86':
                 pass
 
-    name = time + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
+    name = time_stamp + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
     if not os.path.exists(dir_backup_one):
         os.makedirs(dir_backup_one)
