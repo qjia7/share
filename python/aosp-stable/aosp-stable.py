@@ -290,23 +290,24 @@ def flash_image():
 
     arch = target_archs[0]
     device = target_devices[0]
+    path_fastboot = dir_linux + '/fastboot'
 
     # This command would not return so we have to use timeout here
     execute('timeout 5s adb reboot bootloader')
     sleep_sec = 3
     for i in range(0, 60):
-        if not _device_connected(cmd='fastboot devices'):
+        if not _device_connected(cmd='%s devices' % path_fastboot):
             info('Sleeping %s seconds' % str(sleep_sec))
             time.sleep(sleep_sec)
             continue
 
         android_product_out = dir_out + '/target/product/' + _get_product(arch, device)
-        cmd = 'fastboot -t %s oem unlock' % ip
+        cmd = '%s -t %s oem unlock' % (path_fastboot, ip)
         execute(cmd)
-        cmd = 'fastboot -t %s erase cache && fastboot -t %s erase data && fastboot -t %s erase system && ANDROID_PRODUCT_OUT=%s fastboot -t %s flashall' % (ip, ip, ip, android_product_out, ip)
+        cmd = '%s -t %s erase cache && %s -t %s erase data && %s -t %s erase system && ANDROID_PRODUCT_OUT=%s %s -t %s flashall' % (path_fastboot, ip, path_fastboot, ip, path_fastboot, ip, android_product_out, path_fastboot, ip)
         execute(cmd, interactive=True)
         # This command would not return so we have to use timeout here
-        cmd = 'timeout 10s fastboot -t %s reboot' % ip
+        cmd = 'timeout 10s %s -t %s reboot' % (path_fastboot, ip)
         execute(cmd)
 
         # Wait until system is up
