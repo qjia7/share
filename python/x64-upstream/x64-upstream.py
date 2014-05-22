@@ -33,6 +33,7 @@ name_file = sys._getframe().f_code.co_filename
 cpu_count = str(multiprocessing.cpu_count() * 2)
 devices = []
 devices_name = []
+devices_type = []
 
 test_command_default = [
     'gtest',
@@ -73,18 +74,60 @@ instrumentation_suite_default = [
 ]
 
 test_suite = {}
+
+# (device_type, target_arch): {}
+# device_type can be 'baytrail', 'generic'
 test_suite_filter = {
-    # Rough investigation:
-    # As we enlarge the kThreadLocalStorageSize in base/threading/thread_local_storage.cc,
-    # it seems we need to shrink options.stack_size in base/threading/thread_unittest.cc.
-    # If kThreadLocalStorageSize is set to 2048, stack_size should be no more than 6*1024.
-    'base_unittests': '*:-ThreadTest.StartWithOptions_StackSize',
-    'content_unittests': '*:-RenderViewHostTest.BadMessageHandlerInputEventAck:RenderViewHostTest.BadMessageHandlerRenderViewHost:RenderViewHostTest.BadMessageHandlerRenderWidgetHost',
-    'media_unittests': '*:-MediaSourcePlayerTest.A_StarvationDuringEOSDecode:MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
-    'sandbox_linux_unittests': '*:-BaselinePolicy.CreateThread:BaselinePolicy.DisallowedCloneFlagCrashes:BrokerProcess.RecvMsgDescriptorLeak',
-    'unit_tests': '*:-ComponentUpdaterTest.CheckReRegistration:ComponentUpdaterTest.DifferentialUpdate:ComponentUpdaterTest.DifferentialUpdateFailErrorcode:ComponentUpdaterTest.OnDemandUpdate:CrxDownloaderTest.OneUrl:CrxDownloaderTest.TwoUrls_SecondInvalid',
-    # All fail due to [ERROR:gl_context_egl.cc(178)] eglSwapInterval failed with error EGL_BAD_NATIVE_WINDOW
-    'content_browsertests': '*',
+    ('all', 'all'): {},
+    ('all', 'x86_64'): {},
+    ('all', 'x86'): {},
+    ('baytrail', 'all'): {
+        'base_unittests': [
+            # Rough investigation:
+            # As we enlarge the kThreadLocalStorageSize in base/threading/thread_local_storage.cc,
+            # it seems we need to shrink options.stack_size in base/threading/thread_unittest.cc.
+            # If kThreadLocalStorageSize is set to 2048, stack_size should be no more than 6*1024.
+            'ThreadTest.StartWithOptions_StackSize',
+        ],
+        'content_unittests': [
+            'RenderViewHostTest.BadMessageHandlerInputEventAck',
+            'RenderViewHostTest.BadMessageHandlerRenderViewHost',
+            'RenderViewHostTest.BadMessageHandlerRenderWidgetHost',
+        ],
+        'media_unittests': [
+            'MediaSourcePlayerTest.A_StarvationDuringEOSDecode',
+            'MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
+        ],
+        'sandbox_linux_unittests': [
+            'BaselinePolicy.CreateThread',
+            'BaselinePolicy.DisallowedCloneFlagCrashes',
+            'BrokerProcess.RecvMsgDescriptorLeak',
+        ],
+        'unit_tests': [
+            'ComponentUpdaterTest.CheckReRegistration',
+            'ComponentUpdaterTest.DifferentialUpdate',
+            'ComponentUpdaterTest.DifferentialUpdateFailErrorcode',
+            'ComponentUpdaterTest.OnDemandUpdate',
+            'CrxDownloaderTest.OneUrl',
+            'CrxDownloaderTest.TwoUrls_SecondInvalid',
+        ],
+        # All fail due to [ERROR:gl_context_egl.cc(178)] eglSwapInterval failed with error EGL_BAD_NATIVE_WINDOW
+        'content_browsertests': [
+        ],
+    },
+    ('baytrail', 'x86_64'): {},
+    ('baytrail', 'x86'): {
+        'base_unittests': [
+            'SafeSPrintfTest.Truncation',
+        ],
+        'gl_tests': [
+            'TextureStorageTest.CorrectPixels',
+        ],
+
+    },
+    ('generic', 'all'): {},
+    ('generic', 'x86_64'): {},
+    ('generic', 'x86'): {},
 }
 
 
@@ -149,7 +192,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_src, test_type, dir_out_test_type, dir_test, dir_time, devices, devices_name, target_arch, target_module, report_name, test_suite, time_stamp
+    global dir_root, dir_src, test_type, dir_out_test_type, dir_test, dir_time, devices, devices_name, devices_type, target_arch, target_module, report_name, test_suite, time_stamp
 
     # Ensure device is connected if available
     connect_device()
@@ -205,7 +248,7 @@ def setup():
         devices_limit = args.devices.split(',')
     else:
         devices_limit = []
-    (devices, devices_name) = setup_device(devices_limit=devices_limit)
+    (devices, devices_name, devices_type) = setup_device(devices_limit=devices_limit)
 
     _hack_app_process()
 
@@ -435,6 +478,7 @@ def _test_run_device(index_device, results):
 
     device = devices[index_device]
     device_name = devices_name[index_device]
+    device_type = devices_type[index_device]
     dir_device_name = dir_time + '-' + device_name
     if not os.path.exists(dir_device_name):
         os.mkdir(dir_device_name)
@@ -460,9 +504,8 @@ def _test_run_device(index_device, results):
                 elif command == 'instrumentation':
                     cmd += ' --test-apk ' + suite
 
-                if suite in test_suite_filter:
-                    cmd += ' -f "' + test_suite_filter[suite] + '"'
-
+                (filter_suite, count_filter_suite) = _calc_filter(device_type, target_arch, suite)
+                cmd += ' -f "' + filter_suite + '"'
                 cmd += ' -d ' + device + ' --' + test_type + ' 2>&1 | tee ' + dir_device_name + '/' + suite + '.log'
                 result = execute(cmd, interactive=True)
                 if result[0]:
@@ -500,6 +543,7 @@ def _test_sendmail(index_device, html):
 
 def _test_gen_report(index_device, results):
     device_name = devices_name[index_device]
+    device_type = devices_type[index_device]
     dir_device_name = dir_time + '-' + device_name
 
     html_start = '''
@@ -604,10 +648,7 @@ def _test_gen_report(index_device, results):
                 else:
                     rs = 'FAIL'
 
-            if suite in test_suite_filter:
-                count_skip = len(test_suite_filter[suite].split(':')) - 1
-            else:
-                count_skip = 0
+            (filter_suite, count_skip) = _calc_filter(device_type, target_arch, suite)
 
             if count_skip > 0:
                 ut_all = str(int(ut_all) + count_skip)
@@ -678,6 +719,31 @@ def _setup_list(var):
         else:
             list_temp = []
     return list_temp
+
+
+def _calc_filter(device_type, target_arch, suite):
+    filter_temp = []
+
+    if suite in test_suite_filter[(device_type, target_arch)]:
+        filter_temp += test_suite_filter[(device_type, target_arch)][suite]
+
+    if suite in test_suite_filter[(device_type, 'all')]:
+        filter_temp += test_suite_filter[(device_type, 'all')][suite]
+
+    if suite in test_suite_filter[('all', target_arch)]:
+        filter_temp += test_suite_filter[('all', target_arch)][suite]
+
+    if suite in test_suite_filter[('all', 'all')]:
+        filter_temp += test_suite_filter[('all', 'all')][suite]
+
+    count_filter_temp = len(filter_temp)
+
+    if count_filter_temp > 0:
+        filter_str = '*:-' + ':'.join(filter_temp)
+    else:
+        filter_str = '*'
+
+    return (filter_str, count_filter_temp)
 
 
 if __name__ == '__main__':

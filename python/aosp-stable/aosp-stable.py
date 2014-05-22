@@ -15,6 +15,7 @@ target_devices = []
 target_modules = []
 devices = []
 devices_name = []
+devices_type = []
 chromium_version = ''
 ip = '192.168.42.1'
 timestamp = ''
@@ -91,7 +92,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, timestamp
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, devices_type, timestamp
 
     # Ensure device is connected if available
     connect_device()
@@ -147,7 +148,7 @@ def setup():
     else:
         chromium_version = 'cr30'
 
-    (devices, devices_name) = setup_device()
+    (devices, devices_name, devices_type) = setup_device()
 
     os.chdir(dir_root)
 

@@ -258,6 +258,7 @@ def execute_adb(cmd, device=''):
 def setup_device(devices_limit=[]):
     devices = []
     devices_name = []
+    devices_type = []
     cmd = 'adb devices -l'
     device_lines = commands.getoutput(cmd).split('\n')
     for device_line in device_lines:
@@ -272,6 +273,10 @@ def setup_device(devices_limit=[]):
             device_name = match.group(1)
             devices_name.append(device_name)
             device = device_line.split(' ')[0]
+            if re.search('192.168.42.1', device):
+                devices_type.append('baytrail')
+            elif re.search('emulator', device):
+                devices_type.append('generic')
             devices.append(device)
 
     if devices_limit:
@@ -279,8 +284,9 @@ def setup_device(devices_limit=[]):
             if device not in devices_limit:
                 del devices[index]
                 del devices_name[index]
+                del devices_type[index]
 
-    return (devices, devices_name)
+    return (devices, devices_name, devices_type)
 
 
 def timer_start(tag):
