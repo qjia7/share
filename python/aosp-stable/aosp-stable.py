@@ -427,7 +427,9 @@ def push():
         elif module == 'webview':
             cmd += ' && adb push out/target/product/baytrail_64/system/framework/webviewchromium.jar /system/framework'
 
-    if len(modules) > 0:
+    if len(modules) == 1 and modules[0] == 'browser':
+        cmd += ''
+    elif len(modules) > 0:
         cmd += ' && adb shell stop && adb shell start'
 
     result = execute(cmd)
