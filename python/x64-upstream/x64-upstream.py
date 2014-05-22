@@ -506,7 +506,7 @@ def _test_run_device(index_device, results):
 
                 (filter_suite, count_filter_suite) = _calc_filter(device_type, target_arch, suite)
                 cmd += ' -f "' + filter_suite + '"'
-                cmd += ' -d ' + device + ' --' + test_type + ' 2>&1 | tee ' + dir_device_name + '/' + suite + '.log'
+                cmd += ' -d ' + device + ' --' + test_type + ' -vvv 2>&1 | tee ' + dir_device_name + '/' + suite + '.log'
                 result = execute(cmd, interactive=True)
                 if result[0]:
                     warning('Failed to run "' + suite + '"')
