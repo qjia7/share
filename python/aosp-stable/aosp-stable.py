@@ -43,6 +43,7 @@ patches_build = {
         '0002-Fix-a-crash-when-creating-an-incognito-tab-on-tablet.patch',
     ],
     'external/chromium_org/src': ['0001-patch-from-issue-274153002.patch'],
+    'external/chromium_org': ['0001-Ask-driver-for-driver-specific-extension.patch'],
 }
 
 
@@ -211,8 +212,8 @@ def build():
         execute('rm -rf out')
 
     for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
-        _patch_cond(args.disable_2nd_arch and device == 'baytrail', patches_baytrail_disable_2nd_arch)
-        _patch_cond(args.disable_2nd_arch and device == 'generic', patches_generic_disable_2nd_arch)
+        #_patch_cond(args.disable_2nd_arch and device == 'baytrail', patches_baytrail_disable_2nd_arch)
+        #_patch_cond(args.disable_2nd_arch and device == 'generic', patches_generic_disable_2nd_arch)
 
         combo = _get_combo(arch, device)
         if not args.build_skip_mk:
@@ -488,7 +489,7 @@ def _get_combo(arch, device):
         combo = combo_prefix + arch + combo_suffix
     elif device == 'baytrail':
         if arch == 'x86_64':
-            combo = combo_prefix + device + '_64' + combo_suffix
+            combo = combo_prefix + device + '_64p' + combo_suffix
         elif arch == 'x86':
             combo = combo_prefix + device + combo_suffix
 
