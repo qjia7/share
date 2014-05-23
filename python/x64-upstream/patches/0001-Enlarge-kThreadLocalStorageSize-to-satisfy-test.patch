@@ -1,7 +1,7 @@
-From 388df2b589c520692e82b9df480e9cb23748cd5e Mon Sep 17 00:00:00 2001
+From baf6d9760224a9e9f72e1fde7f37aeaa9b4313cf Mon Sep 17 00:00:00 2001
 From: Yang Gu <yang.gu@intel.com>
 Date: Wed, 21 May 2014 17:18:43 +0800
-Subject: [PATCH] Enlarge kThreadLocalStorageSize to satisfy test
+Subject: [PATCH 1/2] Enlarge kThreadLocalStorageSize to satisfy test
 
 ---
  base/threading/thread_local_storage.cc | 2 +-

@@ -1,0 +1,27 @@
+From 6d766b4f5d0aed1eb2baf0710700a61b680dbe04 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 23 May 2014 17:20:25 +0800
+Subject: [PATCH 2/2] Disable the restart of shell for intrumentation test
+
+---
+ build/android/pylib/android_commands.py | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/build/android/pylib/android_commands.py b/build/android/pylib/android_commands.py
+index ee12cd4..93ec1c7 100644
+--- a/build/android/pylib/android_commands.py
++++ b/build/android/pylib/android_commands.py
+@@ -414,8 +414,8 @@ class AndroidCommands(object):
+ 
+   def RestartShell(self):
+     """Restarts the shell on the device. Does not block for it to return."""
+-    self.RunShellCommand('stop')
+-    self.RunShellCommand('start')
++    #self.RunShellCommand('stop')
++    #self.RunShellCommand('start')
+ 
+   def Reboot(self, full_reboot=True):
+     """Reboots the device and waits for the package manager to return.
+-- 
+1.8.3.2
+

@@ -13,7 +13,8 @@ CHROMIUM_INFO_INDEX_REV = 1
 
 patches = {
     'src': [
-        '0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch'
+        '0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
+        '0002-Disable-the-restart-of-shell-for-intrumentation-test.patch',
     ],
 }
 
