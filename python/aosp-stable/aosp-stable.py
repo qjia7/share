@@ -501,7 +501,7 @@ def _get_product(arch, device):
         product = device + '_' + arch
     elif device == 'baytrail':
         if arch == 'x86_64':
-            product = device + '_64'
+            product = device + '_64p'
         elif arch == 'x86':
             product = device
 
