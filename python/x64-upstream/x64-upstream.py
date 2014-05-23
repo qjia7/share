@@ -97,6 +97,7 @@ test_suite_filter = {
         'media_unittests': [
             'MediaSourcePlayerTest.A_StarvationDuringEOSDecode',
             'MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
+            'AudioAndroidOutputTest.StartOutputStreamCallbacks',  # Crash the system if runs enough time
         ],
         'sandbox_linux_unittests': [
             'BaselinePolicy.CreateThread',
@@ -176,6 +177,7 @@ examples:
     group_test.add_argument('--test-type', dest='test_type', help='test_type', choices=['release', 'debug'], default='release')
     group_test.add_argument('--test-command', dest='test_command', help='test command split by ","')
     group_test.add_argument('--test-dryrun', dest='test_dryrun', help='dry run test', action='store_true')
+    group_test.add_argument('--test-verbose', dest='test_verbose', help='verbose output for test', action='store_true')
     group_test.add_argument('--gtest-suite', dest='gtest_suite', help='gtest suite')
     group_test.add_argument('--instrumentation-suite', dest='instrumentation_suite', help='instrumentation suite')
 
@@ -506,7 +508,10 @@ def _test_run_device(index_device, results):
 
                 (filter_suite, count_filter_suite) = _calc_filter(device_type, target_arch, suite)
                 cmd += ' -f "' + filter_suite + '"'
-                cmd += ' -d ' + device + ' --' + test_type + ' -vvv 2>&1 | tee ' + dir_device_name + '/' + suite + '.log'
+                cmd += ' -d ' + device + ' --' + test_type
+                if args.test_verbose:
+                    cmd += ' -v'
+                cmd += ' 2>&1 | tee ' + dir_device_name + '/' + suite + '.log'
                 result = execute(cmd, interactive=True)
                 if result[0]:
                     warning('Failed to run "' + suite + '"')
@@ -605,8 +610,8 @@ def _test_gen_report(index_device, results):
             <td> <strong>Build Status</strong>  </td>
             <td> <strong>Run Status</strong>  </td>
             <td> <strong>All</strong> </td>
-            <td> <strong>Skip</strong> </td>
             <td> <strong>Pass</strong> </td>
+            <td> <strong>Skip</strong> </td>
             <td> <strong>Fail</strong> </td>
             <td> <strong>Crash</strong> </td>
             <td> <strong>Timeout</strong> </td>
@@ -673,8 +678,8 @@ def _test_gen_report(index_device, results):
             ut_row = ut_tr_start + '''
                          <td> <strong>''' + suite + ''' <strong></td> ''' + ut_bs_td_start + bs + ut_td_end + ut_rs_td_start + rs + ut_td_end + '''
                          <td>''' + ut_all + '''</td>
-                         <td>''' + ut_skip + '''</td>
                          <td>''' + ut_pass + '''</td>
+                         <td>''' + ut_skip + '''</td>
                          <td>''' + ut_fail + '''</td>
                          <td>''' + ut_crash + '''</td>
                          <td>''' + ut_timeout + '''</td>
