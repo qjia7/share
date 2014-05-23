@@ -500,7 +500,7 @@ def _test_run_device(index_device, results):
                 cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/test_runner.py ' + command
                 # test command specific cmd
                 if command == 'gtest':
-                    cmd += ' -s ' + suite + ' --num_retries 0 -t 30'
+                    cmd += ' -s ' + suite + ' --num_retries 0 -t 60'
                 elif command == 'instrumentation':
                     cmd += ' --test-apk ' + suite
 
