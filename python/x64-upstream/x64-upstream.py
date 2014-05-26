@@ -178,6 +178,7 @@ examples:
     group_test.add_argument('--test-formal', dest='test_formal', help='formal test, which would send email and backup to samba server', action='store_true')
     group_test.add_argument('--test-type', dest='test_type', help='test_type', choices=['release', 'debug'], default='release')
     group_test.add_argument('--test-command', dest='test_command', help='test command split by ","')
+    group_test.add_argument('--test-drybuild', dest='test_drybuild', help='skip the build of test', action='store_true')
     group_test.add_argument('--test-dryrun', dest='test_dryrun', help='dry run test', action='store_true')
     group_test.add_argument('--test-verbose', dest='test_verbose', help='verbose output for test', action='store_true')
     group_test.add_argument('--test-filter', dest='test_filter', help='filter for test')
@@ -448,7 +449,8 @@ def test_run(force=False):
         error('Please ensure test device is connected')
 
     # Build test
-    results = test_build(force=True)
+    if not args.test_drybuild:
+        results = test_build(force=True)
 
     pool = Pool(processes=number_device)
     for index, device in enumerate(devices):
