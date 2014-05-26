@@ -399,7 +399,7 @@ def analyze():
         match = pattern.search(line)
         if match:
             print line
-            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/baytrail_64/symbols/system/lib64/lib%s.so -f %s' % (match.group(2), match.group(1))
+            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/baytrail_64p/symbols/system/lib64/lib%s.so -f %s' % (match.group(2), match.group(1))
             result = execute(cmd, return_output=True, show_command=False)
             print result[1]
 
