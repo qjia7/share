@@ -169,6 +169,7 @@ examples:
     parser.add_argument('--target-module', dest='target_module', help='target module to build', choices=['chrome', 'webview', 'content_shell'], default='webview')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
     parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
+    parser.add_argument('--just-out', dest='just_out', help='stick to out, instead of out-x86_64/out', action='store_true')
 
     group_test = parser.add_argument_group('test')
     group_test.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
@@ -179,6 +180,7 @@ examples:
     group_test.add_argument('--test-command', dest='test_command', help='test command split by ","')
     group_test.add_argument('--test-dryrun', dest='test_dryrun', help='dry run test', action='store_true')
     group_test.add_argument('--test-verbose', dest='test_verbose', help='verbose output for test', action='store_true')
+    group_test.add_argument('--test-filter', dest='test_filter', help='filter for test')
     group_test.add_argument('--gtest-suite', dest='gtest_suite', help='gtest suite')
     group_test.add_argument('--instrumentation-suite', dest='instrumentation_suite', help='instrumentation suite')
 
@@ -236,7 +238,10 @@ def setup():
 
     dir_src = dir_root + '/src'
     test_type = args.test_type
-    dir_out_test_type = dir_src + '/out-' + target_arch + '/out/' + test_type.capitalize()
+    if args.just_out:
+        dir_out_test_type = dir_src + '/out/' + test_type.capitalize()
+    else:
+        dir_out_test_type = dir_src + '/out-' + target_arch + '/out/' + test_type.capitalize()
     dir_test = dir_root + '/test'
     dir_time = dir_test + '/' + time_stamp
 
@@ -365,7 +370,10 @@ def build(force=False):
         else:
             target_arch_temp = 'x64'
 
-        command = bashify('. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp + ' --generator-output out-' + target_arch)
+        command = bashify('. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp)
+        if not args.just_out:
+            command += ' --generator-output out-' + target_arch
+
         result = execute(command, show_progress=True)
         if result[0]:
             error('Failed to generate makefile')
@@ -496,18 +504,27 @@ def _test_run_device(index_device, results):
                 if command == 'instrumentation':
                     apks = [suite, suite.replace('Test', '')]
                     for apk in apks:
-                        result = execute('CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/adb_install_apk.py --apk=%s.apk --%s' % (apk, test_type), interactive=True)
+                        cmd = 'src/build/android/adb_install_apk.py --apk=%s.apk --%s' % (apk, test_type)
+                        if not args.just_out:
+                            cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out ' + cmd
+                        result = execute(cmd, interactive=True)
                         if result[0]:
                             warning('Failed to install "' + suite + '"')
 
-                cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out src/build/android/test_runner.py ' + command
+                cmd = 'src/build/android/test_runner.py ' + command
+                if not args.just_out:
+                    cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out ' + cmd
+
                 # test command specific cmd
                 if command == 'gtest':
                     cmd += ' -s ' + suite + ' --num_retries 0 -t 60'
                 elif command == 'instrumentation':
                     cmd += ' --test-apk ' + suite
 
-                (filter_suite, count_filter_suite) = _calc_filter(device_type, target_arch, suite)
+                if args.test_filter:
+                    filter_suite = args.test_filter
+                else:
+                    (filter_suite, count_filter_suite) = _calc_filter(device_type, target_arch, suite)
                 cmd += ' -f "' + filter_suite + '"'
                 cmd += ' -d ' + device + ' --' + test_type
                 if args.test_verbose:
