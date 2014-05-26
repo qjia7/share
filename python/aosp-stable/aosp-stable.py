@@ -544,24 +544,25 @@ def _backup_one(arch, device, module):
             }
 
         elif device == 'generic':
+            backup_files_common = {
+                #'platforms': 'development/tools/emulator/skins',
+                'development/tools/emulator': 'development/tools/emulator/skins',
+
+                #'tools': [
+                'out/host/linux-x86': [
+                    'out/host/linux-x86/bin',
+                    'out/host/linux-x86/framework',
+                    'out/host/linux-x86/lib',
+                    'out/host/linux-x86/usr',
+                ],
+
+                #'tools/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
+                'prebuilts/android-emulator/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
+            }
             if arch == 'x86_64':
-                backup_files = {
-                    #'platforms': 'development/tools/emulator/skins',
-                    'development/tools/emulator': 'development/tools/emulator/skins',
-
-                    #'tools': [
-                    'out/host/linux-x86': [
-                        'out/host/linux-x86/bin',
-                        'out/host/linux-x86/framework',
-                        'out/host/linux-x86/lib',
-                        'out/host/linux-x86/usr',
-                    ],
-
+                backup_files_specific = {
                     #'tools/bin': 'prebuilts/android-emulator/linux-x86_64/emulator64-x86',
                     'prebuilts/android-emulator/linux-x86_64': ['prebuilts/android-emulator/linux-x86_64/emulator64-x86', 'prebuilts/android-emulator/linux-x86_64/emulator'],
-
-                    #'tools/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
-                    'prebuilts/android-emulator/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
 
                     'prebuilts/android-emulator/linux-x86_64/lib': 'prebuilts/android-emulator/linux-x86_64/lib/*',
 
@@ -581,7 +582,9 @@ def _backup_one(arch, device, module):
                     'prebuilts/qemu-kernel/x86_64': 'prebuilts/qemu-kernel/x86_64/kernel-qemu',
                 }
             elif arch == 'x86':
-                pass
+                backup_files_specific = {}
+
+            backup_files = dict(backup_files_common, **backup_files_specific)
 
     name = timestamp + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
