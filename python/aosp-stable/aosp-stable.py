@@ -41,7 +41,6 @@ patches_build = {
         '0001-Make-browser-preference-fragment-valid.patch',
         '0002-Fix-a-crash-when-creating-an-incognito-tab-on-tablet.patch',
     ],
-    'external/chromium_org/src': ['0001-patch-from-issue-274153002.patch'],
     'external/chromium_org': ['0001-Ask-driver-for-driver-specific-extension.patch'],
 }
 
@@ -189,6 +188,11 @@ def patch(patches, force=False):
 
     for dir_repo in patches:
         if not os.path.exists(dir_repo):
+            continue
+
+        if os.path.exists('external/chromium_org/src') and dir_repo == 'external/chromium_org':
+            continue
+        elif not os.path.exists('external/chromium_org/src') and dir_repo == 'external/chromium_org/src':
             continue
         for patch in patches[dir_repo]:
             path_patch = dir_script + '/patches/' + patch
