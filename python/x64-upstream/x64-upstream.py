@@ -377,9 +377,10 @@ def build(force=False):
         else:
             target_arch_temp = 'x64'
 
-        command = bashify('. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp)
+        command = '. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp
         if not args.just_out:
             command += ' --generator-output out-' + target_arch
+        command = bashify(command)
 
         result = execute(command, show_progress=True)
         if result[0]:
