@@ -1,0 +1,26 @@
+From a905209fe61299c1dd049938f740ad23e3b481ae Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Tue, 27 May 2014 13:49:04 +0800
+Subject: [PATCH] Change v8 path for libpac
+
+Change-Id: I1c81bacda8c681e339308ae2143cd705f98d908a
+---
+ Android.mk | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/Android.mk b/Android.mk
+index 335ff5e..4272341 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -18,7 +18,7 @@ LOCAL_CFLAGS += \
+   -Wno-format \
+   -Wno-unused-parameter \
+ 
+-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src external/chromium_org/v8
++LOCAL_C_INCLUDES += $(LOCAL_PATH)/src external/chromium_org/src/v8
+ 
+ # Temporarily disable arm64 as WebView isn't being built there yet.
+ LOCAL_MODULE_UNSUPPORTED_TARGET_ARCH := arm64
+-- 
+1.9.1
+

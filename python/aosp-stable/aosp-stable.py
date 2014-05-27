@@ -19,6 +19,7 @@ devices_type = []
 chromium_version = ''
 ip = '192.168.42.1'
 timestamp = ''
+use_upstream_chromium = False
 
 patches_init = {
     '.repo/manifests': ['0001-Replace-webview-and-chromium_org.patch'],
@@ -35,12 +36,21 @@ patches_generic_disable_2nd_arch = {
     'build': ['0001-generic_x86_64-Disable-2nd-arch.patch']
 }
 
-patches_build = {
+patches_build = {}
+
+patches_build_common = {
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
     'packages/apps/Browser': [
         '0001-Make-browser-preference-fragment-valid.patch',
         '0002-Fix-a-crash-when-creating-an-incognito-tab-on-tablet.patch',
     ],
+}
+
+patches_build_upstream_chromium = {
+    'external/chromium-libpac': ['0001-Change-v8-path-for-libpac.patch']
+}
+
+patches_build_aosp_chromium = {
     'external/chromium_org': ['0001-Ask-driver-for-driver-specific-extension.patch'],
 }
 
@@ -91,7 +101,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, devices_type, timestamp
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, devices_type, timestamp, use_upstream_chromium, patches_build
 
     # Ensure device is connected if available
     connect_device()
@@ -151,6 +161,14 @@ def setup():
 
     os.chdir(dir_root)
 
+    if os.path.exists('external/chromium_org/src'):
+        use_upstream_chromium = True
+
+    if use_upstream_chromium:
+        patches_build = dict(patches_build_common, **patches_build_upstream_chromium)
+    else:
+        patches_build = dict(patches_build_common, **patches_build_aosp_chromium)
+
 
 def init():
     if not args.init:
@@ -190,10 +208,6 @@ def patch(patches, force=False):
         if not os.path.exists(dir_repo):
             continue
 
-        if os.path.exists('external/chromium_org/src') and dir_repo == 'external/chromium_org':
-            continue
-        elif not os.path.exists('external/chromium_org/src') and dir_repo == 'external/chromium_org/src':
-            continue
         for patch in patches[dir_repo]:
             path_patch = dir_script + '/patches/' + patch
             if _patch_applied(dir_repo, path_patch):
