@@ -391,6 +391,15 @@ def analyze():
     if not args.analyze:
         return
 
+    if len(target_archs) > 1:
+        error('You need to specify the target arch')
+
+    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+        error('Only baytrail is supported to analyze')
+
+    arch = target_archs[0]
+    device = target_devices[0]
+
     count_line_max = 1000
     count_valid_max = 30
 
@@ -417,7 +426,7 @@ def analyze():
         match = pattern.search(line)
         if match:
             print line
-            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/baytrail_64p/symbols/system/lib64/lib%s.so -f %s' % (match.group(2), match.group(1))
+            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/%s/symbols/system/lib64/lib%s.so -f %s' % (_get_product(arch, device), match.group(2), match.group(1))
             result = execute(cmd, return_output=True, show_command=False)
             print result[1]
 
@@ -430,29 +439,39 @@ def push():
     if not args.push:
         return
 
+    if len(target_archs) > 1:
+        error('You need to specify the target arch')
+
+    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+        error('Only baytrail is supported to analyze')
+
+    arch = target_archs[0]
+    device = target_devices[0]
+
     if args.target_module == 'all':
         modules = ['libwebviewchromium', 'webview']
     else:
         modules = args.target_module.split(',')
 
-    cmd = 'adb root && adb remount'
+    cmd = 'adb root && adb remount && adb push out/target/product/%s' % _get_product(arch, device)
 
     for module in modules:
         if module == 'browser':
-            cmd += ' && adb push out/target/product/baytrail_64/system/app/Browser.apk /system/app'
+            cmd += '/system/app/Browser.apk /system/app'
         if module == 'libwebviewchromium':
-            cmd += ' && adb push out/target/product/baytrail_64/obj/lib/libwebviewchromium.so /system/lib64'
+            cmd += '/obj/lib/libwebviewchromium.so /system/lib64'
         elif module == 'webview':
-            cmd += ' && adb push out/target/product/baytrail_64/system/framework/webviewchromium.jar /system/framework'
-
-    if len(modules) == 1 and modules[0] == 'browser':
-        cmd += ''
-    elif len(modules) > 0:
-        cmd += ' && adb shell stop && adb shell start'
+            cmd += '/system/framework/webviewchromium.jar /system/framework'
 
     result = execute(cmd)
     if result[0]:
         error('Failed to push binaries to system')
+
+    if len(modules) == 1 and modules[0] == 'browser':
+        pass
+    elif len(modules) > 0:
+        hack_reboot(force=True)
+        # adb shell stop && adb shell start
 
 
 def hack_app_process():
