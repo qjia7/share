@@ -510,6 +510,10 @@ def _test_run_device(index_device, results):
         os.mkdir(dir_device_name)
 
     if not args.test_dryrun:
+        # Fake /storage/emulated/0
+        cmd = 'adb root && adb remount && adb shell "mount -o rw,remount rootfs / && chmod 777 /mnt/sdcard && cd /storage/emulated && ln -s legacy 0"'
+        cmd = cmd.replace('adb', 'adb -s ' + device)
+        execute(cmd)
         for command in test_suite:
             for index, suite in enumerate(test_suite[command]):
                 if results[command][index] == 'FAIL':
@@ -532,9 +536,10 @@ def _test_run_device(index_device, results):
 
                 # test command specific cmd
                 if command == 'gtest':
-                    cmd += ' -s ' + suite + ' --num_retries 0 -t 60'
+                    cmd += ' -s ' + suite + ' -t 60'
                 elif command == 'instrumentation':
                     cmd += ' --test-apk ' + suite
+                cmd += ' --num_retries 0'
 
                 if args.test_filter:
                     filter_suite = args.test_filter
