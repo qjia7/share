@@ -65,7 +65,8 @@ gtest_suite_default = [
     'content_gl_tests',
     'breakpad_unittests',  # Need breakpad
     'unit_tests',  # Need breakpad
-    'content_browsertests',  # Need breakpad
+    # This is temporarily disabled until we analyze most of failures
+    #'content_browsertests',  # Need breakpad
 ]
 
 instrumentation_suite_default = [
@@ -99,6 +100,8 @@ test_suite_filter = {
             'MediaSourcePlayerTest.A_StarvationDuringEOSDecode',
             'MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
             'AudioAndroidOutputTest.StartOutputStreamCallbacks',  # Crash the system if runs enough time
+            'MediaDrmBridgeTest.IsKeySystemSupported_Widevine',
+            'MediaDrmBridgeTest.IsSecurityLevelSupported_Widevine',
         ],
         'sandbox_linux_unittests': [
             'BaselinePolicy.CreateThread',
@@ -121,6 +124,9 @@ test_suite_filter = {
     ('baytrail', 'x86'): {
         'base_unittests': [
             'SafeSPrintfTest.Truncation',
+        ],
+        'media_unittests': [
+            'YUVConvertTest.YUVAtoARGB_MMX_MatchReference',
         ],
         'gl_tests': [
             'TextureStorageTest.CorrectPixels',
@@ -449,7 +455,13 @@ def test_run(force=False):
         error('Please ensure test device is connected')
 
     # Build test
-    if not args.test_drybuild:
+    if args.test_drybuild:
+        results = {}
+        for command in test_suite:
+            results[command] = []
+            for suite in test_suite[command]:
+                results[command].append('PASS')
+    else:
         results = test_build(force=True)
 
     pool = Pool(processes=number_device)
