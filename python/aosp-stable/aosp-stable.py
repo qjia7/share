@@ -349,8 +349,8 @@ def start_emu():
         if args.dir_emu:
             dir_backup = args.dir_emu
         else:
-            result = execute('ls -t --group-directories-first backup', return_output=True)
-            dir_backup = dir_root + '/backup/' + result[1].split('\n')[0]
+            result = execute('ls -t -d --group-directories-first backup/*generic*', return_output=True)
+            dir_backup = dir_root + '/' + result[1].split('\n')[0]
         backup_dir(dir_backup)
         #combo = _get_combo(arch, 'generic')
         #cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img')
@@ -362,7 +362,7 @@ def start_emu():
         # 4. Rely on several environmental variables, and use emulator instead of emulator64-x86
         # 5. Skin still loads HVGA/hardware.ini from source code dir.
 
-        if not os.path.exists(dir_root + '/sdcard.img'):
+        if not os.path.exists(dir_root + '/sdcard-%s.img' % arch):
             error('Please put sdcard.img into ' + dir_root)
         execute('rm -f out/target/product/%s/userdata-qemu.img' % product)
         cmd = '''
