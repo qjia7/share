@@ -578,7 +578,11 @@ def _backup_one(arch, device, module):
     else:  # module == 'system'
         if device == 'baytrail':
             backup_files = {
-                '.': 'out/target/product/' + product + '/live.img'
+                '.': [
+                    'out/target/product/' + product + '/boot.img',
+                    'out/target/product/' + product + '/recovery.img',
+                    'out/target/product/' + product + '/system.img',
+                ],
             }
 
         elif device == 'generic':
