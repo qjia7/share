@@ -111,6 +111,23 @@ test_suite_filter = {
         # All fail due to [ERROR:gl_context_egl.cc(178)] eglSwapInterval failed with error EGL_BAD_NATIVE_WINDOW
         'content_browsertests': [
         ],
+        'ChromeShellTest': [
+            # [clean] Context menu did not have window focus.
+            # If we manually sleep a few seconds after the context menu popup, they will pass.
+            'contextmenu.ContextMenuTest#testDismissContextMenuOnBack',
+            'contextmenu.ContextMenuTest#testDismissContextMenuOnClick',
+
+            # [clean] sync-url is a required parameter for the sync tests
+            # Not important
+            'sync.SyncTest#testAboutSyncPageDisplaysCurrentSyncStatus',
+            'sync.SyncTest#testDisableAndEnableSync',
+            'sync.SyncTest#testGetAboutSyncInfoYieldsValidData',
+
+            # [clean] Never Panel not opened
+            # Not important
+            'translate.TranslateInfoBarTest#testTranslateNeverPanel',
+
+        ]
     },
     ('baytrail', 'x86_64'): {},
     ('baytrail', 'x86'): {
