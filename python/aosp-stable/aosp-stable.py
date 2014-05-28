@@ -349,8 +349,8 @@ def start_emu():
         if args.dir_emu:
             dir_backup = args.dir_emu
         else:
-            result = execute('ls -t backup', return_output=True)
-            dir_backup = 'backup/' + result[1].split('\n')[0]
+            result = execute('ls -t --group-directories-first backup', return_output=True)
+            dir_backup = dir_root + '/backup/' + result[1].split('\n')[0]
         backup_dir(dir_backup)
         #combo = _get_combo(arch, 'generic')
         #cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img')
@@ -366,21 +366,22 @@ def start_emu():
             error('Please put sdcard.img into ' + dir_root)
         execute('rm -f out/target/product/%s/userdata-qemu.img' % product)
         cmd = '''
-ANDROID_BUILD_TOP=%s \
-ANDROID_PRODUCT_OUT=out/target/product/%s \
-TARGET_PRODUCT=aosp_%s \
-prebuilts/android-emulator/linux-%s/emulator -verbose -show-kernel -no-snapshot -gpu off -memory 512 \
+ANDROID_BUILD_TOP=%(dir_root)s \
+ANDROID_PRODUCT_OUT=%(dir_backup)s/out/target/product/%(product)s \
+TARGET_PRODUCT=aosp_%(arch)s \
+%(dir_backup)s/prebuilts/android-emulator/linux-%(arch)s/emulator -verbose -show-kernel -no-snapshot -gpu off -memory 512 \
 -skin HVGA \
--skindir development/tools/emulator/skins \
--kernel prebuilts/qemu-kernel/%s/kernel-qemu \
--ramdisk out/target/product/%s/ramdisk.img \
--sysdir out/target/product/%s \
--system out/target/product/%s/system.img \
--datadir out/target/product/%s \
--cache out/target/product/%s/cache.img \
--initdata out/target/product/%s/userdata.img \
--sdcard %s/sdcard.img \
-''' % (dir_root, product, arch, arch, arch, product, product, product, product, product, product, dir_root)
+-skindir %(dir_backup)s/development/tools/emulator/skins \
+-kernel %(dir_backup)s/prebuilts/qemu-kernel/%(arch)s/kernel-qemu \
+-ramdisk %(dir_backup)s/out/target/product/%(product)s/ramdisk.img \
+-sysdir %(dir_backup)s/out/target/product/%(product)s \
+-system %(dir_backup)s/out/target/product/%(product)s/system.img \
+-datadir %(dir_backup)s/out/target/product/%(product)s \
+-cache %(dir_backup)s/out/target/product/%(product)s/cache.img \
+-initdata %(dir_backup)s/out/target/product/%(product)s/userdata.img \
+-sdcard %(dir_root)s/sdcard-%(arch)s.img \
+''' % {'dir_root': dir_root, 'dir_backup': dir_backup, 'product': product, 'arch': arch}
+
 #-data out/target/product/generic_x86_64/userdata-qemu.img \
 
         execute(cmd, interactive=True)
