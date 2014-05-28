@@ -108,14 +108,6 @@ test_suite_filter = {
             'BaselinePolicy.DisallowedCloneFlagCrashes',
             'BrokerProcess.RecvMsgDescriptorLeak',
         ],
-        'unit_tests': [
-            'ComponentUpdaterTest.CheckReRegistration',
-            'ComponentUpdaterTest.DifferentialUpdate',
-            'ComponentUpdaterTest.DifferentialUpdateFailErrorcode',
-            'ComponentUpdaterTest.OnDemandUpdate',
-            'CrxDownloaderTest.OneUrl',
-            'CrxDownloaderTest.TwoUrls_SecondInvalid',
-        ],
         # All fail due to [ERROR:gl_context_egl.cc(178)] eglSwapInterval failed with error EGL_BAD_NATIVE_WINDOW
         'content_browsertests': [
         ],
@@ -131,7 +123,6 @@ test_suite_filter = {
         'gl_tests': [
             'TextureStorageTest.CorrectPixels',
         ],
-
     },
     ('generic', 'all'): {},
     ('generic', 'x86_64'): {},
