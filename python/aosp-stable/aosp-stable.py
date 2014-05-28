@@ -47,7 +47,7 @@ patches_build_common = {
 }
 
 patches_build_upstream_chromium = {
-    'external/chromium-libpac': ['0001-Change-v8-path-for-libpac.patch']
+    'external/chromium-libpac': ['0001-libpac-Change-v8-path-and-v8-tools-module-name.patch']
 }
 
 patches_build_aosp_chromium = {

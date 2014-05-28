@@ -1,0 +1,36 @@
+From fbb466227c073db2bc239ca062075b16a7c79634 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Wed, 28 May 2014 11:24:27 +0800
+Subject: [PATCH] libpac: Change v8 path and v8 tools module name
+
+Change-Id: Iaf36411520a0136ea4a62b8b775e021d946a39b0
+---
+ Android.mk | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/Android.mk b/Android.mk
+index 335ff5e..22ce8b1 100644
+--- a/Android.mk
++++ b/Android.mk
+@@ -18,15 +18,15 @@ LOCAL_CFLAGS += \
+   -Wno-format \
+   -Wno-unused-parameter \
+ 
+-LOCAL_C_INCLUDES += $(LOCAL_PATH)/src external/chromium_org/v8
++LOCAL_C_INCLUDES += $(LOCAL_PATH)/src external/chromium_org/src/v8
+ 
+ # Temporarily disable arm64 as WebView isn't being built there yet.
+ LOCAL_MODULE_UNSUPPORTED_TARGET_ARCH := arm64
+ 
+ # Depend on V8 from WebView
+ # DO NOT COPY without permission from WebView Owners
+-LOCAL_STATIC_LIBRARIES_x86_64 := v8_tools_gyp_v8_base_x64_gyp
+-LOCAL_STATIC_LIBRARIES_x86 := v8_tools_gyp_v8_base_ia32_gyp
++LOCAL_STATIC_LIBRARIES_x86_64 := v8_tools_gyp_v8_base_gyp
++LOCAL_STATIC_LIBRARIES_x86 := v8_tools_gyp_v8_base_gyp
+ LOCAL_STATIC_LIBRARIES_arm64 := v8_tools_gyp_v8_base_arm64_gyp
+ LOCAL_STATIC_LIBRARIES_arm := v8_tools_gyp_v8_base_arm_gyp
+ LOCAL_STATIC_LIBRARIES_mips := v8_tools_gyp_v8_base_mipsel_gyp
+-- 
+1.9.1
+
