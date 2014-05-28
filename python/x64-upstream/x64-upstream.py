@@ -541,6 +541,18 @@ def _test_run_device(index_device, results):
                         if result[0]:
                             warning('Failed to install "' + suite + '"')
 
+                    # push test data
+                    cmd = 'adb -s %s push ' % device
+
+                    if suite == 'ContentShellTest':
+                        cmd += 'src/content/test/data/android/device_files /storage/emulated/0/content/test/data'
+                    elif suite == 'ChromeShellTest':
+                        cmd += 'src/chrome/test/data/android/device_files /storage/emulated/0/chrome/test/data'
+                    if suite == 'AndroidWebViewTest':
+                        cmd += 'src/android_webview/test/data/device_files /storage/emulated/0/chrome/test/data/webview'
+
+                    execute(cmd)
+
                 cmd = 'src/build/android/test_runner.py ' + command
                 if not args.just_out:
                     cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out ' + cmd
