@@ -114,18 +114,21 @@ test_suite_filter = {
         'ChromeShellTest': [
             # [clean] Context menu did not have window focus.
             # If we manually sleep a few seconds after the context menu popup, they will pass.
-            'contextmenu.ContextMenuTest#testDismissContextMenuOnBack',
-            'contextmenu.ContextMenuTest#testDismissContextMenuOnClick',
+            'ContextMenuTest#testDismissContextMenuOnBack',
+            'ContextMenuTest#testDismissContextMenuOnClick',
+
+            # This would pass if we run it alone
+            #'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',
 
             # [clean] sync-url is a required parameter for the sync tests
             # Not important
-            'sync.SyncTest#testAboutSyncPageDisplaysCurrentSyncStatus',
-            'sync.SyncTest#testDisableAndEnableSync',
-            'sync.SyncTest#testGetAboutSyncInfoYieldsValidData',
+            'SyncTest#testAboutSyncPageDisplaysCurrentSyncStatus',
+            'SyncTest#testDisableAndEnableSync',
+            'SyncTest#testGetAboutSyncInfoYieldsValidData',
 
             # [clean] Never Panel not opened
             # Not important
-            'translate.TranslateInfoBarTest#testTranslateNeverPanel',
+            'TranslateInfoBarTest#testTranslateNeverPanel',
 
         ]
     },
