@@ -29,7 +29,7 @@ patches_init2 = {
 }
 
 patches_baytrail_disable_2nd_arch = {
-    'device/intel/baytrail_64': ['0002-baytrail_64-Disable-2nd-arch.patch'],
+    'device/intel/baytrail_64p': ['0002-baytrail_64-Disable-2nd-arch.patch'],
 }
 
 patches_generic_disable_2nd_arch = {
