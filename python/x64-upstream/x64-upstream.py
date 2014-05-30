@@ -118,7 +118,7 @@ test_suite_filter = {
             'ContextMenuTest#testDismissContextMenuOnClick',
 
             # This would pass if we run it alone
-            #'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',
+            'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',
 
             # [clean] sync-url is a required parameter for the sync tests
             # Not important
