@@ -181,7 +181,7 @@ examples:
     parser.add_argument('--skip-mk', dest='skip_mk', help='skip the generation of makefile', action='store_true')
     parser.add_argument('-d', '--dir_root', dest='dir_root', help='set root directory')
     parser.add_argument('--devices', dest='devices', help='device id list separated by ","', default='')
-    parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'arm'], default='x86_64')
+    parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'arm', 'arm64'], default='x86_64')
     parser.add_argument('--target-module', dest='target_module', help='target module to build', choices=['chrome', 'webview', 'content_shell'], default='webview')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
     parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
@@ -384,8 +384,12 @@ def build(force=False):
 
         if target_arch == 'x86':
             target_arch_temp = 'ia32'
-        else:
+        elif target_arch == 'x64':
             target_arch_temp = 'x64'
+        elif target_arch == 'arm':
+            target_arch_temp = 'arm'
+        elif target_arch == 'arm64':
+            target_arch_temp = 'arm64'
 
         command = '. build/android/envsetup.sh && build/gyp_chromium -Dwerror= -Dtarget_arch=' + target_arch_temp
         if not args.just_out:
