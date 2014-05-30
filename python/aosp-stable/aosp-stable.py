@@ -78,6 +78,7 @@ examples:
     parser.add_argument('--disable-2nd-arch', dest='disable_2nd_arch', help='disable 2nd arch, only effective for baytrail', action='store_true')
     parser.add_argument('--burn-image', dest='burn_image', help='burn live image')
     parser.add_argument('--flash-image', dest='flash_image', help='flash the boot and system', action='store_true')
+    parser.add_argument('--file-image', dest='file_image', help='image tgz file')
     parser.add_argument('--backup', dest='backup', help='backup output to both local and samba server', action='store_true')
     parser.add_argument('--backup-skip-server', dest='backup_skip_server', help='only local backup', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
@@ -87,7 +88,6 @@ examples:
     parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
     parser.add_argument('--hack-app-process', dest='hack_app_process', help='hack app_process', action='store_true')
-    parser.add_argument('--hack-reboot', dest='hack_reboot', help='hack reboot to workaround dalvik cache issue', action='store_true')
     parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
@@ -241,7 +241,7 @@ def build():
             execute(cmd, interactive=True)
 
         if module == 'system':
-            cmd = '. build/envsetup.sh && lunch ' + combo + ' && make'
+            cmd = '. build/envsetup.sh && lunch ' + combo + ' && make dist'
         elif module == 'browser' or module == 'webview' or module == 'libwebviewchromium':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && '
             if args.build_no_dep:
@@ -311,6 +311,26 @@ def flash_image():
     device = target_devices[0]
     path_fastboot = dir_linux + '/fastboot'
 
+    if args.file_image:
+        file_image = file_image
+    else:
+        file_image = 'out/dist/aosp_%s-om-factory.tgz' % _get_product(arch, device)
+
+    dir_extract = '/tmp/' + get_datetime()
+    execute('mkdir ' + dir_extract)
+    execute('tar xvf ' + file_image + ' -C ' + dir_extract, interactive=True)
+    backup_dir(dir_extract)
+
+    # Hack flash-all.sh to skip sleep and use our own fastboot
+    for line in fileinput.input('flash-all.sh', inplace=1):
+        if re.search('sleep', line):
+            line = line.replace('sleep', '#sleep')
+        elif re.match('fastboot', line):
+            line = dir_linux + '/' + line
+        # We can not use print here as it will generate blank line
+        sys.stdout.write(line)
+    fileinput.close()
+
     # This command would not return so we have to use timeout here
     execute('timeout 5s adb reboot bootloader')
     sleep_sec = 3
@@ -320,24 +340,19 @@ def flash_image():
             time.sleep(sleep_sec)
             continue
 
-        android_product_out = dir_out + '/target/product/' + _get_product(arch, device)
-        cmd = '%s -t %s oem unlock' % (path_fastboot, ip)
-        execute(cmd)
-        cmd = '%s -t %s erase cache && %s -t %s erase data && %s -t %s erase system && ANDROID_PRODUCT_OUT=%s %s -t %s flashall' % (path_fastboot, ip, path_fastboot, ip, path_fastboot, ip, android_product_out, path_fastboot, ip)
-        execute(cmd, interactive=True)
-        # This command would not return so we have to use timeout here
-        cmd = 'timeout 10s %s -t %s reboot' % (path_fastboot, ip)
-        execute(cmd)
+    execute('./flash-all.sh -t ' + ip, interactive=True)
+    restore_dir()
+    execute('rm -rf ' + dir_extract)
 
-        # Wait until system is up
-        while not _device_connected():
-            info('Sleeping %s seconds' % str(sleep_sec))
-            time.sleep(sleep_sec)
-            connect_device()
+    # This command would not return so we have to use timeout here
+    cmd = 'timeout 10s %s -t %s reboot' % (path_fastboot, ip)
+    execute(cmd)
 
-        hack_reboot(force=True)
-
-        break
+    # Wait until system is up
+    while not _device_connected():
+        info('Sleeping %s seconds' % str(sleep_sec))
+        time.sleep(sleep_sec)
+        connect_device()
 
 
 def start_emu():
@@ -471,8 +486,7 @@ def push():
     if len(modules) == 1 and modules[0] == 'browser':
         pass
     elif len(modules) > 0:
-        hack_reboot(force=True)
-        # adb shell stop && adb shell start
+        execute('adb -s %(device)s shell stop && adb -s %(device)s shell start' % {'device': device})
 
 
 def hack_app_process():
@@ -494,20 +508,6 @@ def hack_app_process():
 
             if need_hack:
                 execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
-
-
-def hack_reboot(force=False):
-    if not args.hack_reboot and not force:
-        return
-
-    sleep_sec = 3
-    execute('adb connect 192.168.42.1 && adb -s 192.168.42.1:5555 root && adb -s 192.168.42.1:5555 remount && adb -s 192.168.42.1:5555 shell "stop zygote-secondary && stop zygote && rm -rf /data/dalvik-cache/*"')
-    execute('timeout 30s adb -s 192.168.42.1:5555 reboot')
-
-    while not _device_connected():
-        info('Sleeping %s seconds' % str(sleep_sec))
-        time.sleep(sleep_sec)
-        connect_device()
 
 
 def _sync_repo(dir, cmd):
@@ -579,9 +579,7 @@ def _backup_one(arch, device, module):
         if device == 'baytrail':
             backup_files = {
                 '.': [
-                    'out/target/product/' + product + '/boot.img',
-                    'out/target/product/' + product + '/recovery.img',
-                    'out/target/product/' + product + '/system.img',
+                    'out/dist/aosp_%s-om-factory.tgz' % _get_product(arch, device),
                 ],
             }
 
@@ -729,4 +727,3 @@ if __name__ == "__main__":
     analyze()
     push()
     hack_app_process()
-    hack_reboot()
