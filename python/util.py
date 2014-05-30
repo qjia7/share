@@ -311,7 +311,7 @@ def get_caller_name():
 
 
 def connect_device(ip='192.168.42.1'):
-    execute('adb disconnect %s && timeout 1s adb connect %s' % (ip, ip), interactive=True)
+    execute('timeout 1s adb disconnect %s && timeout 1s adb connect %s' % (ip, ip), interactive=True)
 ################################################################################
 
 
