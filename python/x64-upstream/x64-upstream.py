@@ -384,7 +384,7 @@ def build(force=False):
 
         if target_arch == 'x86':
             target_arch_temp = 'ia32'
-        elif target_arch == 'x64':
+        elif target_arch == 'x86_64':
             target_arch_temp = 'x64'
         elif target_arch == 'arm':
             target_arch_temp = 'arm'
@@ -428,8 +428,7 @@ def test_build(force=False):
     for command in test_suite:
         results[command] = []
         # test command specific build
-        if command == 'gtest':
-            _test_build_name(command, 'md5sum forwarder2')
+        _test_build_name(command, 'md5sum forwarder2')
 
         for suite in test_suite[command]:
             if command == 'gtest':
