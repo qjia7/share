@@ -1,14 +1,8 @@
-acr: android + chromium, for 32-bit build
-acr64: android + chromium, for 64-bit build
-android: for nexus image build.
+aosp: aosp upstream, for nexus image build
+aosp-cr: aosp upstream + upstream chromium, 32 & 64
 
+aosp-stable: pure aosp stable, 32 & 64
+aosp-stable-cr: aosp stable + upstream Chromium, 32 & 64
 
-android-ia: old abt, android, 64 bit
-abt-x64: new abt, android, 64 bit
-android: aosp, android, 32 bit
-
-
-
-chromium64-android: upstream, chromium, 64 bit
-chromium-android: upstream, chromium for android, 32 bit
-chromium-linux: upstream, chromium for linux, 32 bit
+chromium-android: upstream, chromium for android, 32 & 64
+chromium-linux: upstream, chromium for linux, 32 & 64
