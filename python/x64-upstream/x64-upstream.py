@@ -393,7 +393,7 @@ def build(force=False):
             command += ' --generator-output out-' + target_arch
         command = bashify(command)
 
-        result = execute(command, show_progress=True)
+        result = execute(command, interactive=True)
         if result[0]:
             error('Failed to generate makefile')
         restore_dir()
