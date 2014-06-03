@@ -312,7 +312,7 @@ def flash_image():
     path_fastboot = dir_linux + '/fastboot'
 
     if args.file_image:
-        file_image = file_image
+        file_image = args.file_image
     else:
         file_image = 'out/dist/aosp_%s-om-factory.tgz' % _get_product(arch, device)
 
@@ -339,6 +339,8 @@ def flash_image():
             info('Sleeping %s seconds' % str(sleep_sec))
             time.sleep(sleep_sec)
             continue
+        else:
+            break
 
     execute('./flash-all.sh -t ' + ip, interactive=True)
     restore_dir()
