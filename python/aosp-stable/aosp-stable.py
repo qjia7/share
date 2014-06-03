@@ -495,12 +495,11 @@ def push():
 
 
 def hack_app_process():
-    connect_device()
-
     if not args.hack_app_process:
         return
 
     for device in devices:
+        connect_device(device)
         if not execute_adb("test -d /system/lib64", device=device):
             continue
 
