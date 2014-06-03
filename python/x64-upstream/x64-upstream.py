@@ -216,9 +216,6 @@ examples:
 def setup():
     global dir_root, dir_src, test_type, dir_out_test_type, dir_test, dir_time, devices, devices_name, devices_type, target_arch, target_module, report_name, test_suite, time_stamp
 
-    # Ensure device is connected if available
-    connect_device()
-
     if args.time_fixed:
         time_stamp = get_datetime(format='%Y%m%d')
     else:
@@ -519,6 +516,9 @@ def _test_run_device(index_device, results):
     device_name = devices_name[index_device]
     device_type = devices_type[index_device]
     dir_device_name = dir_time + '-' + device_name
+
+    connect_device(device)
+
     if not os.path.exists(dir_device_name):
         os.mkdir(dir_device_name)
 

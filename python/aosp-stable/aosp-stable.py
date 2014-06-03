@@ -103,9 +103,6 @@ examples:
 def setup():
     global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, devices_type, timestamp, use_upstream_chromium, patches_build
 
-    # Ensure device is connected if available
-    connect_device()
-
     if args.time_fixed:
         timestamp = get_datetime(format='%Y%m%d')
     else:
@@ -283,6 +280,8 @@ def burn_image():
     if len(target_devices) > 1 or target_devices[0] != 'baytrail':
         error('Only baytrail can burn the image')
 
+    connect_device()
+
     arch = target_archs[0]
     device = target_devices[0]
     img = dir_out + '/target/product/' + _get_product(arch, device) + '/live.img'
@@ -300,6 +299,8 @@ def burn_image():
 def flash_image():
     if not args.flash_image:
         return
+
+    connect_device()
 
     if len(target_archs) > 1:
         error('You need to specify the target arch')
@@ -335,7 +336,7 @@ def flash_image():
     execute('timeout 5s adb reboot bootloader')
     sleep_sec = 3
     for i in range(0, 60):
-        if not _device_connected(cmd='%s devices' % path_fastboot):
+        if not device_connected(mode='bootloader'):
             info('Sleeping %s seconds' % str(sleep_sec))
             time.sleep(sleep_sec)
             continue
@@ -349,7 +350,7 @@ def flash_image():
     execute(cmd)
 
     # Wait until system is up
-    while not _device_connected():
+    while not device_connected():
         info('Sleeping %s seconds' % str(sleep_sec))
         time.sleep(sleep_sec)
         connect_device()
@@ -413,6 +414,8 @@ def analyze():
     if len(target_devices) > 1 or target_devices[0] != 'baytrail':
         error('Only baytrail is supported to analyze')
 
+    connect_device()
+
     arch = target_archs[0]
     device = target_devices[0]
 
@@ -464,6 +467,8 @@ def push():
     arch = target_archs[0]
     device = target_devices[0]
 
+    connect_device()
+
     if args.target_module == 'all':
         modules = ['libwebviewchromium', 'webview']
     else:
@@ -490,6 +495,8 @@ def push():
 
 
 def hack_app_process():
+    connect_device()
+
     if not args.hack_app_process:
         return
 
@@ -702,15 +709,6 @@ def _patch_remove(patches):
     backup_dir(dir_repo)
     execute('git reset --hard HEAD^')
     restore_dir()
-
-
-# Check if device is connected in bootloader or system
-def _device_connected(ip='192.168.42.1', cmd='adb devices'):
-    result = execute(cmd, return_output=True, show_command=False)
-    if re.search(ip, result[1]):
-        return True
-    else:
-        return False
 
 
 if __name__ == "__main__":

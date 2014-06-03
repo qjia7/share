@@ -310,8 +310,33 @@ def get_caller_name():
     return inspect.stack()[1][3]
 
 
-def connect_device(ip='192.168.42.1'):
-    execute('timeout 1s adb disconnect %s && timeout 1s adb connect %s' % (ip, ip), interactive=True)
+# device: specific device. Do not use :5555 as -t option does not accept this.
+# mode: system for normal mode, bootloader for bootloader mode
+def device_connected(device='192.168.42.1', mode='system'):
+    if mode == 'system':
+        result = execute('timeout 1s adb -s %s shell \ls' % device)
+    elif mode == 'bootloader':
+        path_fastboot = dir_linux + '/fastboot'
+        result = execute('timeout 1s %s -t %s getvar all' % (path_fastboot, device))
+
+    if result[0]:
+        return False
+    else:
+        return True
+
+
+# Try to connect to device in case it's not online
+def connect_device(device='192.168.42.1', mode='system'):
+    if mode == 'system':
+        if device_connected(device, mode):
+            return True
+
+        execute('timeout 1s adb disconnect %(device)s && timeout 1s adb connect %(device)s' % {'device': device}, interactive=True)
+        return device_connected(device, mode)
+    elif mode == 'bootloader':
+        return device_connected(device, mode)
+
+
 ################################################################################
 
 
