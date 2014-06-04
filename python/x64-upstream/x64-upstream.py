@@ -131,7 +131,29 @@ test_suite_filter = {
 
         ]
     },
-    ('baytrail', 'x86_64'): {},
+    ('baytrail', 'x86_64'): {
+        'components_unittests': [
+            'JSONSchemaValidatorCPPTest.Test',
+            'RegexSetMatcherTest.MatchRegexes',
+            'RegexSetMatcherTest.CaseSensitivity',
+            'URLMatcherTest.FullTest',
+            'URLMatcherTest.TestOriginAndPathRegExPositive',
+            'URLMatcherTest.TestOriginAndPathRegExNegative',
+        ],
+        'content_unittests': [
+            'RenderViewHostTest.BadMessageHandlerInputEventAck',
+            'RenderViewHostTest.BadMessageHandlerRenderViewHost',
+            'RenderViewHostTest.BadMessageHandlerRenderWidgetHost',
+            'IndexedDBIOErrorTest.CleanUpTest',
+            'IndexedDBNonRecoverableIOErrorTest.NuancedCleanupTest',
+            'SharedCryptoTest.DigestSampleSets',
+            'SharedCryptoTest.DigestSampleSetsInChunks',
+            'SharedCryptoTest.HMACSampleSets',
+            'MediaStreamImplTest.GenerateMediaStream',
+            'MediaStreamImplTest.GenerateTwoMediaStreamsWithSameSource',
+            'MediaStreamImplTest.StopLocalTracksWhenTwoStreamUseSameDevices',
+        ],
+    },
     ('baytrail', 'x86'): {
         'base_unittests': [
             'SafeSPrintfTest.Truncation',
