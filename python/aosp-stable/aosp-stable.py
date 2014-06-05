@@ -33,7 +33,6 @@ patches_build = {}
 patches_build_common = {
     'packages/apps/Browser': [
         '0001-Make-browser-preference-fragment-valid.patch',
-        '0002-Fix-a-crash-when-creating-an-incognito-tab-on-tablet.patch',
     ],
 }
 
