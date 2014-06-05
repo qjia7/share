@@ -141,9 +141,6 @@ test_suite_filter = {
             'URLMatcherTest.TestOriginAndPathRegExNegative',
         ],
         'content_unittests': [
-            'RenderViewHostTest.BadMessageHandlerInputEventAck',
-            'RenderViewHostTest.BadMessageHandlerRenderViewHost',
-            'RenderViewHostTest.BadMessageHandlerRenderWidgetHost',
             'IndexedDBIOErrorTest.CleanUpTest',
             'IndexedDBNonRecoverableIOErrorTest.NuancedCleanupTest',
             'SharedCryptoTest.DigestSampleSets',
