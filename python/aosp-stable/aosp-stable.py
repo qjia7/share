@@ -11,7 +11,7 @@ dir_out = ''
 dir_script = sys.path[0]
 dir_backup = 'backup'
 target_archs = []
-target_devices = []
+target_devices_type = []
 target_modules = []
 devices = []
 devices_name = []
@@ -26,14 +26,6 @@ patches_init = {
 }
 patches_init2 = {
     'manifests': ['0001-Replace-webview-and-chromium_org.patch'],
-}
-
-patches_baytrail_disable_2nd_arch = {
-    'device/intel/baytrail_64p': ['0002-baytrail_64-Disable-2nd-arch.patch'],
-}
-
-patches_generic_disable_2nd_arch = {
-    'build': ['0001-generic_x86_64-Disable-2nd-arch.patch']
 }
 
 patches_build = {}
@@ -82,7 +74,7 @@ examples:
     parser.add_argument('--backup-skip-server', dest='backup_skip_server', help='only local backup', action='store_true')
     parser.add_argument('--start-emu', dest='start_emu', help='start the emulator. Copy http://ubuntu-ygu5-02.sh.intel.com/aosp-stable/sdcard.img to dir_root and rename it as sdcard-<arch>.img', action='store_true')
     parser.add_argument('--dir-emu', dest='dir_emu', help='emulator dir')
-    parser.add_argument('--analyze', dest='analyze', help='analyze tombstone or trace file for libwebviewchromium.so')
+    parser.add_argument('--analyze', dest='analyze', help='analyze tombstone or ANR file')
     parser.add_argument('--push', dest='push', help='push updates to system', action='store_true')
     parser.add_argument('--remove-out', dest='remove_out', help='remove out dir before build', action='store_true')
     parser.add_argument('--extra-path', dest='extra_path', help='extra path for execution, such as path for depot_tools')
@@ -90,7 +82,7 @@ examples:
     parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
-    parser.add_argument('--target-device', dest='target_device', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
+    parser.add_argument('--target-device-type', dest='target_device_type', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
     parser.add_argument('--target-module', dest='target_module', help='target module', choices=['libwebviewchromium', 'webview', 'browser', 'system', 'all'], default='system')
 
     args = parser.parse_args()
@@ -100,7 +92,7 @@ examples:
 
 
 def setup():
-    global dir_root, dir_chromium, dir_out, target_archs, target_devices, target_modules, chromium_version, devices, devices_name, devices_type, timestamp, use_upstream_chromium, patches_build
+    global dir_root, dir_chromium, dir_out, target_archs, target_devices_type, target_modules, chromium_version, devices, devices_name, devices_type, timestamp, use_upstream_chromium, patches_build
 
     if args.time_fixed:
         timestamp = get_datetime(format='%Y%m%d')
@@ -138,10 +130,10 @@ def setup():
     else:
         target_archs = args.target_arch.split(',')
 
-    if args.target_device == 'all':
-        target_devices = ['baytrail', 'generic']
+    if args.target_device_type == 'all':
+        target_devices_type = ['baytrail', 'generic']
     else:
-        target_devices = args.target_device.split(',')
+        target_devices_type = args.target_device_type.split(',')
 
     if args.target_module == 'all':
         target_modules = ['system']
@@ -224,11 +216,8 @@ def build():
     if args.remove_out:
         execute('rm -rf out')
 
-    for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
-        #_patch_cond(args.disable_2nd_arch and device == 'baytrail', patches_baytrail_disable_2nd_arch)
-        #_patch_cond(args.disable_2nd_arch and device == 'generic', patches_generic_disable_2nd_arch)
-
-        combo = _get_combo(arch, device)
+    for arch, device_type, module in [(arch, device_type, module) for arch in target_archs for device_type in target_devices_type for module in target_modules]:
+        combo = _get_combo(arch, device_type)
         if not args.build_skip_mk:
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-x86'
             if arch == 'x86_64':
@@ -258,15 +247,15 @@ def build():
         cmd = bashify(cmd)
         result = execute(cmd, interactive=True)
         if result[0]:
-            error('Failed to build %s %s %s' % (arch, device, module))
+            error('Failed to build %s %s %s' % (arch, device_type, module))
 
 
 def backup():
     if not args.backup:
         return
 
-    for arch, device, module in [(arch, device, module) for arch in target_archs for device in target_devices for module in target_modules]:
-        _backup_one(arch, device, module)
+    for arch, device_type, module in [(arch, device_type, module) for arch in target_archs for device_type in target_devices_type for module in target_modules]:
+        _backup_one(arch, device_type, module)
 
 
 def burn_image():
@@ -276,14 +265,14 @@ def burn_image():
     if len(target_archs) > 1:
         error('You need to specify the target arch')
 
-    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+    if len(target_devices_type) > 1 or target_devices_type[0] != 'baytrail':
         error('Only baytrail can burn the image')
 
     connect_device()
 
     arch = target_archs[0]
-    device = target_devices[0]
-    img = dir_out + '/target/product/' + _get_product(arch, device) + '/live.img'
+    device_type = target_devices_type[0]
+    img = dir_out + '/target/product/' + get_product(arch, device_type) + '/live.img'
     if not os.path.exists(img):
         error('Could not find the live image to burn')
 
@@ -304,17 +293,17 @@ def flash_image():
     if len(target_archs) > 1:
         error('You need to specify the target arch')
 
-    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+    if len(target_devices_type) > 1 or target_devices_type[0] != 'baytrail':
         error('Only baytrail can burn the image')
 
     arch = target_archs[0]
-    device = target_devices[0]
+    device_type = target_devices_type[0]
     path_fastboot = dir_linux + '/fastboot'
 
     if args.file_image:
         file_image = args.file_image
     else:
-        file_image = 'out/dist/aosp_%s-om-factory.tgz' % _get_product(arch, device)
+        file_image = 'out/dist/aosp_%s-om-factory.tgz' % get_product(arch, device_type)
 
     dir_extract = '/tmp/' + get_datetime()
     execute('mkdir ' + dir_extract)
@@ -332,7 +321,7 @@ def flash_image():
     fileinput.close()
 
     # This command would not return so we have to use timeout here
-    execute('timeout 5s adb reboot bootloader')
+    execute('timeout 5s ' + adb(cmd='reboot bootloader'))
     sleep_sec = 3
     for i in range(0, 60):
         if not device_connected(mode='bootloader'):
@@ -362,7 +351,7 @@ def start_emu():
         return
 
     for arch in target_archs:
-        product = _get_product(arch, 'generic')
+        product = get_product(arch, 'generic')
         if args.dir_emu:
             dir_backup = args.dir_emu
         else:
@@ -412,47 +401,12 @@ def analyze():
     if len(target_archs) > 1:
         error('You need to specify the target arch')
 
-    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+    if len(target_devices_type) > 1 or target_devices_type[0] != 'baytrail':
         error('Only baytrail is supported to analyze')
 
-    connect_device()
-
     arch = target_archs[0]
-    device = target_devices[0]
-
-    count_line_max = 1000
-    count_valid_max = 30
-
-    execute('adb connect ' + ip)
-    if args.analyze == 'tombstone':
-        result = execute('adb shell \ls /data/tombstones', return_output=True)
-        files = result[1].split('\n')
-        file_name = files[-2].strip()
-        execute('adb pull /data/tombstones/' + file_name + ' /tmp/')
-        result = execute('cat /tmp/' + file_name, return_output=True)
-        lines = result[1].split('\n')
-    elif args.analyze == 'anr':
-        execute('adb pull /data/anr/traces.txt /tmp/')
-        result = execute('cat /tmp/traces.txt', return_output=True)
-        lines = result[1].split('\n')
-
-    pattern = re.compile('pc (.*)  .*lib(webviewchromium|art|c)')
-    count_line = 0
-    count_valid = 0
-    for line in lines:
-        count_line += 1
-        if count_line > count_line_max:
-            return
-        match = pattern.search(line)
-        if match:
-            print line
-            cmd = 'prebuilts/gcc/linux-x86/x86/x86_64-linux-android-4.8/bin/x86_64-linux-android-addr2line -C -e out/target/product/%s/symbols/system/lib64/lib%s.so -f %s' % (_get_product(arch, device), match.group(2), match.group(1))
-            result = execute(cmd, return_output=True, show_command=False)
-            print result[1]
-
-            count_valid += 1
-            if count_valid > count_valid_max:
-                return
+    connect_device()
+    analyze_issue(dir_aosp=dir_root, arch=arch, type=args.analyze)
 
 
 def push():
@@ -462,11 +416,11 @@ def push():
     if len(target_archs) > 1:
         error('You need to specify the target arch')
 
-    if len(target_devices) > 1 or target_devices[0] != 'baytrail':
+    if len(target_devices_type) > 1 or target_devices_type[0] != 'baytrail':
         error('Only baytrail is supported to analyze')
 
     arch = target_archs[0]
-    device = target_devices[0]
+    device_type = target_devices_type[0]
 
     connect_device()
 
@@ -475,7 +429,7 @@ def push():
     else:
         modules = args.target_module.split(',')
 
-    cmd = 'adb root && adb remount && adb push out/target/product/%s' % _get_product(arch, device)
+    cmd = adb(cmd='root') + ' && ' + adb(cmd='remount') + ' && ' + adb(cmd='push out/target/product/%s' % get_product(arch, device_type))
 
     for module in modules:
         if module == 'browser':
@@ -492,7 +446,8 @@ def push():
     if len(modules) == 1 and modules[0] == 'browser':
         pass
     elif len(modules) > 0:
-        execute('adb -s %(device)s shell stop && adb -s %(device)s shell start' % {'device': device})
+        cmd = adb(cmd='shell stop') + ' && ' + adb(cmd='shell start')
+        execute(cmd)
 
 
 def hack_app_process():
@@ -501,11 +456,12 @@ def hack_app_process():
 
     for device in devices:
         connect_device(device)
-        if not execute_adb("test -d /system/lib64", device=device):
+        if not execute_adb_shell("test -d /system/lib64", device=device):
             continue
 
         for file in ['am', 'pm']:
-            execute('adb -s ' + device + ' pull /system/bin/' + file + ' /tmp/' + file)
+            cmd = adb('pull /system/bin/' + file + ' /tmp/' + file)
+            execute(cmd)
             need_hack = False
             for line in fileinput.input('/tmp/' + file, inplace=1):
                 if re.search('app_process ', line):
@@ -514,7 +470,8 @@ def hack_app_process():
                 sys.stdout.write(line)
 
             if need_hack:
-                execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
+                cmd = adb(cmd='root', device=device) + ' && ' + adb(cmd='remount', device=device) + ' && ' + adb('push /tmp/' + file + ' /system/bin/')
+                execute(cmd)
 
 
 def _sync_repo(dir, cmd):
@@ -525,31 +482,19 @@ def _sync_repo(dir, cmd):
     restore_dir()
 
 
-def _get_combo(arch, device):
+def _get_combo(arch, device_type):
     combo_prefix = 'aosp_'
     combo_suffix = '-eng'
 
-    if device == 'generic':
+    if device_type == 'generic':
         combo = combo_prefix + arch + combo_suffix
-    elif device == 'baytrail':
+    elif device_type == 'baytrail':
         if arch == 'x86_64':
-            combo = combo_prefix + device + '_64p' + combo_suffix
+            combo = combo_prefix + device_type + '_64p' + combo_suffix
         elif arch == 'x86':
-            combo = combo_prefix + device + combo_suffix
+            combo = combo_prefix + device_type + combo_suffix
 
     return combo
-
-
-def _get_product(arch, device):
-    if device == 'generic':
-        product = device + '_' + arch
-    elif device == 'baytrail':
-        if arch == 'x86_64':
-            product = device + '_64p'
-        elif arch == 'x86':
-            product = device
-
-    return product
 
 
 # All valid combination:
@@ -562,8 +507,8 @@ def _get_product(arch, device):
 # (x86, baytrail, webview) is included in 1
 # (x86, generic, webview) is included in 1
 
-def _backup_one(arch, device, module):
-    product = _get_product(arch, device)
+def _backup_one(arch, device_type, module):
+    product = get_product(arch, device_type)
 
     if module == 'webview':
         if arch == 'x86_64':
@@ -583,14 +528,14 @@ def _backup_one(arch, device, module):
             ]
 
     else:  # module == 'system'
-        if device == 'baytrail':
+        if device_type == 'baytrail':
             backup_files = {
                 '.': [
-                    'out/dist/aosp_%s-om-factory.tgz' % _get_product(arch, device),
+                    'out/dist/aosp_%s-om-factory.tgz' % get_product(arch, device),
                 ],
             }
 
-        elif device == 'generic':
+        elif device_type == 'generic':
             backup_files_common = {
                 #'platforms': 'development/tools/emulator/skins',
                 'development/tools/emulator': 'development/tools/emulator/skins',
@@ -633,7 +578,7 @@ def _backup_one(arch, device, module):
 
             backup_files = dict(backup_files_common, **backup_files_specific)
 
-    name = timestamp + '-' + arch + '-' + device + '-' + module + '-' + chromium_version
+    name = timestamp + '-' + arch + '-' + device_type + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
     if not os.path.exists(dir_backup_one):
         os.makedirs(dir_backup_one)

@@ -240,26 +240,12 @@ def setenv(env, value):
     os.environ[env] = value
 
 
-# Execute a adb shell command and know the return value
-# adb shell would always return 0, so a trick has to be used here to get return value
-def execute_adb(cmd, device=''):
-    cmd_adb = 'adb'
-    if device != '':
-        cmd_adb += ' -s ' + device
-    cmd_adb += ' shell "' + cmd + '|| echo FAIL"'
-    result = execute(cmd_adb, return_output=True, show_command=False)
-    if re.search('FAIL', result[1].rstrip('\n')):
-        return False
-    else:
-        return True
-
-
 # Setup devices and their names
 def setup_device(devices_limit=[]):
     devices = []
     devices_name = []
     devices_type = []
-    cmd = 'adb devices -l'
+    cmd = adb('devices -l', device='')
     device_lines = commands.getoutput(cmd).split('\n')
     for device_line in device_lines:
         if re.match('List of devices attached', device_line):
@@ -310,11 +296,45 @@ def get_caller_name():
     return inspect.stack()[1][3]
 
 
+def adb(cmd, device='192.168.42.1'):
+    if device == '192.168.42.1':
+        device = '192.168.42.1:5555'
+
+    if device == '':
+        return 'adb ' + cmd
+    else:
+        return 'adb -s ' + device + ' ' + cmd
+
+
+# Execute a adb shell command and know the return value
+# adb shell would always return 0, so a trick has to be used here to get return value
+def execute_adb_shell(cmd, device='192.168.42.1'):
+    cmd_adb = adb(cmd, device=device)
+    cmd_adb += ' shell "' + cmd + '|| echo FAIL"'
+    result = execute(cmd_adb, return_output=True, show_command=False)
+    if re.search('FAIL', result[1].rstrip('\n')):
+        return False
+    else:
+        return True
+
+
+def get_product(arch, device_type):
+    if device_type == 'generic':
+        product = device_type + '_' + arch
+    elif device_type == 'baytrail':
+        if arch == 'x86_64':
+            product = device_type + '_64p'
+        elif arch == 'x86':
+            product = device_type
+
+    return product
+
+
 # device: specific device. Do not use :5555 as -t option does not accept this.
 # mode: system for normal mode, bootloader for bootloader mode
 def device_connected(device='192.168.42.1', mode='system'):
     if mode == 'system':
-        result = execute('timeout 1s adb -s %s shell \ls' % device)
+        result = execute('timeout 1s ' + adb(cmd='shell \ls', device=device))
     elif mode == 'bootloader':
         path_fastboot = dir_linux + '/fastboot'
         result = execute('timeout 1s %s -t %s getvar all' % (path_fastboot, device))
@@ -331,11 +351,69 @@ def connect_device(device='192.168.42.1', mode='system'):
         if device_connected(device, mode):
             return True
 
-        execute('timeout 1s adb disconnect %(device)s && timeout 1s adb connect %(device)s' % {'device': device}, interactive=True)
+        cmd = 'timeout 1s ' + adb(cmd='disconnect', device=device) + ' && timeout 1s' + adb(cmd='connect', device=device)
+        execute(cmd, interactive=True)
         return device_connected(device, mode)
     elif mode == 'bootloader':
         return device_connected(device, mode)
 
+
+def analyze_issue(dir_aosp='/workspace/project/aosp-stable', dir_chromium='/workspace/project/chromium-android', arch='x86_64', device='192.168.42.1', type='tombstone'):
+    if device == '192.168.42.1':
+        device_type = 'baytrail'
+    product = get_product(arch, device_type)
+    if arch == 'x86_64':
+        arch_str = '64'
+    else:
+        arch_str = ''
+
+    dirs = [
+        dir_aosp + '/out/target/product/%s/symbols/system/lib%s' % (product, arch_str),
+        dir_chromium + '/src/out-%s/out/Release/lib' % arch,
+    ]
+
+    connect_device(device)
+
+    count_line_max = 1000
+    count_valid_max = 20
+
+    if type == 'tombstone':
+        result = execute(adb(cmd='shell \ls /data/tombstones'), return_output=True)
+        files = result[1].split('\n')
+        file_name = files[-2].strip()
+        info('Start to analyze ' + file_name)
+        execute(adb(cmd='pull /data/tombstones/' + file_name + ' /tmp/'))
+        result = execute('cat /tmp/' + file_name, return_output=True)
+        lines = result[1].split('\n')
+    elif type == 'anr':
+        execute(adb(cmd='pull /data/anr/traces.txt /tmp/'))
+        result = execute('cat /tmp/traces.txt', return_output=True)
+        lines = result[1].split('\n')
+
+    pattern = re.compile('pc (.*)  .*lib(.*)\.so')
+    count_line = 0
+    count_valid = 0
+    for line in lines:
+        count_line += 1
+        if count_line > count_line_max:
+            break
+        match = pattern.search(line)
+        if match:
+            print line
+            name = match.group(2)
+            for dir in dirs:
+                path = dir + '/lib%s.so' % name
+                if not os.path.exists(path):
+                    continue
+                cmd = dir_linux + '/x86_64-linux-android-addr2line -C -e %s -f %s' % (path, match.group(1))
+                result = execute(cmd, return_output=True, show_command=False)
+                print result[1]
+
+                count_valid += 1
+                if count_valid >= count_valid_max:
+                    return
+
+                break
 
 ################################################################################
 

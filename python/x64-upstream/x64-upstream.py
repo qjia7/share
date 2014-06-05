@@ -211,7 +211,7 @@ examples:
 
     group_test = parser.add_argument_group('test')
     group_test.add_argument('--test-build', dest='test_build', help='build test', action='store_true')
-    group_test.add_argument('--test-run', dest='test_run', help='run test and generate report (adb conection being ready is necessary)', action='store_true')
+    group_test.add_argument('--test-run', dest='test_run', help='run test and generate report', action='store_true')
     group_test.add_argument('--test-to', dest='test_to', help='test email receivers that would override the default for test sake')
     group_test.add_argument('--test-formal', dest='test_formal', help='formal test, which would send email and backup to samba server', action='store_true')
     group_test.add_argument('--test-type', dest='test_type', help='test_type', choices=['release', 'debug'], default='release')
@@ -220,6 +220,7 @@ examples:
     group_test.add_argument('--test-dryrun', dest='test_dryrun', help='dry run test', action='store_true')
     group_test.add_argument('--test-verbose', dest='test_verbose', help='verbose output for test', action='store_true')
     group_test.add_argument('--test-filter', dest='test_filter', help='filter for test')
+    group_test.add_argument('--analyze', dest='analyze', help='analyze test tombstone', action='store_true')
     group_test.add_argument('--gtest-suite', dest='gtest_suite', help='gtest suite')
     group_test.add_argument('--instrumentation-suite', dest='instrumentation_suite', help='instrumentation suite')
 
@@ -504,6 +505,13 @@ def test_run(force=False):
     pool.join()
 
 
+def analyze():
+    if not args.analyze:
+        return
+
+    analyze_issue(dir_chromium=dir_root, arch='x86_64')
+
+
 def batch_build(force=False):
     if not args.batch_build and not force:
         return
@@ -546,8 +554,7 @@ def _test_run_device(index_device, results):
 
     if not args.test_dryrun:
         # Fake /storage/emulated/0
-        cmd = 'adb root && adb remount && adb shell "mount -o rw,remount rootfs / && chmod 777 /mnt/sdcard && cd /storage/emulated && ln -s legacy 0"'
-        cmd = cmd.replace('adb', 'adb -s ' + device)
+        cmd = adb(cmd='root', device=device) + ' && ' + adb(cmd='remount', device=device) + ' && ' + adb(cmd='shell "mount -o rw,remount rootfs / && chmod 777 /mnt/sdcard && cd /storage/emulated && ln -s legacy 0"', device=device)
         execute(cmd)
         for command in test_suite:
             for index, suite in enumerate(test_suite[command]):
@@ -566,7 +573,7 @@ def _test_run_device(index_device, results):
                             warning('Failed to install "' + suite + '"')
 
                     # push test data
-                    cmd = 'adb -s %s push ' % device
+                    cmd = adb(cmd='push ', device=device)
 
                     if suite == 'ContentShellTest':
                         cmd += 'src/content/test/data/android/device_files /storage/emulated/0/content/test/data'
@@ -781,11 +788,11 @@ def _test_gen_report(index_device, results):
 
 def _hack_app_process():
     for device in devices:
-        if not execute_adb("test -d /system/lib64", device=device):
+        if not execute_adb_shell("test -d /system/lib64", device=device):
             continue
 
         for file in ['am', 'pm']:
-            execute('adb -s ' + device + ' pull /system/bin/' + file + ' /tmp/' + file)
+            execute(adb('pull /system/bin/' + file + ' /tmp/' + file))
             need_hack = False
             for line in fileinput.input('/tmp/' + file, inplace=1):
                 if re.search('app_process ', line):
@@ -794,7 +801,8 @@ def _hack_app_process():
                 sys.stdout.write(line)
 
             if need_hack:
-                execute('adb -s ' + device + ' root && adb -s ' + device + ' remount && adb -s ' + device + ' push /tmp/' + file + ' /system/bin/')
+                cmd = adb(cmd='root', device=device) + ' && ' + adb(cmd='remount') + ' && ' + adb(cmd='push /tmp/' + file + ' /system/bin/')
+                execute(cmd)
 
 
 def _setup_list(var):
@@ -846,6 +854,7 @@ if __name__ == '__main__':
 
     test_build()
     test_run()
+    analyze()
 
     batch_build()
     batch_test()
