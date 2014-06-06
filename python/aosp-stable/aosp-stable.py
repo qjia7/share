@@ -319,6 +319,15 @@ def flash_image():
         sys.stdout.write(line)
     fileinput.close()
 
+    # Hack gpt.ini for fast userdata erasion
+    file_gpt = 'aosp_%s-OM-gpt.ini' % get_product(arch, device_type)
+    for line in fileinput.input(file_gpt, inplace=1):
+        if re.search('len = -1', line):
+            line = line.replace('-1', '2000')
+        # We can not use print here as it will generate blank line
+        sys.stdout.write(line)
+    fileinput.close()
+
     # This command would not return so we have to use timeout here
     execute('timeout 5s ' + adb(cmd='reboot bootloader'))
     sleep_sec = 3
