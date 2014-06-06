@@ -13,7 +13,7 @@ CHROMIUM_INFO_INDEX_REV = 1
 
 patches = {
     'src': [
-        '0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
+        #'0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
     ],
 }
 
@@ -84,18 +84,15 @@ test_suite_filter = {
     ('all', 'x86'): {},
     ('baytrail', 'all'): {
         'base_unittests': [
+            # Status: TODO
             # Rough investigation:
             # As we enlarge the kThreadLocalStorageSize in base/threading/thread_local_storage.cc,
             # it seems we need to shrink options.stack_size in base/threading/thread_unittest.cc.
             # If kThreadLocalStorageSize is set to 2048, stack_size should be no more than 6*1024.
-            'ThreadTest.StartWithOptions_StackSize',
-        ],
-        'content_unittests': [
-            'RenderViewHostTest.BadMessageHandlerInputEventAck',
-            'RenderViewHostTest.BadMessageHandlerRenderViewHost',
-            'RenderViewHostTest.BadMessageHandlerRenderWidgetHost',
+            #'ThreadTest.StartWithOptions_StackSize',
         ],
         'media_unittests': [
+            # Status: TODO
             'MediaSourcePlayerTest.A_StarvationDuringEOSDecode',
             'MediaSourcePlayerTest.AV_NoPrefetchForFinishedVideoOnAudioStarvation',
             'AudioAndroidOutputTest.StartOutputStreamCallbacks',  # Crash the system if runs enough time
@@ -103,62 +100,111 @@ test_suite_filter = {
             'MediaDrmBridgeTest.IsSecurityLevelSupported_Widevine',
         ],
         'sandbox_linux_unittests': [
+            # Status: Verified with stable image
             'BaselinePolicy.CreateThread',
             'BaselinePolicy.DisallowedCloneFlagCrashes',
             'BrokerProcess.RecvMsgDescriptorLeak',
+
+            # The following cases are due to https://codereview.chromium.org/290143006
+            # These are false positive cases and test infrastructure needs to improve to support them.
+            'BaselinePolicy.DisallowedKillCrashes',
+            'BaselinePolicy.SIGSYS___NR_acct',
+            'BaselinePolicy.SIGSYS___NR_chroot',
+            'BaselinePolicy.SIGSYS___NR_eventfd',
+            'BaselinePolicy.SIGSYS___NR_fanotify_init',
+            'BaselinePolicy.SIGSYS___NR_fgetxattr',
+            'BaselinePolicy.SIGSYS___NR_getcpu',
+            'BaselinePolicy.SIGSYS___NR_getitimer',
+            'BaselinePolicy.SIGSYS___NR_init_module',
+            'BaselinePolicy.SIGSYS___NR_inotify_init',
+            'BaselinePolicy.SIGSYS___NR_io_cancel',
+            'BaselinePolicy.SIGSYS___NR_keyctl',
+            'BaselinePolicy.SIGSYS___NR_mq_open',
+            'BaselinePolicy.SIGSYS___NR_ptrace',
+            'BaselinePolicy.SIGSYS___NR_sched_setaffinity',
+            'BaselinePolicy.SIGSYS___NR_setpgid',
+            'BaselinePolicy.SIGSYS___NR_swapon',
+            'BaselinePolicy.SIGSYS___NR_sysinfo',
+            'BaselinePolicy.SIGSYS___NR_syslog',
+            'BaselinePolicy.SIGSYS___NR_timer_create',
+            'BaselinePolicy.SIGSYS___NR_vserver',
+            'BaselinePolicy.SocketpairWrongDomain',
         ],
-        # All fail due to [ERROR:gl_context_egl.cc(178)] eglSwapInterval failed with error EGL_BAD_NATIVE_WINDOW
-        'content_browsertests': [
+        'ContentShellTest': [
+            # Status: TODO
+            # Crash
+            'JavaBridgeBasicsTest#testCallStaticMethod',
+            'JavaBridgeCoercionTest#testPassJavaObject',
+
+            # Status: TODO
+            # Fail
+            'AddressDetectionTest#testAddressLimits',
+            'AddressDetectionTest#testMultipleAddressesInText',
+            'AddressDetectionTest#testRealAddresses',
+            'AddressDetectionTest#testSpecialChars',
+            'AddressDetectionTest#testSplitAddresses',
+            'ClickListenerTest#testClickContentOnJSListener1',
+            'ClickListenerTest#testClickContentOnJSListener2',
+            'ClickListenerTest#testClickContentOnLink',
+            'ContentViewLocationTest#testHideWatchResume',
+            'ContentViewLocationTest#testWatchHideNewWatchShow',
+            'ContentViewLocationTest#testWatchHideShowStop',
+            'ContentViewPopupZoomerTest#testPopupZoomerShowsUp',
+            'ContentViewScrollingTest#testFling',
+            'EmailAddressDetectionTest#testValidEmailAddresses',
+            'JavaBridgeBasicsTest#testSameReturnedObjectUsesSameWrapper',
+            'PhoneNumberDetectionTest#testInternationalNumberIntents',
+            'PhoneNumberDetectionTest#testLocalFRNumbers',
+            'PhoneNumberDetectionTest#testLocalUKNumbers',
+            'PhoneNumberDetectionTest#testLocalUSNumbers',
+            'ScreenOrientationIntegrationTest#testExpectedValues',
+            'ScreenOrientationIntegrationTest#testNoChange',
+            'ScreenOrientationProviderTest#testBasicValues',
+            'ScreenOrientationProviderTest#testLandscape',
+            'ScreenOrientationProviderTest#testPortrait',
+            'input.InsertionHandleTest#testDragInsertionHandle',
+
         ],
         'ChromeShellTest': [
-            # [clean] Context menu did not have window focus.
+            # Status: Verified with stable image
+            # Context menu did not have window focus.
             # If we manually sleep a few seconds after the context menu popup, they will pass.
             'ContextMenuTest#testDismissContextMenuOnBack',
             'ContextMenuTest#testDismissContextMenuOnClick',
 
-            # This would pass if we run it alone
-            'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',
-
-            # [clean] sync-url is a required parameter for the sync tests
-            # Not important
+            # Status: Verified with stable image (Not important)
+            # sync-url is a required parameter for the sync tests
+            #
             'SyncTest#testAboutSyncPageDisplaysCurrentSyncStatus',
             'SyncTest#testDisableAndEnableSync',
             'SyncTest#testGetAboutSyncInfoYieldsValidData',
 
-            # [clean] Never Panel not opened
-            # Not important
+            # Status: Verified with stable image (Not important)
+            # Never Panel not opened
             'TranslateInfoBarTest#testTranslateNeverPanel',
 
+            # Status: TODO
+            'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',  # This would pass if we run it alone
+            'OAuth2TokenServiceIntegrationTest#testValidateAccountsOneAccountsRegisteredAndNoSignedInUser',
+            'ProviderBookmarksUriTest#testDeleteBookmark',
+            'ProviderBookmarksUriTest#testQueryBookmark',
+            'ProviderBookmarksUriTest#testUpdateBookmark',
+            'ChromeShellUrlTest#testChromeWelcomePageLoads',
         ]
     },
     ('baytrail', 'x86_64'): {
-        'components_unittests': [
-            'JSONSchemaValidatorCPPTest.Test',
-            'RegexSetMatcherTest.MatchRegexes',
-            'RegexSetMatcherTest.CaseSensitivity',
-            'URLMatcherTest.FullTest',
-            'URLMatcherTest.TestOriginAndPathRegExPositive',
-            'URLMatcherTest.TestOriginAndPathRegExNegative',
-        ],
-        'content_unittests': [
-            'IndexedDBIOErrorTest.CleanUpTest',
-            'IndexedDBNonRecoverableIOErrorTest.NuancedCleanupTest',
-            'SharedCryptoTest.DigestSampleSets',
-            'SharedCryptoTest.DigestSampleSetsInChunks',
-            'SharedCryptoTest.HMACSampleSets',
-            'MediaStreamImplTest.GenerateMediaStream',
-            'MediaStreamImplTest.GenerateTwoMediaStreamsWithSameSource',
-            'MediaStreamImplTest.StopLocalTracksWhenTwoStreamUseSameDevices',
-        ],
     },
     ('baytrail', 'x86'): {
         'base_unittests': [
+            # https://codereview.chromium.org/310323003
             'SafeSPrintfTest.Truncation',
         ],
         'media_unittests': [
+            # Status: TODO
             'YUVConvertTest.YUVAtoARGB_MMX_MatchReference',
         ],
         'gl_tests': [
+            # Status: TODO
             'TextureStorageTest.CorrectPixels',
         ],
     },
