@@ -351,7 +351,7 @@ def connect_device(device='192.168.42.1', mode='system'):
         if device_connected(device, mode):
             return True
 
-        cmd = 'timeout 1s ' + adb(cmd='disconnect', device=device) + ' && timeout 1s ' + adb(cmd='connect', device=device)
+        cmd = 'timeout 1s ' + adb(cmd='disconnect %s' % device, device='') + ' && timeout 1s ' + adb(cmd='connect %s' % device, device='')
         execute(cmd, interactive=True)
         return device_connected(device, mode)
     elif mode == 'bootloader':
