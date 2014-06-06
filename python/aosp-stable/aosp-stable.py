@@ -530,7 +530,7 @@ def _backup_one(arch, device_type, module):
         if device_type == 'baytrail':
             backup_files = {
                 '.': [
-                    'out/dist/aosp_%s-om-factory.tgz' % get_product(arch, device),
+                    'out/dist/aosp_%s-om-factory.tgz' % get_product(arch, device_type),
                 ],
             }
 
