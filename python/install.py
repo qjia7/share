@@ -196,6 +196,7 @@ if __name__ == "__main__":
         'libpulse-dev',
         'postfix',  # smtp server
         'android-tools-adb', 'android-tools-adbd', 'android-tools-fastboot',
+        'dos2unix',
     ])
 
     install_chromium()
