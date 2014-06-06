@@ -309,8 +309,7 @@ def adb(cmd, device='192.168.42.1'):
 # Execute a adb shell command and know the return value
 # adb shell would always return 0, so a trick has to be used here to get return value
 def execute_adb_shell(cmd, device='192.168.42.1'):
-    cmd_adb = adb(cmd, device=device)
-    cmd_adb += ' shell "' + cmd + '|| echo FAIL"'
+    cmd_adb = adb(cmd='shell "' + cmd + ' || echo FAIL"', device=device)
     result = execute(cmd_adb, return_output=True, show_command=False)
     if re.search('FAIL', result[1].rstrip('\n')):
         return False
