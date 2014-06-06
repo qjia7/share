@@ -13,7 +13,7 @@ CHROMIUM_INFO_INDEX_REV = 1
 
 patches = {
     'src': [
-        #'0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
+        '0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
     ],
 }
 
@@ -84,11 +84,7 @@ test_suite_filter = {
     ('all', 'x86'): {},
     ('baytrail', 'all'): {
         'base_unittests': [
-            # Status: TODO
-            # Rough investigation:
-            # As we enlarge the kThreadLocalStorageSize in base/threading/thread_local_storage.cc,
-            # it seems we need to shrink options.stack_size in base/threading/thread_unittest.cc.
-            # If kThreadLocalStorageSize is set to 2048, stack_size should be no more than 6*1024.
+            # Confirmed the below case is no longer needed to be filtered
             #'ThreadTest.StartWithOptions_StackSize',
         ],
         'media_unittests': [
@@ -162,8 +158,7 @@ test_suite_filter = {
             'ScreenOrientationProviderTest#testBasicValues',
             'ScreenOrientationProviderTest#testLandscape',
             'ScreenOrientationProviderTest#testPortrait',
-            'input.InsertionHandleTest#testDragInsertionHandle',
-
+            'InsertionHandleTest#testDragInsertionHandle',
         ],
         'ChromeShellTest': [
             # Status: Verified with stable image
@@ -186,11 +181,23 @@ test_suite_filter = {
             # Status: TODO
             'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',  # This would pass if we run it alone
             'OAuth2TokenServiceIntegrationTest#testValidateAccountsOneAccountsRegisteredAndNoSignedInUser',
+            'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredButSignedIn',
             'ProviderBookmarksUriTest#testDeleteBookmark',
             'ProviderBookmarksUriTest#testQueryBookmark',
             'ProviderBookmarksUriTest#testUpdateBookmark',
             'ChromeShellUrlTest#testChromeWelcomePageLoads',
-        ]
+        ],
+        'AndroidWebViewTest': [
+            'AndroidScrollIntegrationTest#testUiScrollReflectedInJs',
+            'AwContentsTest#testCreateAndGcManyTimes',
+            'AwSettingsTest#testAllowMixedMode',
+            'AwSettingsTest#testFileUrlAccessWithTwoViews',
+            'AwSettingsTest#testUserAgentStringDefault',
+            'NavigationHistoryTest#testFavicon',
+            'NavigationHistoryTest#testNavigateBackToNoncacheableLoginPage',
+            'WebViewAsynchronousFindApisTest#testClearFindNext',
+            'WebViewAsynchronousFindApisTest#testFindAllDoubleNext',
+        ],
     },
     ('baytrail', 'x86_64'): {
     },
