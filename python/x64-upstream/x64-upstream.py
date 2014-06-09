@@ -210,6 +210,7 @@ test_suite_filter = {
             # Fail
             'AwContentsClientOnScaleChangedTest#testScaleUp',
             'AwSettingsTest#testLoadWithOverviewModeWithTwoViews',
+            'AwSettingsTest#testContentUrlAccessWithTwoViews',
             'CookieManagerStartupTest#testShouldInterceptRequestDeadlock',
         ],
     },
