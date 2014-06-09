@@ -363,10 +363,14 @@ def setup():
 
     target_module = args.target_module
 
-    info('PATH=' + os.getenv('PATH'))
-    info('http_proxy=' + os.getenv('http_proxy'))
-    info('https_proxy=' + os.getenv('https_proxy'))
-    info('no_proxy=' + os.getenv('no_proxy'))
+    print '''
+========== Configuration Begin ==========
+PATH=%(path)s
+http_proxy=%(http_proxy)s
+https_proxy=%(http_proxy)s
+no_proxy=%(no_proxy)s
+========== Configuration End ==========
+    ''' % {'path': os.getenv('PATH'), 'http_proxy': os.getenv('http_proxy'), 'https_proxy': os.getenv('https_proxy'), 'no_proxy': os.getenv('no_proxy')}
 
     # Setup test_suite
     for command in _setup_list('test_command'):
