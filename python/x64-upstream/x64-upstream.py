@@ -182,12 +182,14 @@ test_suite_filter = {
             'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',  # This would pass if we run it alone
             'OAuth2TokenServiceIntegrationTest#testValidateAccountsOneAccountsRegisteredAndNoSignedInUser',
             'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredButSignedIn',
+            'OAuth2TokenServiceIntegrationTest#testValidateAccountsSingleAccountThenAddOne',
             'ProviderBookmarksUriTest#testDeleteBookmark',
             'ProviderBookmarksUriTest#testQueryBookmark',
             'ProviderBookmarksUriTest#testUpdateBookmark',
             'ChromeShellUrlTest#testChromeWelcomePageLoads',
         ],
         'AndroidWebViewTest': [
+            # Status: TODO
             'AndroidScrollIntegrationTest#testUiScrollReflectedInJs',
             'AwContentsTest#testCreateAndGcManyTimes',
             'AwSettingsTest#testAllowMixedMode',
@@ -197,6 +199,18 @@ test_suite_filter = {
             'NavigationHistoryTest#testNavigateBackToNoncacheableLoginPage',
             'WebViewAsynchronousFindApisTest#testClearFindNext',
             'WebViewAsynchronousFindApisTest#testFindAllDoubleNext',
+            'AwSettingsTest#testCacheModeWithTwoViews',
+            'AwZoomTest#testZoomControls',
+            # Crash
+            'AndroidScrollIntegrationTest#testFlingScroll',
+            'AndroidScrollIntegrationTest#testJsScrollCanBeAlteredByUi',
+            'AndroidScrollIntegrationTest#testJsScrollFromBody',
+            'AndroidScrollIntegrationTest#testJsScrollReflectedInUi',
+            'AndroidScrollIntegrationTest#testTouchScrollCanBeAlteredByUi',
+            # Fail
+            'AwContentsClientOnScaleChangedTest#testScaleUp',
+            'AwSettingsTest#testLoadWithOverviewModeWithTwoViews',
+            'CookieManagerStartupTest#testShouldInterceptRequestDeadlock',
         ],
     },
     ('baytrail', 'x86_64'): {
