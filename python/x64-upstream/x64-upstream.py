@@ -223,11 +223,17 @@ test_suite_filter = {
         'media_unittests': [
             # Status: TODO
             'YUVConvertTest.YUVAtoARGB_MMX_MatchReference',
+            'MediaDrmBridgeTest.AddNewKeySystemMapping',
+            'MediaDrmBridgeTest.ShouldNotOverwriteExistingKeySystem',
         ],
         'gl_tests': [
             # Status: TODO
             'TextureStorageTest.CorrectPixels',
         ],
+        'AndroidWebViewTest': [
+            'AwSettingsTest#testLoadWithOverviewModeViewportTagWithTwoViews',
+            'AwSettingsTest#testLoadWithOverviewModeWithTwoViews',
+        ]
     },
     ('generic', 'all'): {},
     ('generic', 'x86_64'): {},
@@ -661,7 +667,7 @@ def _test_run_device(index_device, results):
                     cmd += ' -s ' + suite + ' -t 60'
                 elif command == 'instrumentation':
                     cmd += ' --test-apk ' + suite
-                cmd += ' --num_retries 0'
+                cmd += ' --num_retries 1'
 
                 if args.test_filter:
                     filter_suite = args.test_filter
