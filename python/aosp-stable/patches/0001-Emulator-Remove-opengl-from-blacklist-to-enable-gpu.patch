@@ -1,0 +1,25 @@
+From 965c76e05cb811562ae5883397d1ce0f55ea9d4a Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Mon, 9 Jun 2014 10:52:23 +0800
+Subject: [PATCH] Emulator: Remove opengl from blacklist to enable gpu
+
+Change-Id: I6ff36b6c757bddcd73f7c6002a440445ccba1fa0
+---
+ core/64_bit_blacklist.mk | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/core/64_bit_blacklist.mk b/core/64_bit_blacklist.mk
+index b7420cd..79d8ede 100644
+--- a/core/64_bit_blacklist.mk
++++ b/core/64_bit_blacklist.mk
+@@ -2,7 +2,6 @@ ifneq ($(TARGET_2ND_ARCH),)
+ 
+ # misc build errors
+ _64_bit_directory_blacklist += \
+-	device/generic/goldfish/opengl \
+ 	device/generic/goldfish/camera \
+ 
+ _64_bit_directory_blacklist_pattern := $(addsuffix %,$(_64_bit_directory_blacklist))
+-- 
+2.0.0
+

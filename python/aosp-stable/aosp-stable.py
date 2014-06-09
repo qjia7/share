@@ -34,11 +34,16 @@ patches_build_common = {
     'packages/apps/Browser': [
         '0001-Make-browser-preference-fragment-valid.patch',
     ],
+
+    # Emulator
+    'build/core': ['0001-Emulator-Remove-opengl-from-blacklist-to-enable-gpu.patch'],
+    'device/generic/goldfish': ['0001-Emulator-Make-the-size-of-cb_handle_t-same-for-32-64.patch'],
+    'frameworks/base': ['0001-Emulator-Enable-HWUI.patch'],
 }
 
 patches_build_upstream_chromium = {
     'frameworks/webview': ['0001-Change-drawGLFunctor-to-64-bit.patch'],
-    'external/chromium-libpac': ['0001-libpac-Change-v8-path-and-v8-tools-module-name.patch']
+    'external/chromium-libpac': ['0001-libpac-Change-v8-path-and-v8-tools-module-name.patch'],
 }
 
 patches_build_aosp_chromium = {
@@ -217,7 +222,7 @@ def build():
 
     for arch, device_type, module in [(arch, device_type, module) for arch in target_archs for device_type in target_devices_type for module in target_modules]:
         combo = _get_combo(arch, device_type)
-        if not args.build_skip_mk:
+        if not args.build_skip_mk and os.path.exists(dir_root + '/external/chromium_org/src'):
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-x86'
             if arch == 'x86_64':
                 cmd += ' && ' + dir_root + '/external/chromium_org/src/android_webview/tools/gyp_webview linux-x86_64'
@@ -247,6 +252,12 @@ def build():
         result = execute(cmd, interactive=True)
         if result[0]:
             error('Failed to build %s %s %s' % (arch, device_type, module))
+
+        if module == 'system' and device_type == 'generic':
+            cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && external/qemu/android-rebuild.sh')
+            result = execute(cmd, interactive=True)
+            if result[0]:
+                error('Failed to build %s emulator' % arch)
 
 
 def backup():
@@ -383,7 +394,7 @@ def start_emu():
 ANDROID_BUILD_TOP=%(dir_root)s \
 ANDROID_PRODUCT_OUT=%(dir_backup)s/out/target/product/%(product)s \
 TARGET_PRODUCT=aosp_%(arch)s \
-%(dir_backup)s/prebuilts/android-emulator/linux-%(arch)s/emulator -verbose -show-kernel -no-snapshot -gpu off -memory 512 \
+%(dir_backup)s/prebuilts/android-emulator/linux-%(arch)s/emulator -verbose -show-kernel -no-snapshot -gpu on -memory 512 \
 -skin HVGA \
 -skindir %(dir_backup)s/development/tools/emulator/skins \
 -kernel %(dir_backup)s/prebuilts/qemu-kernel/%(arch)s/kernel-qemu \
@@ -634,7 +645,7 @@ def _patch_applied(dir_repo, path_patch, count=30):
     match = pattern.search(lines[3])
     title = match.group(1)
     backup_dir(dir_repo)
-    result = execute('git show -s --pretty="format:%s" --max-count=' + str(count) + ' |grep "%s"' % title, show_command=False)
+    result = execute('git show -s --pretty="format:%s" --max-count=' + str(count) + ' |grep "%s"' % title.replace('"', '\\"'), show_command=False)
     restore_dir()
     if result[0]:
         return False

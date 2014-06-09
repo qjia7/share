@@ -1,0 +1,46 @@
+From e626ee8d21ad9277956079dea1a7234058425a92 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Mon, 9 Jun 2014 10:55:51 +0800
+Subject: [PATCH] Emulator: Make the size of "cb_handle_t" same for 32/64-bit
+
+cb_handle_t is usually created by Surfaceflinger which is a 64-bit
+process on
+64-bit platform, and used by client processes which could be 32-bit
+processes
+or 64-bit processes. Since the "cb_handle_t" is like a protocol, we
+should make
+its size same for both 32-bit and 64-bit processes.
+
+Change-Id: I35175a37fbc54ba5a4abf845fbf628852f9d71e9
+---
+ opengl/system/OpenglSystemCommon/gralloc_cb.h | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/opengl/system/OpenglSystemCommon/gralloc_cb.h b/opengl/system/OpenglSystemCommon/gralloc_cb.h
+index c138964..543d26b 100644
+--- a/opengl/system/OpenglSystemCommon/gralloc_cb.h
++++ b/opengl/system/OpenglSystemCommon/gralloc_cb.h
+@@ -72,7 +72,7 @@ struct cb_handle_t : public native_handle {
+     }
+ 
+     static bool validate(cb_handle_t * hnd) {
+-        return (hnd && 
++        return (hnd &&
+                 hnd->version == sizeof(native_handle) &&
+                 hnd->magic == BUFFER_HANDLE_MAGIC &&
+                 hnd->numInts == CB_HANDLE_NUM_INTS(hnd->numFds));
+@@ -96,7 +96,10 @@ struct cb_handle_t : public native_handle {
+     int glType;             // OpenGL type enum used when uploading to host
+     int ashmemSize;         // ashmem region size for the buffer (0 unless is HW_FB buffer or
+                             //                                    s/w access is needed)
+-    intptr_t ashmemBase;         // CPU address of the mapped ashmem region
++    union {
++        intptr_t ashmemBase;    // CPU address of the mapped ashmem region
++        uint64_t padding;       // enforce same size on 32-bit/64-bit
++    } __attribute__((aligned(8)));
+     int ashmemBasePid;      // process id which mapped the ashmem region
+     int mappedPid;          // process id which succeeded gralloc_register call
+     int lockedLeft;         // region of buffer locked for s/w write
+-- 
+2.0.0
+
