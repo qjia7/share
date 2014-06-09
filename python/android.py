@@ -12,7 +12,7 @@ from util import *
 # Run script with '-f all', Restart device and enter fastboot mode.
 
 
-root_dir = '/workspace/project/android/'
+root_dir = os.path.abspath(os.getcwd())
 backup_dir = '/workspace/topic/android/backup/'
 backup_driver_dir = backup_dir + 'vendor/'
 backup_image_dir = backup_dir + 'image/'
