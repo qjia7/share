@@ -361,6 +361,7 @@ def setup():
     if args.devices:
         devices_limit = args.devices.split(',')
     else:
+        connect_device()
         devices_limit = []
     (devices, devices_name, devices_type) = setup_device(devices_limit=devices_limit)
 
