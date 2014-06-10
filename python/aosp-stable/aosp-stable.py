@@ -377,37 +377,35 @@ def start_emu():
             result = execute('ls -t -d --group-directories-first backup/*generic*', return_output=True)
             dir_backup = dir_root + '/' + result[1].split('\n')[0]
         backup_dir(dir_backup)
-        #combo = _get_combo(arch, 'generic')
-        #cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && emulator -sdcard sdcard-' + arch + '.img')
-
-        # Currently there are several problems to run emulator
-        # 1. userdata-qemu.img has to be deleted everytime
-        # 2. must not designate -data option. Use full path can not work
-        # 3. gpu has to be off
-        # 4. Rely on several environmental variables, and use emulator instead of emulator64-x86
-        # 5. Skin still loads HVGA/hardware.ini from source code dir.
 
         if not os.path.exists(dir_root + '/sdcard-%s.img' % arch):
             error('Please put sdcard.img into ' + dir_root)
-        execute('rm -f out/target/product/%s/userdata-qemu.img' % product)
-        cmd = '''
-ANDROID_BUILD_TOP=%(dir_root)s \
-ANDROID_PRODUCT_OUT=%(dir_backup)s/out/target/product/%(product)s \
-TARGET_PRODUCT=aosp_%(arch)s \
-%(dir_backup)s/prebuilts/android-emulator/linux-%(arch)s/emulator -verbose -show-kernel -no-snapshot -gpu on -memory 512 \
--skin HVGA \
--skindir %(dir_backup)s/development/tools/emulator/skins \
--kernel %(dir_backup)s/prebuilts/qemu-kernel/%(arch)s/kernel-qemu \
--ramdisk %(dir_backup)s/out/target/product/%(product)s/ramdisk.img \
--sysdir %(dir_backup)s/out/target/product/%(product)s \
--system %(dir_backup)s/out/target/product/%(product)s/system.img \
--datadir %(dir_backup)s/out/target/product/%(product)s \
--cache %(dir_backup)s/out/target/product/%(product)s/cache.img \
--initdata %(dir_backup)s/out/target/product/%(product)s/userdata.img \
--sdcard %(dir_root)s/sdcard-%(arch)s.img \
-''' % {'dir_root': dir_root, 'dir_backup': dir_backup, 'product': product, 'arch': arch}
 
-#-data out/target/product/generic_x86_64/userdata-qemu.img \
+        if not os.path.exists('system-images/aosp_%(arch)s/userdata-qemu.img' % {'arch': arch}):
+            execute('cp system-images/aosp_%(arch)s/userdata.img system-images/aosp_%(arch)s/userdata-qemu.img' % {'arch': arch})
+
+        if arch == 'x86_64':
+            gpu_type = 'on'
+            file_emu = 'emulator64-x86'
+        else:
+            gpu_type = 'off'
+            file_emu = 'emulator-x86'
+
+        cmd = '''
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:%(dir_backup)s/emulator-linux/lib \
+%(dir_backup)s/emulator-linux/%(file_emu)s -verbose -show-kernel -no-snapshot -gpu %(gpu_type)s -memory 512 \
+-skin HVGA \
+-skindir %(dir_backup)s/platforms/skins \
+-kernel %(dir_backup)s/system-images/aosp_%(arch)s/kernel-qemu \
+-ramdisk %(dir_backup)s/system-images/aosp_%(arch)s/ramdisk.img \
+-sysdir %(dir_backup)s/system-images/aosp_%(arch)s \
+-system %(dir_backup)s/system-images/aosp_%(arch)s/system.img \
+-datadir %(dir_backup)s/system-images/aosp_%(arch)s \
+-data %(dir_backup)s/system-images/aosp_%(arch)s/userdata-qemu.img \
+-cache %(dir_backup)s/system-images/aosp_%(arch)s/cache.img \
+-initdata %(dir_backup)s/system-images/aosp_%(arch)s/userdata.img \
+-sdcard %(dir_root)s/sdcard-%(arch)s.img \
+''' % {'dir_root': dir_root, 'dir_backup': dir_backup, 'product': product, 'arch': arch, 'gpu_type': gpu_type, 'file_emu': file_emu}
 
         execute(cmd, interactive=True)
         restore_dir()
@@ -553,55 +551,26 @@ def _backup_one(arch, device_type, module):
                     'out/dist/aosp_%s-om-factory.tgz' % get_product(arch, device_type),
                 ],
             }
-
         elif device_type == 'generic':
-            backup_files_common = {
-                #'platforms': 'development/tools/emulator/skins',
-                'development/tools/emulator': 'development/tools/emulator/skins',
-
-                #'tools': [
-                'out/host/linux-x86': [
-                    'out/host/linux-x86/bin',
-                    'out/host/linux-x86/framework',
-                    'out/host/linux-x86/lib',
-                    'out/host/linux-x86/usr',
+            backup_files = {
+                'platforms': 'development/tools/emulator/skins',
+                'emulator-linux': 'external/qemu/objs/*',
+                'system-images/aosp_%s/system' % arch: 'out/target/product/generic_%s/system/*' % arch,
+                'system-images/aosp_%s' % arch: [
+                    'out/target/product/generic_%s/cache.img' % arch,
+                    'out/target/product/generic_%s/userdata.img' % arch,
+                    'out/target/product/generic_%s/ramdisk.img' % arch,
+                    'out/target/product/generic_%s/system.img' % arch,
+                    'prebuilts/qemu-kernel/%s/kernel-qemu' % arch,
                 ],
-
-                #'tools/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
-                'prebuilts/android-emulator/usr/share': 'out/host/linux-x86/usr/share/pc-bios',
             }
-            if arch == 'x86_64':
-                backup_files_specific = {
-                    #'tools/bin': 'prebuilts/android-emulator/linux-x86_64/emulator64-x86',
-                    'prebuilts/android-emulator/linux-x86_64': ['prebuilts/android-emulator/linux-x86_64/emulator64-x86', 'prebuilts/android-emulator/linux-x86_64/emulator'],
-
-                    'prebuilts/android-emulator/linux-x86_64/lib': 'prebuilts/android-emulator/linux-x86_64/lib/*',
-
-                    #'system-images/generic_x86_64/system': 'out/target/product/generic_x86_64/system/build.prop',
-                    'out/target/product/generic_x86_64/system': 'out/target/product/generic_x86_64/system/build.prop',
-
-                    #'system-images/generic_x86_64': [
-                    'out/target/product/generic_x86_64': [
-                        'out/target/product/generic_x86_64/cache.img',
-                        'out/target/product/generic_x86_64/userdata.img',
-                        'out/target/product/generic_x86_64/userdata-qemu.img',  # not existed
-                        'out/target/product/generic_x86_64/ramdisk.img',
-                        'out/target/product/generic_x86_64/system.img',
-                        'out/target/product/generic_x86_64/hardware-qemu.ini',  # not existed
-                        #'prebuilts/qemu-kernel/x86_64/kernel-qemu',
-                    ],
-                    'prebuilts/qemu-kernel/x86_64': 'prebuilts/qemu-kernel/x86_64/kernel-qemu',
-                }
-            elif arch == 'x86':
-                backup_files_specific = {}
-
-            backup_files = dict(backup_files_common, **backup_files_specific)
 
     name = timestamp + '-' + arch + '-' + device_type + '-' + module + '-' + chromium_version
     dir_backup_one = dir_backup + '/' + name
     if not os.path.exists(dir_backup_one):
         os.makedirs(dir_backup_one)
     backup_dir(dir_backup_one)
+    info('Begin to backup to ' + dir_backup_one)
     for dir_dest in backup_files:
         if not os.path.exists(dir_dest):
             os.makedirs(dir_dest)
