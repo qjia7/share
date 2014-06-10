@@ -350,7 +350,7 @@ def flash_image():
         else:
             break
 
-    execute('./flash-all.sh -t ' + ip, interactive=True)
+    execute('./flash-all.sh -t ' + ip, interactive=True, dryrun=False)
     restore_dir()
     execute('rm -rf ' + dir_extract)
 
@@ -363,6 +363,9 @@ def flash_image():
         info('Sleeping %s seconds' % str(sleep_sec))
         time.sleep(sleep_sec)
         connect_device()
+
+    info('Sleeping 30 seconds until system fully boots up..')
+    time.sleep(30)
 
 
 def start_emu():
