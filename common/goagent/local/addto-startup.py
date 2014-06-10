@@ -12,6 +12,8 @@ import time
 import ctypes
 import platform
 
+python2 = os.popen('python2 -V 2>&1').read().startswith('Python 2.') and 'python2' or 'python'
+
 def addto_startup_linux():
     filename = os.path.abspath(__file__)
     dirname = os.path.dirname(filename)
@@ -21,14 +23,14 @@ def addto_startup_linux():
 [Desktop Entry]
 Type=Application
 Categories=Network;Proxy;
-Exec=/usr/bin/env python "%s/%s"
+Exec=/usr/bin/env %s "%s/%s"
 Icon=%s/goagent-logo.png
 Hidden=false
 NoDisplay=false
 X-GNOME-Autostart-enabled=true
 Name=GoAgent GTK
 Comment=GoAgent GTK Launcher
-''' % (dirname , scriptname , dirname)
+''' % (python2, dirname , scriptname , dirname)
     #sometimes maybe  /etc/xdg/autostart , ~/.kde/Autostart/ , ~/.config/openbox/autostart
     for dirname in map(os.path.expanduser, ['~/.config/autostart']):
         if os.path.isdir(dirname):
@@ -36,6 +38,7 @@ Comment=GoAgent GTK Launcher
             with open(filename, 'w') as fp:
                 fp.write(DESKTOP_FILE)
            # os.chmod(filename, 0755)
+
 
 def addto_startup_osx():
     if os.getuid() != 0:
@@ -46,14 +49,14 @@ def addto_startup_osx():
             GroupName = 'wheel',
             Label = 'org.goagent.macos',
             ProgramArguments = list([
-                '/usr/bin/python',
+                '/usr/bin/%s' % python2,
                 os.path.join(os.path.abspath(os.path.dirname(__file__)), 'proxy.py')
                 ]),
             RunAtLoad = True,
             UserName = 'root',
             WorkingDirectory = os.path.dirname(__file__),
-            StandardOutPath = 'var/log/goagent.log',
-            StandardErrorPath = 'var/log/goagent.log',
+            StandardOutPath = '/var/log/goagent.log',
+            StandardErrorPath = '/var/log/goagent.log',
             KeepAlive = dict(
                 SuccessfulExit = False,
                 )
@@ -71,13 +74,40 @@ def addto_startup_osx():
     print 'To start goagent right now, try this command: sudo launchctl load /Library/LaunchDaemons/org.goagent.macos.plist'
     print 'To checkout log file: using Console.app to locate /var/log/goagent.log'
 
+    install_sharp_osx()
+
+
+def install_sharp_osx():
+    # extracted from SwitchySharp.crx
+    extension_id = 'dpplabbmogkhghncfbfdeeokoefdjegm'
+    extension_version = '1.10.2'
+    extension_path = '%s/SwitchySharp.crx' % os.path.abspath(os.path.dirname(__file__))
+
+    dest_path = '/Library/Application Support/Google/Chrome/External Extensions'
+    dest_file = '%s/%s.json' % (dest_path, extension_id)
+    print 'Installing SwitchySharp for Chrome...'
+    cmd = 'mkdir -p "%s"' % dest_path
+    if os.system(cmd) != 0:
+        print 'Create Chrome External Extensions folder Failed!'
+        sys.exit(0)
+
+    json_dict = {'external_crx': extension_path,
+                 'external_version': extension_version}
+    with open(dest_file, 'w') as fp:
+        import json
+        json.dump(json_dict, fp)
+        print 'Installing SwitchySharp done.'
+
+
 def addto_startup_windows():
     if 1 == ctypes.windll.user32.MessageBoxW(None, u'是否将goagent.exe加入到启动项？', u'GoAgent 对话框', 1):
         if 1 == ctypes.windll.user32.MessageBoxW(None, u'是否显示托盘区图标？', u'GoAgent 对话框', 1):
             pass
 
+
 def addto_startup_unknown():
     print '*** error: Unknown system'
+
 
 def main():
     addto_startup_funcs = {

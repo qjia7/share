@@ -3,7 +3,7 @@
 # Contributor:
 #      Phus Lu        <phus.lu@gmail.com>
 
-__version__ = '3.0.4'
+__version__ = '3.0.7'
 __password__ = ''
 __hostsdeny__ = ()  # __hostsdeny__ = ('.youtube.com', '.youku.com')
 
@@ -18,6 +18,7 @@ import logging
 import httplib
 import urlparse
 import errno
+import string
 try:
     from io import BytesIO
 except ImportError:
@@ -51,45 +52,111 @@ URLFETCH_DEFLATE_MAXSIZE = 4*1024*1024
 URLFETCH_TIMEOUT = 60
 
 def message_html(title, banner, detail=''):
-    ERROR_TEMPLATE = '''
-<html><head>
-<meta http-equiv="content-type" content="text/html;charset=utf-8">
-<title>{{ title }}</title>
-<style><!--
-body {font-family: arial,sans-serif}
-div.nav {margin-top: 1ex}
-div.nav A {font-size: 10pt; font-family: arial,sans-serif}
-span.nav {font-size: 10pt; font-family: arial,sans-serif; font-weight: bold}
-div.nav A,span.big {font-size: 12pt; color: #0000cc}
-div.nav A {font-size: 10pt; color: black}
-A.l:link {color: #6f6f6f}
-A.u:link {color: green}
-//--></style>
-</head>
-<body text=#000000 bgcolor=#ffffff>
-<table border=0 cellpadding=2 cellspacing=0 width=100%>
-<tr><td bgcolor=#3366cc><font face=arial,sans-serif color=#ffffff><b>Message</b></td></tr>
-<tr><td>&nbsp;</td></tr></table>
-<blockquote>
-<H1>{{ banner }}</H1>
-{{ detail }}
-<!--
-<script type="text/javascript" src="http://www.qq.com/404/search_children.js" charset="utf-8"></script>
-//-->
-<p>
-</blockquote>
-<table width=100% cellpadding=0 cellspacing=0><tr><td bgcolor=#3366cc><img alt="" width=1 height=4></td></tr></table>
-</body></html>
-'''
-    kwargs = dict(title=title, banner=banner, detail=detail)
-    template = ERROR_TEMPLATE
-    for keyword, value in kwargs.items():
-        template = template.replace('{{ %s }}' % keyword, value)
-    return template
+    MESSAGE_TEMPLATE = '''
+    <html><head>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8">
+    <title>$title</title>
+    <style><!--
+    body {font-family: arial,sans-serif}
+    div.nav {margin-top: 1ex}
+    div.nav A {font-size: 10pt; font-family: arial,sans-serif}
+    span.nav {font-size: 10pt; font-family: arial,sans-serif; font-weight: bold}
+    div.nav A,span.big {font-size: 12pt; color: #0000cc}
+    div.nav A {font-size: 10pt; color: black}
+    A.l:link {color: #6f6f6f}
+    A.u:link {color: green}
+    //--></style>
+    </head>
+    <body text=#000000 bgcolor=#ffffff>
+    <table border=0 cellpadding=2 cellspacing=0 width=100%>
+    <tr><td bgcolor=#3366cc><font face=arial,sans-serif color=#ffffff><b>Message</b></td></tr>
+    <tr><td> </td></tr></table>
+    <blockquote>
+    <H1>$banner</H1>
+    $detail
+    <p>
+    </blockquote>
+    <table width=100% cellpadding=0 cellspacing=0><tr><td bgcolor=#3366cc><img alt="" width=1 height=4></td></tr></table>
+    </body></html>
+    '''
+    return string.Template(MESSAGE_TEMPLATE).substitute(title=title, banner=banner, detail=detail)
+
+
+def rc4crypt(data, key):
+    """RC4 algorithm"""
+    if not key or not data:
+        return data
+    x = 0
+    box = range(256)
+    for i, y in enumerate(box):
+        x = (x + y + ord(key[i % len(key)])) & 0xff
+        box[i], box[x] = box[x], y
+    x = y = 0
+    out = []
+    out_append = out.append
+    for char in data:
+        x = (x + 1) & 0xff
+        y = (y + box[x]) & 0xff
+        box[x], box[y] = box[y], box[x]
+        out_append(chr(ord(char) ^ box[(box[x] + box[y]) & 0xff]))
+    return ''.join(out)
+
+
+class RC4FileObject(object):
+    """fileobj for rc4"""
+    def __init__(self, stream, key):
+        self.__stream = stream
+        x = 0
+        box = range(256)
+        for i, y in enumerate(box):
+            x = (x + y + ord(key[i % len(key)])) & 0xff
+            box[i], box[x] = box[x], y
+        self.__box = box
+        self.__x = 0
+        self.__y = 0
+
+    def __getattr__(self, attr):
+        if attr not in ('__stream', '__box', '__x', '__y'):
+            return getattr(self.__stream, attr)
+
+    def read(self, size=-1):
+        out = []
+        out_append = out.append
+        x = self.__x
+        y = self.__y
+        box = self.__box
+        data = self.__stream.read(size)
+        for char in data:
+            x = (x + 1) & 0xff
+            y = (y + box[x]) & 0xff
+            box[x], box[y] = box[y], box[x]
+            out_append(chr(ord(char) ^ box[(box[x] + box[y]) & 0xff]))
+        self.__x = x
+        self.__y = y
+        return ''.join(out)
+
+
+try:
+    from Crypto.Cipher._ARC4 import new as _Crypto_Cipher_ARC4_new
+    def rc4crypt(data, key):
+        return _Crypto_Cipher_ARC4_new(key).encrypt(data) if key else data
+    class RC4FileObject(object):
+        """fileobj for rc4"""
+        def __init__(self, stream, key):
+            self.__stream = stream
+            self.__cipher = _Crypto_Cipher_ARC4_new(key) if key else lambda x:x
+        def __getattr__(self, attr):
+            if attr not in ('__stream', '__cipher'):
+                return getattr(self.__stream, attr)
+        def read(self, size=-1):
+            return self.__cipher.encrypt(self.__stream.read(size))
+except ImportError:
+    pass
 
 
 def gae_application(environ, start_response):
     cookie = environ.get('HTTP_COOKIE', '')
+    options = environ.get('HTTP_X_GOA_OPTIONS', '')
     if environ['REQUEST_METHOD'] == 'GET' and not cookie:
         if '204' in environ['QUERY_STRING']:
             start_response('204 No Content', [])
@@ -104,29 +171,41 @@ def gae_application(environ, start_response):
 
     # inflate = lambda x:zlib.decompress(x, -zlib.MAX_WBITS)
     wsgi_input = environ['wsgi.input']
-    if cookie:
-        metadata = zlib.decompress(base64.b64decode(cookie), -zlib.MAX_WBITS)
-    else:
-        data = wsgi_input.read(2)
-        metadata_length, = struct.unpack('!h', data)
-        metadata = wsgi_input.read(metadata_length)
-        metadata = zlib.decompress(metadata, -zlib.MAX_WBITS)
+    input_data = wsgi_input.read()
 
-    headers = dict(x.split(':', 1) for x in metadata.splitlines() if x)
-    method = headers.pop('G-Method')
-    url = headers.pop('G-Url')
+    try:
+        if cookie:
+            if 'rc4' not in options:
+                metadata = zlib.decompress(base64.b64decode(cookie), -zlib.MAX_WBITS)
+                payload = input_data or ''
+            else:
+                metadata = zlib.decompress(rc4crypt(base64.b64decode(cookie), __password__), -zlib.MAX_WBITS)
+                payload = rc4crypt(input_data, __password__) if input_data else ''
+        else:
+            if 'rc4' in options:
+                input_data = rc4crypt(input_data, __password__)
+            metadata_length, = struct.unpack('!h', input_data[:2])
+            metadata = zlib.decompress(input_data[2:2+metadata_length], -zlib.MAX_WBITS)
+            payload = input_data[2+metadata_length:]
+        headers = dict(x.split(':', 1) for x in metadata.splitlines() if x)
+        method = headers.pop('G-Method')
+        url = headers.pop('G-Url')
+    except (zlib.error, KeyError, ValueError):
+        import traceback
+        start_response('500 Internal Server Error', [('Content-Type', 'text/html')])
+        yield message_html('500 Internal Server Error', 'Bad Request (metadata) - Possible Wrong Password', '<pre>%s</pre>' % traceback.format_exc())
+        raise StopIteration
 
     kwargs = {}
     any(kwargs.__setitem__(x[2:].lower(), headers.pop(x)) for x in headers.keys() if x.startswith('G-'))
 
-    abbv_headers = {'A': ('Accept', 'text/html, */*; q=0.01'),
-                    'AC': ('Accept-Charset', 'UTF-8,*;q=0.5'),
-                    'AL': ('Accept-Language', 'zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4'),
-                    'AE': ('Accept-Encoding', 'gzip,deflate'), }
-    abbv_args = kwargs.get('abbv', '').split(',')
-    headers.update(v for k, v in abbv_headers.iteritems() if k in abbv_args and v[0] not in headers)
+    if 'Content-Encoding' in headers:
+        if headers['Content-Encoding'] == 'deflate':
+            payload = zlib.decompress(payload, -zlib.MAX_WBITS)
+            headers['Content-Length'] = str(len(payload))
+            del headers['Content-Encoding']
 
-    #logging.info('%s "%s %s %s" - -', environ['REMOTE_ADDR'], method, url, 'HTTP/1.1')
+    logging.info('%s "%s %s %s" - -', environ['REMOTE_ADDR'], method, url, 'HTTP/1.1')
     #logging.info('request headers=%s', headers)
 
     if __password__ and __password__ != kwargs.get('password', ''):
@@ -155,16 +234,7 @@ def gae_application(environ, start_response):
 
     deadline = URLFETCH_TIMEOUT
     validate_certificate = bool(int(kwargs.get('validate', 0)))
-    headers = dict(headers)
-    payload = wsgi_input.read() if 'Content-Length' in headers else None
-    if 'Content-Encoding' in headers:
-        if headers['Content-Encoding'] == 'deflate':
-            payload = zlib.decompress(payload, -zlib.MAX_WBITS)
-            headers['Content-Length'] = str(len(payload))
-            del headers['Content-Encoding']
-
     accept_encoding = headers.get('Accept-Encoding', '')
-
     errors = []
     for i in xrange(int(kwargs.get('fetchmax', URLFETCH_MAX))):
         try:
@@ -231,9 +301,15 @@ def gae_application(environ, start_response):
     if data:
          response_headers['Content-Length'] = str(len(data))
     response_headers_data = zlib.compress('\n'.join('%s:%s' % (k.title(), v) for k, v in response_headers.items() if not k.startswith('x-google-')))[2:-4]
-    start_response('200 OK', [('Content-Type', 'image/gif')])
-    yield struct.pack('!hh', int(response.status_code), len(response_headers_data))+response_headers_data
-    yield data
+    if 'rc4' not in options:
+        start_response('200 OK', [('Content-Type', 'image/gif')])
+        yield struct.pack('!hh', int(response.status_code), len(response_headers_data))+response_headers_data
+        yield data
+    else:
+        start_response('200 OK', [('Content-Type', 'image/gif'), ('X-GOA-Options', 'rc4')])
+        yield struct.pack('!hh', int(response.status_code), len(response_headers_data))
+        yield rc4crypt(response_headers_data, __password__)
+        yield rc4crypt(data, __password__)
 
 
 class LegacyHandler(object):
@@ -381,32 +457,27 @@ def paas_application(environ, start_response):
         start_response('302 Found', [('Location', 'https://www.google.com')])
         raise StopIteration
 
-    # inflate = lambda x:zlib.decompress(x, -zlib.MAX_WBITS)
     wsgi_input = environ['wsgi.input']
     data = wsgi_input.read(2)
     metadata_length, = struct.unpack('!h', data)
     metadata = wsgi_input.read(metadata_length)
 
     metadata = zlib.decompress(metadata, -zlib.MAX_WBITS)
-    headers = dict(x.split(':', 1) for x in metadata.splitlines() if x)
+    headers = {}
+    for line in metadata.splitlines():
+        if line:
+            keyword, value = line.split(':', 1)
+            headers[keyword.title()] = value.strip()
     method = headers.pop('G-Method')
     url = headers.pop('G-Url')
+    timeout = URLFETCH_TIMEOUT
 
     kwargs = {}
     any(kwargs.__setitem__(x[2:].lower(), headers.pop(x)) for x in headers.keys() if x.startswith('G-'))
 
-    headers['Connection'] = 'close'
-
-    payload = environ['wsgi.input'].read() if 'Content-Length' in headers else None
-    if 'Content-Encoding' in headers:
-        if headers['Content-Encoding'] == 'deflate':
-            payload = zlib.decompress(payload, -zlib.MAX_WBITS)
-            headers['Content-Length'] = str(len(payload))
-            del headers['Content-Encoding']
-
     if __password__ and __password__ != kwargs.get('password'):
         random_host = 'g%d%s' % (int(time.time()*100), environ['HTTP_HOST'])
-        conn = httplib.HTTPConnection(random_host, timeout=3)
+        conn = httplib.HTTPConnection(random_host, timeout=timeout)
         conn.request('GET', '/')
         response = conn.getresponse(True)
         status_line = '%s %s' % (response.status, httplib.responses.get(response.status, 'OK'))
@@ -419,8 +490,13 @@ def paas_application(environ, start_response):
         yield message_html('403 Forbidden Host', 'Hosts Deny(%s)' % url, detail='url=%r' % url)
         raise StopIteration
 
-    timeout = URLFETCH_TIMEOUT
-    xorchar = ord(kwargs.get('xorchar') or '\x00')
+    headers['Connection'] = 'close'
+    payload = environ['wsgi.input'].read() if 'Content-Length' in headers else None
+    if 'Content-Encoding' in headers:
+        if headers['Content-Encoding'] == 'deflate':
+            payload = zlib.decompress(payload, -zlib.MAX_WBITS)
+            headers['Content-Length'] = str(len(payload))
+            del headers['Content-Encoding']
 
     logging.info('%s "%s %s %s" - -', environ['REMOTE_ADDR'], method, url, 'HTTP/1.1')
 
@@ -433,7 +509,7 @@ def paas_application(environ, start_response):
         sock = rfile._sock
         host, _, port = url.rpartition(':')
         port = int(port)
-        remote_sock = socket.create_connection((host, port), timeout=URLFETCH_TIMEOUT)
+        remote_sock = socket.create_connection((host, port), timeout=timeout)
         start_response('200 OK', [])
         forward_socket(sock, remote_sock)
         yield 'out'
@@ -449,20 +525,15 @@ def paas_application(environ, start_response):
             conn.request(method, path, body=payload, headers=headers)
             response = conn.getresponse()
 
-            headers = [('X-Status', str(response.status))]
-            headers += [(k.title(), v) for k, v in response.msg.items() if k.title() != 'Transfer-Encoding']
-            start_response('200 OK', headers)
-
-            bufsize = 8192
+            headers_data = zlib.compress('\n'.join('%s:%s' % (k.title(), v) for k, v in response.getheaders()))[2:-4]
+            start_response('200 OK', [('Content-Type', 'image/gif')])
+            yield struct.pack('!hh', int(response.status), len(headers_data))+headers_data
             while 1:
-                data = response.read(bufsize)
+                data = response.read(8192)
                 if not data:
                     response.close()
                     break
-                if xorchar:
-                    yield ''.join(chr(ord(x) ^ xorchar) for x in data)
-                else:
-                    yield data
+                yield data
         except httplib.HTTPException:
             raise
 

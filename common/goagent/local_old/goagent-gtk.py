@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python2
 # coding:utf-8
 # Contributor:
 #      Phus Lu        <phus.lu@gmail.com>
@@ -133,7 +133,7 @@ def should_visible():
     import ConfigParser
     ConfigParser.RawConfigParser.OPTCRE = re.compile(r'(?P<option>[^=\s][^=]*)\s*(?P<vi>[=])\s*(?P<value>.*)$')
     config = ConfigParser.ConfigParser()
-    config.read('proxy.ini')
+    config.read(['proxy.ini', 'proxy.user.ini'])
     visible = config.has_option('listen', 'visible') and config.getint('listen', 'visible')
     return visible
 
@@ -154,8 +154,10 @@ class GoAgentGTK:
         self.window.connect('delete-event',self.delete_event)
         self.terminal = terminal
 
-        if os.system('which python3') == 0:
-            self.command[1] = 'python3'
+        for cmd in ('python2.7', 'python27', 'python2'):
+            if os.system('which %s' % cmd) == 0:
+                self.command[1] = cmd
+                break
 
         self.window.add(terminal)
         self.childpid = self.terminal.fork_command(self.command[0], self.command, os.getcwd())
@@ -276,7 +278,8 @@ def main():
         __file__ = getattr(os, 'readlink', lambda x: x)(__file__)
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
-    if platform.dist()[0] == 'Ubuntu':
+    if not os.path.exists('goagent-logo.png'):
+        # first run and drop shortcut to desktop
         drop_desktop()
 
     window = gtk.Window()
