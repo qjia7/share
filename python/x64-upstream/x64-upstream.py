@@ -83,10 +83,6 @@ test_suite_filter = {
     ('all', 'x86_64'): {},
     ('all', 'x86'): {},
     ('baytrail', 'all'): {
-        'base_unittests': [
-            # Confirmed the below case is no longer needed to be filtered
-            #'ThreadTest.StartWithOptions_StackSize',
-        ],
         'media_unittests': [
             # Status: TODO
             'MediaSourcePlayerTest.A_StarvationDuringEOSDecode',
@@ -220,6 +216,8 @@ test_suite_filter = {
         'base_unittests': [
             # https://codereview.chromium.org/310323003
             'SafeSPrintfTest.Truncation',
+            # This case is only needed for x86. x64 doesn't have this problem.
+            'ThreadTest.StartWithOptions_StackSize',
         ],
         'media_unittests': [
             # Status: TODO
