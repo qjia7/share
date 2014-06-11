@@ -364,14 +364,11 @@ def flash_image():
         time.sleep(sleep_sec)
         connect_device()
 
+    # It will take about 45s to boot to GUI
     info('Sleeping 60 seconds until system fully boots up..')
     time.sleep(60)
 
-    # Bring up screen by pressing power
-    execute(adb('shell input keyevent 26'))
-    # Unlock the screen
-    execute(adb('shell input keyevent 82'))
-
+    # After system boots up, it will show guide screen and never lock or turn off screen.
     set_screen_lock_none()
 
 
