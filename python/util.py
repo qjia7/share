@@ -420,6 +420,18 @@ def set_screen_lock_none():
     execute_adb_shell(cmd='am start -n com.android.settings/.SecuritySettings && sleep 5 && input tap 200 150 && sleep 5 && input tap 200 100')
 
 
+def is_screen_on(device='192.168.42.1'):
+    result = execute(adb(cmd='shell dumpsys power', device=device) + ' |grep mScreenOn=true')
+    if result[0]:
+        return False
+    else:
+        return True
+
+
+def ensure_screen_on(device='192.168.42.1'):
+    if not is_screen_on(device):
+        # Bring up screen by pressing power
+        execute(adb('shell input keyevent 26'), device=device)
 ################################################################################
 
 
