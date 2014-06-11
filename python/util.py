@@ -266,7 +266,8 @@ def setup_device(devices_limit=[]):
             devices.append(device)
 
     if devices_limit:
-        for index, device in enumerate(devices):
+        # This has to be reversed and deleted from end
+        for index, device in reversed(list(enumerate(devices))):
             if device not in devices_limit:
                 del devices[index]
                 del devices_name[index]
@@ -413,6 +414,11 @@ def analyze_issue(dir_aosp='/workspace/project/aosp-stable', dir_chromium='/work
                     return
 
                 break
+
+
+def set_screen_lock_none():
+    execute_adb_shell(cmd='am start -n com.android.settings/.SecuritySettings && sleep 5 && input tap 200 150 && sleep 5 && input tap 200 100')
+
 
 ################################################################################
 

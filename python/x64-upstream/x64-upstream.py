@@ -14,6 +14,7 @@ CHROMIUM_INFO_INDEX_REV = 1
 patches = {
     'src': [
         '0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
+        '0001-Add-option-device-in-install-apk-script.patch',
     ],
 }
 
@@ -627,6 +628,12 @@ def _test_run_device(index_device, results):
         os.mkdir(dir_device_name)
 
     if not args.test_dryrun:
+        # Ensure screen stays on
+        execute(adb(cmd='shell svc power stayon usb', device=device))
+
+        # Try to unlock the screen if needed
+        execute(adb(cmd='shell input keyevent 82', device=device))
+
         # Fake /storage/emulated/0
         cmd = adb(cmd='root', device=device) + ' && ' + adb(cmd='remount', device=device) + ' && ' + adb(cmd='shell "mount -o rw,remount rootfs / && chmod 777 /mnt/sdcard && cd /storage/emulated && ln -s legacy 0"', device=device)
         execute(cmd)
@@ -639,7 +646,7 @@ def _test_run_device(index_device, results):
                 if command == 'instrumentation':
                     apks = [suite, suite.replace('Test', '')]
                     for apk in apks:
-                        cmd = 'src/build/android/adb_install_apk.py --apk=%s.apk --%s' % (apk, test_type)
+                        cmd = 'src/build/android/adb_install_apk.py -d %s --apk=%s.apk --%s' % (device, apk, test_type)
                         if not args.just_out:
                             cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out ' + cmd
                         result = execute(cmd, interactive=True)

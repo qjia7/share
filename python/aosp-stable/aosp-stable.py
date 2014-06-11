@@ -364,8 +364,15 @@ def flash_image():
         time.sleep(sleep_sec)
         connect_device()
 
-    info('Sleeping 30 seconds until system fully boots up..')
-    time.sleep(30)
+    info('Sleeping 60 seconds until system fully boots up..')
+    time.sleep(60)
+
+    # Bring up screen by pressing power
+    execute(adb('shell input keyevent 26'))
+    # Unlock the screen
+    execute(adb('shell input keyevent 82'))
+
+    set_screen_lock_none()
 
 
 def start_emu():

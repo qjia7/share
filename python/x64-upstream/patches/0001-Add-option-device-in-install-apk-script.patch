@@ -1,0 +1,66 @@
+From 1b8079195459faa9f294a6cbf0fc263eb50511fc Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Wed, 11 Jun 2014 13:03:26 +0800
+Subject: [PATCH] Add option device in install apk script
+
+Sometimes we need to designate device to install apk on, so this option
+is needed.
+---
+ build/android/adb_install_apk.py | 27 ++++++++++++++++++++++++++-
+ 1 file changed, 26 insertions(+), 1 deletion(-)
+
+diff --git a/build/android/adb_install_apk.py b/build/android/adb_install_apk.py
+index a915101..69a3682 100755
+--- a/build/android/adb_install_apk.py
++++ b/build/android/adb_install_apk.py
+@@ -38,6 +38,8 @@ def AddInstallAPKOption(option_parser):
+                            dest='build_type',
+                            help='If set, run test suites under out/Release. '
+                            'Default is env var BUILDTYPE or Debug.')
++  option_parser.add_option('-d', '--device', dest='device',
++                           help=('Target device for apk to install on.'))
+ 
+ 
+ def ValidateInstallAPKOption(option_parser, options):
+@@ -49,6 +51,29 @@ def ValidateInstallAPKOption(option_parser, options):
+                                options.apk)
+ 
+ 
++def _GetAttachedDevices(device=None):
++  """Get all attached devices.
++
++  Args:
++    device: Name of a specific device to use.
++
++  Returns:
++    A list of attached devices.
++  """
++  attached_devices = []
++
++  attached_devices = android_commands.GetAttachedDevices()
++  if device:
++    assert device in attached_devices, (
++        'Did not find device %s among attached device. Attached devices: %s'
++        % (device, ', '.join(attached_devices)))
++    attached_devices = [device]
++
++  assert attached_devices, 'No devices attached.'
++
++  return sorted(attached_devices)
++
++
+ def main(argv):
+   parser = optparse.OptionParser()
+   AddInstallAPKOption(parser)
+@@ -58,7 +83,7 @@ def main(argv):
+   if len(args) > 1:
+     raise Exception('Error: Unknown argument:', args[1:])
+ 
+-  devices = android_commands.GetAttachedDevices()
++  devices = _GetAttachedDevices(options.device)
+   if not devices:
+     raise Exception('Error: no connected devices')
+ 
+-- 
+2.0.0
+
