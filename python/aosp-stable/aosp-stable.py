@@ -31,10 +31,6 @@ patches_init2 = {
 patches_build = {}
 
 patches_build_common = {
-    'packages/apps/Browser': [
-        '0001-Make-browser-preference-fragment-valid.patch',
-    ],
-
     # Emulator
     'build/core': ['0001-Emulator-Remove-opengl-from-blacklist-to-enable-gpu.patch'],
     'device/generic/goldfish': ['0001-Emulator-Make-the-size-of-cb_handle_t-same-for-32-64.patch'],
