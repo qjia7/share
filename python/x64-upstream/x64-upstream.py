@@ -45,12 +45,15 @@ test_command_default = [
     #'perf'
 ]
 
+# See details at build/android/pylib/gtest/gtest_config.py
 gtest_suite_default = [
     'android_webview_unittests',
     'base_unittests',
+    'breakpad_unittests',  # Need breakpad
     'cc_unittests',
     'components_unittests',
     'content_unittests',
+    'events_unittests',
     'gl_tests',
     'gpu_unittests',
     'ipc_tests',
@@ -60,13 +63,11 @@ gtest_suite_default = [
     'sql_unittests',
     'sync_unit_tests',
     'ui_unittests',
+    'unit_tests',  # Need breakpad
     'webkit_compositor_bindings_unittests',
     'webkit_unit_tests',
-    'content_gl_tests',
-    'breakpad_unittests',  # Need breakpad
-    'unit_tests',  # Need breakpad
-    # This is temporarily disabled until we analyze most of failures
-    #'content_browsertests',  # Need breakpad
+    'content_gl_tests',  # experimental suite
+    #'content_browsertests',  # webrtc
 ]
 
 instrumentation_suite_default = [
