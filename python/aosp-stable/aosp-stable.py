@@ -81,9 +81,11 @@ examples:
     parser.add_argument('--hack-app-process', dest='hack_app_process', help='hack app_process', action='store_true')
     parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
 
+    parser.add_argument('--cts-run', dest='cts_run', help='package to run with cts')
+
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device-type', dest='target_device_type', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
-    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['libwebviewchromium', 'webview', 'browser', 'system', 'all'], default='system')
+    parser.add_argument('--target-module', dest='target_module', help='target module', choices=['libwebviewchromium', 'webview', 'browser', 'cts', 'system', 'all'], default='system')
 
     args = parser.parse_args()
 
@@ -225,8 +227,12 @@ def build():
             cmd = bashify(cmd)
             execute(cmd, interactive=True)
 
-        if module == 'system':
-            cmd = '. build/envsetup.sh && lunch ' + combo + ' && make dist'
+        if module == 'system' or module == 'cts':
+            cmd = '. build/envsetup.sh && lunch ' + combo + ' && make '
+            if module == 'system':
+                cmd += 'dist'
+            else:
+                cmd += module
         elif module == 'browser' or module == 'webview' or module == 'libwebviewchromium':
             cmd = '. build/envsetup.sh && lunch ' + combo + ' && '
             if args.build_no_dep:
@@ -494,6 +500,26 @@ def hack_app_process():
                 execute(cmd)
 
 
+def cts_run():
+    if not args.cts_run:
+        return
+
+    connect_device()
+
+    if len(target_archs) > 1:
+        error('You need to specify the target arch')
+
+    if len(target_devices_type) > 1 or target_devices_type[0] != 'baytrail':
+        error('Only baytrail can run cts')
+
+    arch = target_archs[0]
+    device_type = target_devices_type[0]
+
+    combo = _get_combo(arch, device_type)
+    cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && cts-tradefed run cts -p ' + args.cts_run)
+    execute(cmd, interactive=True)
+
+
 def _sync_repo(dir, cmd):
     backup_dir(dir)
     result = execute(cmd, interactive=True)
@@ -661,3 +687,4 @@ if __name__ == "__main__":
     analyze()
     push()
     hack_app_process()
+    cts_run()
