@@ -1,0 +1,39 @@
+From 35160fd78320f2e20f9928b72aedcdc76cddd442 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 13 Jun 2014 15:10:54 +0800
+Subject: [PATCH] patch from issue 321403002
+
+---
+ build/android/adb_install_apk.py | 9 +++++++++
+ 1 file changed, 9 insertions(+)
+
+diff --git a/build/android/adb_install_apk.py b/build/android/adb_install_apk.py
+index ea39aea..5d0fd17 100755
+--- a/build/android/adb_install_apk.py
++++ b/build/android/adb_install_apk.py
+@@ -37,6 +37,8 @@ def AddInstallAPKOption(option_parser):
+                            dest='build_type',
+                            help='If set, run test suites under out/Release. '
+                            'Default is env var BUILDTYPE or Debug.')
++  option_parser.add_option('-d', '--device', dest='device',
++                           help='Target device for apk to install on.')
+ 
+ 
+ def ValidateInstallAPKOption(option_parser, options, args):
+@@ -70,6 +72,13 @@ def main(argv):
+   ValidateInstallAPKOption(parser, options, args)
+ 
+   devices = android_commands.GetAttachedDevices()
++
++  if options.device:
++    if options.device not in devices:
++      raise Exception('Error: %s not in attached devices %s' % (options.device,
++                      ','.join(devices)))
++    devices = [options.device]
++
+   if not devices:
+     raise Exception('Error: no connected devices')
+ 
+-- 
+2.0.0
+
