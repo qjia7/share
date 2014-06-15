@@ -7,14 +7,13 @@ import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
 
-chromium_info = ['9dc9d50342bd25ca4e997daf6d056b52dde54234', '276950']
+chromium_info = ['21ac7cd3468fd3052be197202057db0084bb0774', '277286']
 CHROMIUM_INFO_INDEX_HASH = 0
 CHROMIUM_INFO_INDEX_REV = 1
 
 patches = {
     'src': [
         '0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
-        '0001-patch-from-issue-321403002.patch',
     ],
 }
 
