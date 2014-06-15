@@ -2,8 +2,10 @@ aosp: aosp upstream, for nexus image build
 aosp-cr: aosp upstream + upstream chromium, 32 & 64
 
 aosp-stable: pure aosp stable, 32 & 64
-aosp-stable-emulator: pure aosp stable, for emulator build
 aosp-stable-cr: aosp stable + upstream Chromium, 32 & 64
 
-chromium-android: upstream, chromium for android, 32 & 64
+chromium-android-x64: chromium for android, 32 & 64, used for x64 test
+
+chromium-android: upstream, chromium for android, 32 & 64. Used to apply patch
 chromium-linux: upstream, chromium for linux, 32 & 64
+
