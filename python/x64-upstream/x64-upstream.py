@@ -73,6 +73,7 @@ instrumentation_suite_default = [
     'ContentShellTest',
     'ChromeShellTest',
     'AndroidWebViewTest',
+    'MojoTest',
 ]
 
 test_suite = {}
@@ -210,6 +211,12 @@ test_suite_filter = {
             'AwSettingsTest#testContentUrlAccessWithTwoViews',
             'CookieManagerStartupTest#testShouldInterceptRequestDeadlock',
         ],
+        'MojoTest': [
+            # TODO
+            'CoreImplTest#testDataPipeCreation',
+            'CoreImplTest#testSharedBufferCreation',
+        ]
+
     },
     ('baytrail', 'x86_64'): {
     },
@@ -538,6 +545,8 @@ def test_build(force=False):
                     name = 'chrome_shell_apk chrome_shell_test_apk'
                 elif suite == 'AndroidWebViewTest':
                     name = 'android_webview_apk android_webview_test_apk'
+                elif suite == 'MojoTest':
+                    name = 'mojo_test_apk'
 
             result = _test_build_name(command, name)
             if result:
@@ -642,28 +651,36 @@ def _test_run_device(index_device, results):
                 if results[command][index] == 'FAIL':
                     continue
 
-                # Install packages before running
                 if command == 'instrumentation':
-                    apks = [suite, suite.replace('Test', '')]
-                    for apk in apks:
-                        cmd = 'src/build/android/adb_install_apk.py -d %s --apk=%s.apk --%s' % (device, apk, test_type)
+                    # Install packages before running
+                    if suite == 'ContentShellTest':
+                        apks = ['org.chromium.content_shell_apk', 'ContentShell.apk']
+                    elif suite == 'ChromeShellTest':
+                        apks = ['org.chromium.chrome.shell', 'ChromeShell.apk']
+                    elif suite == 'AndroidWebViewTest':
+                        apks = ['org.chromium.android_webview.shell', 'AndroidWebView.apk']
+                    elif suite == 'MojoTest':
+                        apks = []
+
+                    if apks:
+                        cmd = 'src/build/android/adb_install_apk.py -d %s --apk_package %s --%s' % (device, ' '.join(apks), test_type)
                         if not args.just_out:
                             cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out ' + cmd
                         result = execute(cmd, interactive=True)
                         if result[0]:
-                            warning('Failed to install "' + suite + '"')
+                            warning('Failed to install packages for suite "' + suite + '"')
 
                     # push test data
-                    cmd = adb(cmd='push ', device=device)
+                    #cmd = adb(cmd='push ', device=device)
 
-                    if suite == 'ContentShellTest':
-                        cmd += 'src/content/test/data/android/device_files /storage/emulated/0/content/test/data'
-                    elif suite == 'ChromeShellTest':
-                        cmd += 'src/chrome/test/data/android/device_files /storage/emulated/0/chrome/test/data'
-                    if suite == 'AndroidWebViewTest':
-                        cmd += 'src/android_webview/test/data/device_files /storage/emulated/0/chrome/test/data/webview'
+                    #if suite == 'ContentShellTest':
+                    #    cmd += 'src/content/test/data/android/device_files /storage/emulated/0/content/test/data'
+                    #elif suite == 'ChromeShellTest':
+                    #    cmd += 'src/chrome/test/data/android/device_files /storage/emulated/0/chrome/test/data'
+                    #if suite == 'AndroidWebViewTest':
+                    #    cmd += 'src/android_webview/test/data/device_files /storage/emulated/0/chrome/test/data/webview'
 
-                    execute(cmd)
+                    #execute(cmd)
 
                 cmd = 'src/build/android/test_runner.py ' + command
                 if not args.just_out:
@@ -674,6 +691,16 @@ def _test_run_device(index_device, results):
                     cmd += ' -s ' + suite + ' -t 60'
                 elif command == 'instrumentation':
                     cmd += ' --test-apk ' + suite
+
+                if suite == 'ContentShellTest':
+                    cmd += ' --test_data content:content/test/data/android/device_files'
+                elif suite == 'ChromeShellTest':
+                    cmd += ' --test_data chrome:chrome/test/data/android/device_files'  # --host-driven-root?
+                elif suite == 'AndroidWebViewTest':
+                    cmd += ' --test_data webview:android_webview/test/data/device_files'
+                elif suite == 'MojoTest':
+                    cmd += ''
+
                 cmd += ' --num_retries 1'
 
                 if args.test_filter:
