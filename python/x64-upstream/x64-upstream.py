@@ -297,6 +297,7 @@ examples:
     group_test.add_argument('--test-dryrun', dest='test_dryrun', help='dry run test', action='store_true')
     group_test.add_argument('--test-verbose', dest='test_verbose', help='verbose output for test', action='store_true')
     group_test.add_argument('--test-filter', dest='test_filter', help='filter for test')
+    group_test.add_argument('--test-debug', dest='test_debug', help='enter debug mode', action='store_true')
     group_test.add_argument('--analyze', dest='analyze', help='analyze test tombstone', action='store_true')
     group_test.add_argument('--gtest-suite', dest='gtest_suite', help='gtest suite')
     group_test.add_argument('--instrumentation-suite', dest='instrumentation_suite', help='instrumentation suite')
@@ -682,15 +683,29 @@ def _test_run_device(index_device, results):
 
                     #execute(cmd)
 
-                cmd = 'src/build/android/test_runner.py ' + command
-                if not args.just_out:
-                    cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out ' + cmd
+                if args.just_out:
+                    cmd = ''
+                else:
+                    cmd = 'CHROMIUM_OUT_DIR=out-' + target_arch + '/out '
 
-                # test command specific cmd
+                cmd += 'src/build/android/test_runner.py ' + command
+
                 if command == 'gtest':
-                    cmd += ' -s ' + suite + ' -t 60'
+                    cmd += ' -s ' + suite
                 elif command == 'instrumentation':
                     cmd += ' --test-apk ' + suite
+
+                if args.test_debug:
+                    if command == 'gtest':
+                        cmd += ' -a --wait-for-debugger'
+                    elif command == 'instrumentation':
+                        cmd += ' -w'
+
+                if command == 'gtest':
+                    if args.test_debug:
+                        cmd += ' -t 600'
+                    else:
+                        cmd += ' -t 60'
 
                 if suite == 'ContentShellTest':
                     cmd += ' --test_data content:content/test/data/android/device_files'
