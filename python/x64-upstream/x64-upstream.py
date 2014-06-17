@@ -127,30 +127,15 @@ test_suite_filter = {
         'ContentShellTest': [
             # Status: TODO
             # Crash
-            'JavaBridgeBasicsTest#testCallStaticMethod',
             'JavaBridgeCoercionTest#testPassJavaObject',
 
             # Status: TODO
             # Fail
-            'AddressDetectionTest#testAddressLimits',
-            'AddressDetectionTest#testMultipleAddressesInText',
-            'AddressDetectionTest#testRealAddresses',
-            'AddressDetectionTest#testSpecialChars',
-            'AddressDetectionTest#testSplitAddresses',
-            'ClickListenerTest#testClickContentOnJSListener1',
-            'ClickListenerTest#testClickContentOnJSListener2',
-            'ClickListenerTest#testClickContentOnLink',
-            'ContentViewLocationTest#testHideWatchResume',
-            'ContentViewLocationTest#testWatchHideNewWatchShow',
-            'ContentViewLocationTest#testWatchHideShowStop',
             'ContentViewPopupZoomerTest#testPopupZoomerShowsUp',
             'ContentViewScrollingTest#testFling',
-            'EmailAddressDetectionTest#testValidEmailAddresses',
             'JavaBridgeBasicsTest#testSameReturnedObjectUsesSameWrapper',
-            'PhoneNumberDetectionTest#testInternationalNumberIntents',
             'PhoneNumberDetectionTest#testLocalFRNumbers',
             'PhoneNumberDetectionTest#testLocalUKNumbers',
-            'PhoneNumberDetectionTest#testLocalUSNumbers',
             'ScreenOrientationIntegrationTest#testExpectedValues',
             'ScreenOrientationIntegrationTest#testNoChange',
             'ScreenOrientationProviderTest#testBasicValues',
@@ -158,6 +143,7 @@ test_suite_filter = {
             'ScreenOrientationProviderTest#testPortrait',
             'InsertionHandleTest#testDragInsertionHandle',
         ],
+        # Done
         'ChromeShellTest': [
             # Status: Verified with stable image
             # Context menu did not have window focus.
@@ -167,7 +153,6 @@ test_suite_filter = {
 
             # Status: Verified with stable image (Not important)
             # sync-url is a required parameter for the sync tests
-            #
             'SyncTest#testAboutSyncPageDisplaysCurrentSyncStatus',
             'SyncTest#testDisableAndEnableSync',
             'SyncTest#testGetAboutSyncInfoYieldsValidData',
@@ -175,41 +160,29 @@ test_suite_filter = {
             # Status: Verified with stable image (Not important)
             # Never Panel not opened
             'TranslateInfoBarTest#testTranslateNeverPanel',
-
-            # Status: TODO
-            'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredAndNoSignedInUser',  # This would pass if we run it alone
-            'OAuth2TokenServiceIntegrationTest#testValidateAccountsOneAccountsRegisteredAndNoSignedInUser',
-            'OAuth2TokenServiceIntegrationTest#testValidateAccountsNoAccountsRegisteredButSignedIn',
-            'OAuth2TokenServiceIntegrationTest#testValidateAccountsSingleAccountThenAddOne',
-            'ProviderBookmarksUriTest#testDeleteBookmark',
-            'ProviderBookmarksUriTest#testQueryBookmark',
-            'ProviderBookmarksUriTest#testUpdateBookmark',
-            'ChromeShellUrlTest#testChromeWelcomePageLoads',
         ],
         'AndroidWebViewTest': [
             # Status: TODO
             'AndroidScrollIntegrationTest#testUiScrollReflectedInJs',
+            'AwContentsClientOnScaleChangedTest#testScaleUp',
+            'AwContentsRenderTest#testSetGetBackgroundColor',
             'AwContentsTest#testCreateAndGcManyTimes',
             'AwSettingsTest#testAllowMixedMode',
-            'AwSettingsTest#testFileUrlAccessWithTwoViews',
+            'AwSettingsTest#testLoadWithOverviewModeViewportTagWithTwoViews',
+            'AwSettingsTest#testLoadWithOverviewModeWithTwoViews',
             'AwSettingsTest#testUserAgentStringDefault',
+            'KeySystemTest#testSupportWidevineKeySystem',
             'NavigationHistoryTest#testFavicon',
             'NavigationHistoryTest#testNavigateBackToNoncacheableLoginPage',
             'WebViewAsynchronousFindApisTest#testClearFindNext',
             'WebViewAsynchronousFindApisTest#testFindAllDoubleNext',
-            'AwSettingsTest#testCacheModeWithTwoViews',
-            'AwZoomTest#testZoomControls',
+
             # Crash
             'AndroidScrollIntegrationTest#testFlingScroll',
             'AndroidScrollIntegrationTest#testJsScrollCanBeAlteredByUi',
             'AndroidScrollIntegrationTest#testJsScrollFromBody',
             'AndroidScrollIntegrationTest#testJsScrollReflectedInUi',
             'AndroidScrollIntegrationTest#testTouchScrollCanBeAlteredByUi',
-            # Fail
-            'AwContentsClientOnScaleChangedTest#testScaleUp',
-            'AwSettingsTest#testLoadWithOverviewModeWithTwoViews',
-            'AwSettingsTest#testContentUrlAccessWithTwoViews',
-            'CookieManagerStartupTest#testShouldInterceptRequestDeadlock',
         ],
         'MojoTest': [
             # TODO
