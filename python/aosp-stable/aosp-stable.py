@@ -32,9 +32,9 @@ patches_build = {}
 
 patches_build_common = {
     # Emulator
-    'build/core': ['0001-Emulator-Remove-opengl-from-blacklist-to-enable-gpu.patch'],
-    'device/generic/goldfish': ['0001-Emulator-Make-the-size-of-cb_handle_t-same-for-32-64.patch'],
-    'frameworks/base': ['0001-Emulator-Enable-HWUI.patch'],
+    #'build/core': ['0001-Emulator-Remove-opengl-from-blacklist-to-enable-gpu.patch'],
+    #'device/generic/goldfish': ['0001-Emulator-Make-the-size-of-cb_handle_t-same-for-32-64.patch'],
+    #'frameworks/base': ['0001-Emulator-Enable-HWUI.patch'],
 }
 
 patches_build_upstream_chromium = {
@@ -81,7 +81,7 @@ examples:
     parser.add_argument('--hack-app-process', dest='hack_app_process', help='hack app_process', action='store_true')
     parser.add_argument('--time-fixed', dest='time_fixed', help='fix the time for test sake. We may run multiple tests and results are in same dir', action='store_true')
 
-    parser.add_argument('--cts-run', dest='cts_run', help='package to run with cts')
+    parser.add_argument('--cts-run', dest='cts_run', help='package to run with cts, such as android.webkit, com.android.cts.browserbench')
 
     parser.add_argument('--target-arch', dest='target_arch', help='target arch', choices=['x86', 'x86_64', 'all'], default='x86_64')
     parser.add_argument('--target-device-type', dest='target_device_type', help='target device', choices=['baytrail', 'generic', 'all'], default='baytrail')
