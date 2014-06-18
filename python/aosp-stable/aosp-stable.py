@@ -518,10 +518,7 @@ def cts_run():
 
     combo = _get_combo(arch, device_type)
     cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && cts-tradefed run cts -p ' + args.cts_run)
-    child = pexpect.spawn(cmd)
-    child.logfile = sys.stdout
-    child.expect("cts-tf > ")
-    child.sendline('exit')
+    execute(cmd, interactive=True)
 
 
 def _sync_repo(dir, cmd):
