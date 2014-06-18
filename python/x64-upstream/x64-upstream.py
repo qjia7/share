@@ -7,7 +7,7 @@ import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
 
-chromium_info = ['21ac7cd3468fd3052be197202057db0084bb0774', '277286']
+chromium_info = ['d2cdd96176668dc823d36bad78df1186e6dbb5df', '277998']
 CHROMIUM_INFO_INDEX_HASH = 0
 CHROMIUM_INFO_INDEX_REV = 1
 
@@ -198,8 +198,6 @@ test_suite_filter = {
     },
     ('baytrail', 'x86'): {
         'base_unittests': [
-            # https://codereview.chromium.org/310323003
-            'SafeSPrintfTest.Truncation',
             # This case is only needed for x86. x64 doesn't have this problem.
             'ThreadTest.StartWithOptions_StackSize',
         ],
