@@ -1,0 +1,33 @@
+From 2b7426d7c3e1f6fa7eaea63a7a2264570308f3ca Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Fri, 13 Jun 2014 17:35:29 +0800
+Subject: [PATCH] webview: Enable atrace
+
+Change-Id: I9c980d4ef0effb3c382b2585aead205cc3f6fa7d
+---
+ .../com/android/webview/chromium/WebViewChromiumFactoryProvider.java    | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/chromium/java/com/android/webview/chromium/WebViewChromiumFactoryProvider.java b/chromium/java/com/android/webview/chromium/WebViewChromiumFactoryProvider.java
+index 86a6dae..c02548d 100644
+--- a/chromium/java/com/android/webview/chromium/WebViewChromiumFactoryProvider.java
++++ b/chromium/java/com/android/webview/chromium/WebViewChromiumFactoryProvider.java
+@@ -45,6 +45,7 @@ import org.chromium.base.PathService;
+ import org.chromium.base.ThreadUtils;
+ import org.chromium.base.library_loader.LibraryLoader;
+ import org.chromium.base.library_loader.ProcessInitException;
++import org.chromium.base.TraceEvent;
+ import org.chromium.content.app.ContentMain;
+ import org.chromium.content.browser.ContentViewStatics;
+ import org.chromium.content.browser.ResourceExtractor;
+@@ -83,6 +84,7 @@ public class WebViewChromiumFactoryProvider implements WebViewFactoryProvider {
+         // Load chromium library.
+         AwBrowserProcess.loadLibrary();
+         // Load glue-layer support library.
++        TraceEvent.setATraceEnabled(true);
+         System.loadLibrary("webviewchromium_plat_support");
+         ThreadUtils.setWillOverrideUiThread();
+     }
+-- 
+2.0.0
+
