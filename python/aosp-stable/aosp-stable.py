@@ -4,6 +4,7 @@ import sys
 sys.path.append(sys.path[0] + '/..')
 from util import *
 import fileinput
+import pexpect
 
 dir_root = ''
 dir_chromium = ''
@@ -517,7 +518,10 @@ def cts_run():
 
     combo = _get_combo(arch, device_type)
     cmd = bashify('. build/envsetup.sh && lunch ' + combo + ' && cts-tradefed run cts -p ' + args.cts_run)
-    execute(cmd, interactive=True)
+    child = pexpect.spawn(cmd)
+    child.logfile = sys.stdout
+    child.expect("cts-tf > ")
+    child.sendline('exit')
 
 
 def _sync_repo(dir, cmd):
