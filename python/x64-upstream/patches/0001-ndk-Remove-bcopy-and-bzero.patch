@@ -1,0 +1,40 @@
+From 9f3d109e3c6474a2bd8c7b934210d1d2833b81a5 Mon Sep 17 00:00:00 2001
+From: Yang Gu <yang.gu@intel.com>
+Date: Wed, 18 Jun 2014 11:18:32 +0800
+Subject: [PATCH] ndk: Remove bcopy and bzero
+
+bionic in aosp removed them in ce9ce28e on Jun 3
+---
+ .../platforms/android-20/arch-x86_64/usr/include/strings.h    | 11 ++---------
+ 1 file changed, 2 insertions(+), 9 deletions(-)
+
+diff --git a/ndk_experimental/platforms/android-20/arch-x86_64/usr/include/strings.h b/ndk_experimental/platforms/android-20/arch-x86_64/usr/include/strings.h
+index e72798b..e7c9a1d 100644
+--- a/ndk_experimental/platforms/android-20/arch-x86_64/usr/include/strings.h
++++ b/ndk_experimental/platforms/android-20/arch-x86_64/usr/include/strings.h
+@@ -43,20 +43,13 @@
+ #include <sys/cdefs.h>
+ 
+ __BEGIN_DECLS
+-void	 bcopy(const void *, void *, size_t);
+-void	 bzero(void *, size_t);
++#define bcopy(b1, b2, len) (void)(memmove((b2), (b1), (len)))
++#define bzero(b, len) (void)(memset((b), '\0', (len)))
+ int	 ffs(int);
+ char	*index(const char *, int);
+ int	 strcasecmp(const char *, const char *);
+ int	 strncasecmp(const char *, const char *, size_t);
+ 
+-#if defined(__BIONIC_FORTIFY)
+-__BIONIC_FORTIFY_INLINE
+-void bzero (void *s, size_t n) {
+-    __builtin___memset_chk(s, '\0', n, __builtin_object_size (s, 0));
+-}
+-#endif /* defined(__BIONIC_FORTIFY) */
+-
+ __END_DECLS
+ 
+ #endif /* !defined(_STRINGS_H_) */
+-- 
+2.0.0
+

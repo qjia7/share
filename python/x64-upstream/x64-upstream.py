@@ -15,6 +15,9 @@ patches = {
     'src': [
         '0001-Enlarge-kThreadLocalStorageSize-to-satisfy-test.patch',
     ],
+    'src/third_party/android_tools': [
+        '0001-ndk-Remove-bcopy-and-bzero.patch',
+    ]
 }
 
 dir_script = sys.path[0]
