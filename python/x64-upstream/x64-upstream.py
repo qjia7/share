@@ -128,23 +128,33 @@ test_suite_filter = {
             'BaselinePolicy.SocketpairWrongDomain',
         ],
         'ContentShellTest': [
-            # Status: TODO
+            # Status: Done
             # Crash
+            # Existing behavior is to pass all Java objects.
+            # Spec requires passing only Java objects which are assignment-compatibile.
+            # So when a unrelated object is passed, CheckMethodArguments will call JniAbortF.
             'JavaBridgeCoercionTest#testPassJavaObject',
 
-            # Status: TODO
-            # Fail
+            # Status: Done
+            # @DisabledTest. crbug.com/167045
             'ContentViewPopupZoomerTest#testPopupZoomerShowsUp',
-            'ContentViewScrollingTest#testFling',
+            # @DisabledTest. The current Java bridge implementation doesn't reuse JS wrappers when returning the same object from a method. That looks wrong.
             'JavaBridgeBasicsTest#testSameReturnedObjectUsesSameWrapper',
+            # @FlakyTest crbug.com/231484
             'PhoneNumberDetectionTest#testLocalFRNumbers',
             'PhoneNumberDetectionTest#testLocalUKNumbers',
+            # @DisableTest crbug.com/371144
             'ScreenOrientationIntegrationTest#testExpectedValues',
             'ScreenOrientationIntegrationTest#testNoChange',
+            # @FlakyTest crbug.com/353500
             'ScreenOrientationProviderTest#testBasicValues',
             'ScreenOrientationProviderTest#testLandscape',
             'ScreenOrientationProviderTest#testPortrait',
+            # @DisabledTest crbug.com/169648
             'InsertionHandleTest#testDragInsertionHandle',
+
+            # Status: TODO
+            'ContentViewScrollingTest#testFling',
         ],
         # Done
         'ChromeShellTest': [
